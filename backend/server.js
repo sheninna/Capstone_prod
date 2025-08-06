@@ -10,6 +10,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());  // Allows cross-origin requests
 
+const authRoutes = require('./routes/auth'); // Authentication route
+const orderRoutes = require('./routes/orders'); 
+
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -19,7 +23,8 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.log(err));
 
 // Routes
-app.use('/api/auth', require('./routes/route'));
+app.use('/api/auth', authRoutes); 
+app.use('/api/orders', orderRoutes); 
 
 app.listen(5000, () => {
   console.log('Server running on port 5000');
