@@ -9,32 +9,32 @@ router.post('/', protect, async (req, res) => {
   const { items, name, phone, orderType, address, people, date, time } = req.body;
   const userId = req.user; 
 
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: 'Items array is required and should not be empty' });
-  }
-
-  try {
+   try {
     let newOrder = {
       userId,
       items,
       totalAmount: calculateTotalAmount(items),  // Calculate total based on items
       name,
       phone,
+      orderType, // Store the order type (delivery, reservation, pickup)
     };
 
-    // Handle Delivery Order
+    // Handle different order types
     if (orderType === 'delivery') {
       newOrder.deliveryAddress = address;
       newOrder.reservationDate = null;
       newOrder.reservationTime = null;
       newOrder.numberOfPeople = null;
-    } 
-    // Handle Reservation Order
-    else if (orderType === 'reservation') {
+    } else if (orderType === 'reservation') {
       newOrder.reservationDate = date;
       newOrder.reservationTime = time;
       newOrder.numberOfPeople = people;
       newOrder.deliveryAddress = null;
+    } else if (orderType === 'pickup') {
+      newOrder.deliveryAddress = null;  // No address for pickup
+      newOrder.reservationDate = null;
+      newOrder.pickupTime = time;
+      newOrder.numberOfPeople = null;
     }
 
     // Save the new order to the database
@@ -49,8 +49,27 @@ router.post('/', protect, async (req, res) => {
 
 // Helper function to calculate the total amount
 function calculateTotalAmount(items) {
-  const prices = { 'Lomi': 75.00, 'Bihon': 90.00 };
-  return items.reduce((total, item) => total + prices[item], 0);
+  // Prices for each item (ensure that these are in sync with the food items in the order)
+  const prices = {
+    'Lomi': 75.00,
+    'Sweet & Spicy': 75.00,
+    'Plain': 75.00,
+    'Bihon': 90.00,
+    // Add more food items with their prices here
+  };
+
+  // Calculate the total amount based on the price and quantity of each item
+  let total = 0;
+  
+  items.forEach(item => {
+    if (prices[item.name]) {
+      total += prices[item.name] * item.quantity;
+    } else {
+      console.log(`Price for ${item.name} not found.`);
+    }
+  });
+
+  return total;
 }
 
 module.exports = router;
