@@ -13,10 +13,10 @@ router.post('/', protect, async (req, res) => {
     let newOrder = {
       userId,
       items,
-      totalAmount: calculateTotalAmount(items),  // Calculate total based on items
+      totalAmount: calculateTotalAmount(items),  
       name,
       phone,
-      orderType, // Store the order type (delivery, reservation, pickup)
+      orderType, 
     };
 
     // Handle different order types
@@ -31,13 +31,13 @@ router.post('/', protect, async (req, res) => {
       newOrder.numberOfPeople = people;
       newOrder.deliveryAddress = null;
     } else if (orderType === 'pickup') {
-      newOrder.deliveryAddress = null;  // No address for pickup
+      newOrder.deliveryAddress = null;  
       newOrder.reservationDate = null;
       newOrder.pickupTime = time;
       newOrder.numberOfPeople = null;
     }
 
-    // Save the new order to the database
+    // Save to database
     const order = new Order(newOrder);
     await order.save();
 
@@ -47,18 +47,14 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
-// Helper function to calculate the total amount
+
 function calculateTotalAmount(items) {
-  // Prices for each item (ensure that these are in sync with the food items in the order)
   const prices = {
     'Lomi': 75.00,
     'Sweet & Spicy': 75.00,
     'Plain': 75.00,
     'Bihon': 90.00,
-    // Add more food items with their prices here
   };
-
-  // Calculate the total amount based on the price and quantity of each item
   let total = 0;
   
   items.forEach(item => {
