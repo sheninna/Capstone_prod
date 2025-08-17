@@ -1,22 +1,21 @@
 const mongoose = require('mongoose');
 
-const itemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  quantity: { type: Number, required: true },
-});
-
 const orderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  items: [itemSchema],
-  totalAmount: { type: Number, required: true },
-  orderType: { type: String, enum: ['delivery', 'pickup', 'reservation'], required: true },
-  deliveryAddress: { type: String },
-  reservationDate: { type: String },
-  reservationTime: { type: String },
-  pickupTime: { type: String },
-  numberOfPeople: { type: Number },
-  status: { type: String, default: 'pending' },
+  items: [
+    {
+      name: String,
+      quantity: Number
+    }
+  ],
+  name: String,
+  phone: String,
+  orderType: { type: String, enum: ['delivery', 'pickup', 'reservation'] },
+  address: String,
+  people: Number,
+  date: Date,
+  time: String,
+  source: { type: String, enum: ['online', 'pos'], default: 'online' },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -62,6 +62,50 @@ router.get('/profile', protect, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-})
+});
+
+// Update profile
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user, req.body, { new: true });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Change password
+router.put('/change-password', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    user.password = req.body.newPassword;
+    await user.save();
+    res.json({ message: 'Password updated' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Add to favorites
+router.post('/favorites', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    user.favorites.push(req.body.foodId);
+    await user.save();
+    res.json(user.favorites);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get favorites
+router.get('/favorites', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user).populate('favorites');
+    res.json(user.favorites);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

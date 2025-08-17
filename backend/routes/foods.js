@@ -18,4 +18,35 @@ router.post('/', adminOnly, async (req, res) => {
   }
 });
 
+// Delete food (admin only)
+router.delete('/:id', adminOnly, async (req, res) => {
+  try {
+    await Food.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Food deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Edit food (admin only)
+router.put('/:id', adminOnly, async (req, res) => {
+  try {
+    const food = await Food.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!food) return res.status(404).json({ message: 'Food not found' });
+    res.json(food);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all foods (for customers to browse)
+router.get('/', async (req, res) => {
+  try {
+    const foods = await Food.find();
+    res.json(foods);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

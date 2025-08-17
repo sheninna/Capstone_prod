@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['customer', 'admin'],
     default: 'customer'
-  }
+  },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }]
 });
 
 // Hash the password before saving
