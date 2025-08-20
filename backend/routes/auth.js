@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const sendPasswordResetEmail = require('../utils/mailer');
 const protect = require('../middleware/auth'); 
 
 // Signup
@@ -85,6 +87,63 @@ router.put('/change-password', protect, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+// Forgot password - Generate Reset Token and Send Email
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Check if the user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Generate a reset token
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Password reset link
+    const resetLink = `http://localhost:5000/api/auth/reset-password?token=${token}`;
+
+    // Send the reset password email
+    await sendPasswordResetEmail(email, resetLink);
+
+    res.status(200).json({ message: 'Password reset link sent to your email' });
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    res.status(500).json({ message: 'Error sending email' });
+  }
+});
+
+// Reset password - Verify token and update password
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+
+    // Find the user and update their password
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(400).json({ message: 'Invalid or expired token' });
+  }
+});
+
+
 
 // Add to favorites
 router.post('/favorites', protect, async (req, res) => {
