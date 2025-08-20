@@ -71,6 +71,21 @@ router.delete('/users/:id', adminOnly, async (req, res) => {
   }
 });
 
+
+// Edit food (admin only)
+router.put('/foods/:id', adminOnly, async (req, res) => {
+  const { isAvailable } = req.body;  // Allow admin to update availability status
+
+  try {
+    const food = await Food.findByIdAndUpdate(req.params.id, { isAvailable }, { new: true });
+    if (!food) return res.status(404).json({ message: 'Food not found' });
+    res.json(food);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // Admin Dashboard
 router.get('/dashboard', adminOnly, async (req, res) => {
   try {

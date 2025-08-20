@@ -1,21 +1,29 @@
-const Admin = require('../models/admin');
 const jwt = require('jsonwebtoken');
+const Admin = require('../models/admin');
 
-module.exports = async function (req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No token provided' });
+const adminOnly = async (req, res, next) => {
+  // Get token from header or request
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
-  const token = authHeader.split(' ')[1];
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const admin = await Admin.findById(decoded.id);
+
     if (!admin) {
-      return res.status(403).json({ message: 'Admin access required' });
+      return res.status(404).json({ message: 'Admin not found' });
     }
+
+    // Attach the admin to the request object
     req.admin = admin;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
+    next(); // Allow the request to proceed
+  } catch (error) {
+    return res.status(400).json({ message: 'Invalid token' });
   }
 };
+
+module.exports = adminOnly;

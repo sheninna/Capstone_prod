@@ -1,22 +1,23 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  items: [
-    {
-      name: String,
-      quantity: Number
-    }
-  ],
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  items: [{ name: String, quantity: Number }],
+  totalAmount: Number,
   name: String,
   phone: String,
-  orderType: { type: String, enum: ['delivery', 'pickup', 'reservation'] },
+  orderType: { type: String, enum: ['reservation', 'delivery', 'pickup'], required: true },
   address: String,
   people: Number,
   date: Date,
   time: String,
-  source: { type: String, enum: ['online', 'pos'], default: 'online' },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
-  createdAt: { type: Date, default: Date.now }
+  source: { type: String, default: 'online' },
+  reservationDate: Date,
+  reservationTime: String,
+  numberOfPeople: Number,
+  deliveryAddress: String,
+  pickupTime: String,
+  status: { type: String, default: 'pending' }, 
 });
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -5,14 +5,17 @@ const adminOnly = require('../middleware/adminOnly');
 
 // POST /api/foods - Only admin can add food
 router.post('/', adminOnly, async (req, res) => {
+  const { name, category, price } = req.body; // Get price from the request body
+
+  // Validation for required fields
+  if (!name || !category || price === undefined) { // Check for price as well
+    return res.status(400).json({ error: 'Missing required fields: name, category, or price' });
+  }
+
   try {
-    const { name, category } = req.body;
-    if (!name || !category) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    const food = new Food({ name, category });
+    const food = new Food({ name, category, price }); // Include price in food object
     await food.save();
-    res.status(201).json(food);
+    res.status(201).json(food); // Return the created food item
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -23,17 +26,6 @@ router.delete('/:id', adminOnly, async (req, res) => {
   try {
     await Food.findByIdAndDelete(req.params.id);
     res.json({ message: 'Food deleted' });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Edit food (admin only)
-router.put('/:id', adminOnly, async (req, res) => {
-  try {
-    const food = await Food.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!food) return res.status(404).json({ message: 'Food not found' });
-    res.json(food);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
