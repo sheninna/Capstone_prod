@@ -44,7 +44,6 @@ router.post('/login', async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, user });
@@ -100,7 +99,6 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // Generate a reset token
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Password reset link

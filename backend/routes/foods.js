@@ -5,17 +5,17 @@ const adminOnly = require('../middleware/adminOnly');
 
 // POST /api/foods - Only admin can add food
 router.post('/', adminOnly, async (req, res) => {
-  const { name, category, price } = req.body; // Get price from the request body
+  const { name, category, price } = req.body; 
 
   // Validation for required fields
-  if (!name || !category || price === undefined) { // Check for price as well
+  if (!name || !category || price === undefined) { 
     return res.status(400).json({ error: 'Missing required fields: name, category, or price' });
   }
 
   try {
-    const food = new Food({ name, category, price }); // Include price in food object
+    const food = new Food({ name, category, price }); 
     await food.save();
-    res.status(201).json(food); // Return the created food item
+    res.status(201).json(food); 
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

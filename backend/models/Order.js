@@ -6,7 +6,11 @@ const orderSchema = new mongoose.Schema({
   totalAmount: Number,
   name: String,
   phone: String,
-  orderType: { type: String, enum: ['reservation', 'delivery', 'pickup'], required: true },
+  orderType: { type: String, enum: ['reservation', 'delivery', 'pickup', 'walk-in'], required: function() {
+      return this.source !== 'walk-in'; 
+    },
+    default: 'walk-in',  
+  },
   address: String,
   people: Number,
   date: Date,

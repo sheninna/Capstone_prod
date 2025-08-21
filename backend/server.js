@@ -4,15 +4,16 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const foodRoutes = require('./routes/foods');
 const adminAuthRoutes = require('./routes/adminAcces');
+const authRoutes = require('./routes/auth'); 
+const orderRoutes = require('./routes/orders'); 
+const posAuthRoutes = require('./routes/posAuth');
+
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());  
-
-const authRoutes = require('./routes/auth'); // Authentication route
-const orderRoutes = require('./routes/orders'); 
 
 
 // MongoDB connection
@@ -28,6 +29,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes); 
 app.use('/api/foods', foodRoutes); 
 app.use('/api/admin', adminAuthRoutes);
+app.use('/api/pos', posAuthRoutes);
 
 app.listen(5000, () => {
   console.log('Server running on port 5000');

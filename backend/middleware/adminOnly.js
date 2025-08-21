@@ -20,7 +20,7 @@ const adminOnly = async (req, res, next) => {
 
     // Attach the admin to the request object
     req.admin = admin;
-    next(); // Allow the request to proceed
+    next(); 
   } catch (error) {
     return res.status(400).json({ message: 'Invalid token' });
   }

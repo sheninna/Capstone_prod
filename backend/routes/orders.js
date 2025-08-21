@@ -4,6 +4,8 @@ const Order = require('../models/Order');
 const Food = require('../models/Food');
 const protect = require('../middleware/auth'); 
 const adminOnly = require('../middleware/adminOnly');
+const posAuth = require('../middleware/posAuth'); 
+const PosOrder = require('../models/posOrder');
 
 // Place Order Route (Authenticated)
 router.post('/', protect, async (req, res) => {
@@ -77,6 +79,59 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+
+// === POS Order Route (For Walk-in Orders) ===
+router.post('/pos', posAuth, async (req, res) => {
+  const { items, name, source } = req.body;
+  const userId = req.user._id;  // The authenticated POS user (admin/employee)
+
+  // Ensure the items are an array
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ error: 'Items must be an array' });
+  }
+
+  try {
+    // Fetch food items based on the names provided in the order
+    const foodItems = await Food.find({ 'name': { $in: items.map(item => item.name) } });
+
+    // Check for unavailable items
+    const unavailableItems = foodItems.filter(food => !food.isAvailable);
+    if (unavailableItems.length > 0) {
+      return res.status(400).json({
+        error: `The following items are unavailable: ${unavailableItems.map(item => item.name).join(', ')}`
+      });
+    }
+
+    // Map food prices to food names
+    const foodPriceMap = foodItems.reduce((acc, food) => {
+      acc[food.name] = food.price;
+      return acc;
+    }, {});
+
+    // Calculate the total amount for the order
+    const totalAmount = calculateTotalAmount(items, foodPriceMap);
+
+    // Create the new order object for walk-in (POS) order
+    let newOrder = {
+      user: userId,  // Link the order to the authenticated POS user (admin/employee)
+      name,
+      items,
+      totalAmount,
+      source: source || 'walk-in',  // Mark the source as 'walk-in' for POS orders
+    };
+
+    // Save the order to the POS_orders collection
+    const order = new PosOrder(newOrder);  // Save to POS_orders collection
+    await order.save();
+
+    // Respond with the order details
+    res.status(201).json({ message: 'Walk-in order placed successfully', order });
+  } catch (err) {
+    res.status(500).json({ message: 'Error placing walk-in order', error: err.message });
+  }
+});
+
+
 // Get order history for a user
 router.get('/:userId', async (req, res) => {
   try {
@@ -91,8 +146,11 @@ router.get('/:userId', async (req, res) => {
 router.get('/', adminOnly, async (req, res) => {
   try {
     const orders = await Order.find().populate('user').populate('items');
+    const posOrders = await PosOrder.find().populate('user').populate('items');  
 
-    const ordersWithDetails = orders.map(order => {
+    const allOrders = [...orders, ...posOrders];
+
+    const ordersWithDetails = allOrders.map(order => {
       let orderDetails = {
         ...order.toObject(),  
       };
@@ -116,7 +174,7 @@ router.get('/', adminOnly, async (req, res) => {
       return orderDetails;
     });
 
-    res.json(ordersWithDetails);  // Send the formatted orders to the admin
+    res.json(ordersWithDetails);  
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
