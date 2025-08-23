@@ -187,7 +187,7 @@ router.patch('/:orderId/status', adminOnly, async (req, res) => {
   const { status } = req.body;  // 'pending', 'in process', 'out for delivery', 'delivered'
 
   // Valid status values
-  const validStatuses = ['pending', 'in process', 'out for delivery', 'delivered'];
+  const validStatuses = ['pending', 'in process', 'out for delivery', 'delivered', 'ready for pick-up'];
 
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, out for delivery, delivered.' });
@@ -205,7 +205,7 @@ router.patch('/:orderId/status', adminOnly, async (req, res) => {
     await order.save();
 
     // Define the statuses that should trigger an email
-    const statusesToNotify = ['in process', 'out for delivery', 'delivered'];
+    const statusesToNotify = ['in process', 'out for delivery', 'delivered', 'ready for pick-up'];
 
     // Send an email to the customer if the status is one of the specified values
     if (statusesToNotify.includes(status)) {

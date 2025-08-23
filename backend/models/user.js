@@ -21,6 +21,14 @@ const userSchema = new mongoose.Schema({
     enum: ['customer', 'admin'],
     default: 'customer'
   },
+   phoneNumber: {
+    type: String,
+    default: null,  // Optional, phone number can be updated later
+  },
+  profilePicUrl: {
+    type: String,
+    default: null,  // Optional, profile pic can be updated later
+  },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }]
 });
 

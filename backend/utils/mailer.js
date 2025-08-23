@@ -67,13 +67,13 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
     case 'in process':
       statusMessage = `
         <h3>Your Order is Now in Process</h3>
-        <p>Your order ID: <strong>${order._id}</strong> is being processed. We are preparing your items for delivery.</p>
+        <p>Your order ID: <strong>${order._id}</strong> is being processed.</p>
         <p>Items:</p>
         <ul>
           ${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join('')}
         </ul>
         <p><strong>Total Amount:</strong> ₱${order.totalAmount}</p>
-        <p>Thank you for your patience, we’ll notify you when your order is ready for delivery!</p>
+        <p>Thank you for your patience, we’ll notify you when your order is ready!</p>
       `;
       break;
 
@@ -99,7 +99,20 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
           ${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join('')}
         </ul>
         <p><strong>Total Amount:</strong> ₱${order.totalAmount}</p>
-        <p>Thank you for choosing us! We hope you enjoy your meal. If you have any questions, feel free to contact us.</p>
+        <p>Thank you for choosing us! We hope you enjoy your meal.</p>
+      `;
+      break;
+
+    case 'ready for pick-up':
+      statusMessage = `
+        <h3>Your Order is ready for Pick Up</h3>
+        <p>Your order ID: <strong>${order._id}</strong></p>
+        <p>Items:</p>
+        <ul>
+          ${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join('')}
+        </ul>
+        <p><strong>Total Amount:</strong> ₱${order.totalAmount}</p>
+        <p>Thank you for choosing us! We hope you enjoy your meal.</p>
       `;
       break;
 

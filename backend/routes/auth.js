@@ -5,6 +5,29 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const sendPasswordResetEmail = require('../utils/mailer');
 const protect = require('../middleware/auth'); 
+const multer = require('multer');
+const path = require('path');
+
+
+
+
+// Set up multer storage engine
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Set the correct path for the upload folder
+    const uploadPath = path.join(__dirname, '../uploads');  // Goes one level up to the root
+    cb(null, uploadPath);  // Ensure multer stores files in the uploads folder
+  },
+  filename: (req, file, cb) => {
+    // Save file with a unique name (timestamp + original file extension)
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+
+const upload = multer({ storage: storage });
+
+
 
 // Signup
 router.post('/signup', async (req, res) => {
@@ -71,14 +94,34 @@ router.get('/profile', protect, async (req, res) => {
 });
 
 // Update profile
-router.put('/profile', protect, async (req, res) => {
+router.put('/profile', protect, upload.single('profilePic'), async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.user, req.body, { new: true });
-    res.json(user);
+    const { phoneNumber } = req.body;
+    const profilePicUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Check if req.user contains a valid ObjectId
+    const userId = req.user;  // This should be a valid MongoDB ObjectId
+    
+    // Prepare the update data
+    const updateData = {
+      phoneNumber: phoneNumber || undefined,
+      profilePicUrl: profilePicUrl || undefined,
+    };
+
+    // Update the user's profile using the ObjectId
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);  // Return the updated user
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+
 
 // Change password
 router.put('/change-password', protect, async (req, res) => {

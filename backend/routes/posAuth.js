@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require('../models/admin');  
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const adminOnly = require('../middleware/adminOnly');
+
 
 // POS User Login Route (Using Username)
 router.post('/login', async (req, res) => {
@@ -31,5 +33,17 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+// Get all online orders for POS users
+router.get('/pos/orders', adminOnly, async (req, res) => {
+  try {
+    // Retrieve all orders where the source is 'online'
+    const orders = await Order.find({ source: 'online' }).populate('user').populate('items'); // Populate to get user and items data
+    res.json(orders);  // Send the orders as a response
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving orders', error: err.message });
+  }
+});
+
 
 module.exports = router;
