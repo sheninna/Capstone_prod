@@ -6,20 +6,19 @@ const protect = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const posAuth = require('../middleware/posAuth'); 
 const PosOrder = require('../models/posOrder');
+const { sendOrderReceiptEmail, sendStatusUpdateEmail } = require('../utils/mailer'); 
 
 // Place Order Route (Authenticated)
 router.post('/', protect, async (req, res) => {
   const { items, name, phone, orderType, address, people, date, time, source } = req.body;
-  const userId = req.user;  
-
+  const userId = req.user.id;  // Get the authenticated user ID
+  const email = req.user.email;  // Get the authenticated user's email from req.user
 
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'Items must be an array' });
   }
 
-
   try {
-
     const foodItems = await Food.find({ 'name': { $in: items.map(item => item.name) } });
 
     const unavailableItems = foodItems.filter(food => !food.isAvailable);
@@ -28,13 +27,12 @@ router.post('/', protect, async (req, res) => {
         error: `The following items are unavailable: ${unavailableItems.map(item => item.name).join(', ')}`
       });
     }
-    // Map food names to their prices
+
     const foodPriceMap = foodItems.reduce((acc, food) => {
-      acc[food.name] = food.price;  // Use food name as key and price as value
+      acc[food.name] = food.price;
       return acc;
     }, {});
 
-    // Calculate total amount based on food prices
     const totalAmount = calculateTotalAmount(items, foodPriceMap);
 
     let newOrder = {
@@ -44,34 +42,36 @@ router.post('/', protect, async (req, res) => {
       name,
       phone,
       orderType,
-      address, people, date, time,
-      source: source || 'online',  
+      address,
+      people, 
+      date, 
+      time,
+      source: source || 'online',
     };
 
     // Handle different order types
     if (orderType === 'reservation') {
-      // Set date, time, and number of people for reservations
       newOrder.reservationDate = date;  
       newOrder.reservationTime = time;  
       newOrder.numberOfPeople = people; 
       newOrder.deliveryAddress = null;  
     } else if (orderType === 'delivery') {
-      // Set delivery address for deliveries
       newOrder.deliveryAddress = address; 
       newOrder.reservationDate = null;    
       newOrder.reservationTime = null;    
       newOrder.numberOfPeople = null;     
     } else if (orderType === 'pickup') {
-      // Set pickup time for pickups
       newOrder.pickupTime = time;         
       newOrder.deliveryAddress = null;    
       newOrder.reservationDate = null;    
       newOrder.numberOfPeople = null;     
     }
 
-    // Save the order to the database
     const order = new Order(newOrder);
     await order.save();
+
+    // Send the order receipt email automatically to the authenticated user's email
+    await sendOrderReceiptEmail(order, email);  // Pass the user's email from req.user
 
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
@@ -181,26 +181,54 @@ router.get('/', adminOnly, async (req, res) => {
 });
 
 
-// Update order status
-router.patch('/:orderId', adminOnly, async (req, res) => {
+// Update order status (admin only)
+router.patch('/:orderId/status', adminOnly, async (req, res) => {
   const { orderId } = req.params;
-  const { status } = req.body; //'completed' or 'cancelled'
+  const { status } = req.body;  // 'pending', 'in process', 'out for delivery', 'delivered'
+
+  // Valid status values
+  const validStatuses = ['pending', 'in process', 'out for delivery', 'delivered'];
+
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, out for delivery, delivered.' });
+  }
 
   try {
-    const order = await Order.findById(orderId);
-
+    // Find the order by ID and populate user data
+    const order = await Order.findById(orderId).populate('user');
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    order.status = status; 
+    // Update the order status
+    order.status = status;
     await order.save();
 
-    res.json({ message: 'Order status updated', order });
+    // Define the statuses that should trigger an email
+    const statusesToNotify = ['in process', 'out for delivery', 'delivered'];
+
+    // Send an email to the customer if the status is one of the specified values
+    if (statusesToNotify.includes(status)) {
+      console.log('Sending email to:', order.user.email);  // Log email address for debugging
+      await sendStatusUpdateEmail(order, order.user.email, status);  // Send email to customer
+    }
+
+    res.json({
+      message: 'Order status updated successfully',
+      order: {
+        _id: order._id,
+        status: order.status,
+        items: order.items,
+        totalAmount: order.totalAmount,
+      }
+    });
   } catch (err) {
+    console.error('Error updating order status:', err.message);
     res.status(500).json({ message: 'Error updating order status', error: err.message });
   }
 });
+
+
 
 
 function calculateTotalAmount(items, foodPriceMap) {

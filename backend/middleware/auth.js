@@ -8,9 +8,12 @@ const protect = (req, res, next) => {
   }
 
   try {
-    // Verify the token
+    // Verify the token and decode it
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.id; // Attach the user ID to the request object
+
+    // Attach the entire decoded object or specific properties to req.user
+    req.user = decoded;  // Now req.user will contain { id, email, ... }
+
     next(); 
   } catch (err) {
     res.status(401).json({ message: 'Token is not valid' });

@@ -32,25 +32,30 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login 
+
+// Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Check if password matches
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user._id, email: user.email },  // Include email in the token payload
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.json({ token, user });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+
 
 // Protected Profile Route
 router.get('/profile', protect, async (req, res) => {

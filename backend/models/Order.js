@@ -21,7 +21,11 @@ const orderSchema = new mongoose.Schema({
   numberOfPeople: Number,
   deliveryAddress: String,
   pickupTime: String,
-  status: { type: String, default: 'pending' }, 
+  status: {
+  type: String,
+  enum: ['pending', 'in process', 'out for delivery', 'delivered'],
+  default: 'pending',
+}
 });
 
 module.exports = mongoose.model('Order', orderSchema);
