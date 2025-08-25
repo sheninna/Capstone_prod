@@ -7,7 +7,7 @@ const adminAuthRoutes = require('./routes/adminAcces');
 const authRoutes = require('./routes/auth'); 
 const orderRoutes = require('./routes/orders'); 
 const posAuthRoutes = require('./routes/posAuth');
-
+const feedbackRoutes = require('./routes/feedback');
 
 dotenv.config();
 
@@ -30,6 +30,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/foods', foodRoutes); 
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/pos', posAuthRoutes);
+app.use('/api', feedbackRoutes);
 
 app.listen(5000, () => {
   console.log('Server running on port 5000');
