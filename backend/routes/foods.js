@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const upload = require('../middleware/multerConfig');
 const adminOnly = require('../middleware/adminOnly');
 const {
   addFood,
@@ -8,7 +9,7 @@ const {
 } = require('../controllers/foodController');
 
 // POST /api/foods - Only admin can add food
-router.post('/', adminOnly, addFood);
+router.post('/', adminOnly, upload.single('image'), addFood);
 
 // DELETE /api/foods/:id - Only admin can delete food
 router.delete('/:id', adminOnly, deleteFood);

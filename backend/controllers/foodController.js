@@ -1,21 +1,25 @@
 const Food = require('../models/Food');
+const upload = require('../middleware/multerConfig');
 
 // Add food (only admin can add)
 const addFood = async (req, res) => {
   const { name, category, price } = req.body;
+  const image = req.file ? req.file.path : null; // Store the image path
 
   if (!name || !category || price === undefined) {
     return res.status(400).json({ error: 'Missing required fields: name, category, or price' });
   }
 
   try {
-    const food = new Food({ name, category, price });
+    const food = new Food({ name, category, price, image }); 
     await food.save();
     res.status(201).json(food);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+
 
 // Delete food (admin only)
 const deleteFood = async (req, res) => {

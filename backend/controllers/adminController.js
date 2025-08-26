@@ -70,16 +70,37 @@ const deleteUser = async (req, res) => {
 
 // Edit food (admin only)
 const editFood = async (req, res) => {
-  const { isAvailable } = req.body;
+  const { name, category, price } = req.body;  // Only fields name, category, and price will be considered for update
+
+  // Validate that at least one field is provided to update
+  if (!name && !category && price === undefined) {
+    return res.status(400).json({ message: 'No data to update' });
+  }
+
+  const updatedFields = {};
+
+  // Only update fields that are provided
+  if (name) updatedFields.name = name;
+  if (category) updatedFields.category = category;
+  if (price !== undefined) updatedFields.price = price;
 
   try {
-    const food = await Food.findByIdAndUpdate(req.params.id, { isAvailable }, { new: true });
-    if (!food) return res.status(404).json({ message: 'Food not found' });
+    // Attempt to update the food item by ID
+    const food = await Food.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
+
+    // If food item not found, return a 404 response
+    if (!food) {
+      return res.status(404).json({ message: 'Food not found' });
+    }
+
+    // Return the updated food item
     res.json(food);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
+
 
 // Admin Dashboard
 const getDashboard = async (req, res) => {
