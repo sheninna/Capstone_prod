@@ -5,6 +5,7 @@ const protect = require('../middleware/auth');
 const {
   signup,
   login,
+  logout,
   getProfile,
   updateProfile,
   changePassword,
@@ -16,6 +17,7 @@ const {
 
 router.post('/signup', signup);
 router.post('/login', login);
+router.post('/logout', logout); 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, upload.single('profilePic'), updateProfile);
 router.put('/change-password', protect, changePassword);

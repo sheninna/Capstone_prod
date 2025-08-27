@@ -34,8 +34,8 @@ const deleteFood = async (req, res) => {
 // Get all foods (for customers to browse)
 const getAllFoods = async (req, res) => {
   try {
-    const foods = await Food.find();
-    res.json(foods);
+    const foods = await Food.find();  
+    res.json(foods);  
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -43,6 +43,6 @@ const getAllFoods = async (req, res) => {
 
 module.exports = {
   addFood,
-  deleteFood,
+  deleteFood, 
   getAllFoods,
 };

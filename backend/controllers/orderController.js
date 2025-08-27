@@ -1,5 +1,3 @@
-// controllers/orderController.js
-
 const Order = require('../models/Order');
 const Food = require('../models/Food');
 const PosOrder = require('../models/posOrder');

@@ -1,8 +1,7 @@
-// controllers/authController.js
-
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const RevokedToken = require('../models/revokedToken');
 const sendPasswordResetEmail = require('../utils/mailer');
 
 // Signup
@@ -40,17 +39,55 @@ const login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Generate a unique `jti` for this token
+    const jti = new Date().getTime().toString();  // Using current timestamp as a unique ID for `jti`
+
+    // Generate the JWT token with `id`, `email`, and `jti` in the payload
     const token = jwt.sign(
-      { id: user._id, email: user.email },  // Include email in the token payload
+      { id: user._id, email: user.email, jti: jti },  // Include `jti` in the payload
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
+    // Send the token and user info back to the client
     res.json({ token, user });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
+const logout = async (req, res) => {
+  try {
+    // Check for the refresh token in cookies or the Authorization header
+    const token = req.cookies?.refreshToken || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      return res.status(400).json({ message: 'No token, authorization denied' });
+    }
+
+    // Decode the token to get its payload (including the `jti` and user ID)
+    const payload = jwt.decode(token);  // Decode without verifying just to get the payload
+
+    // If the token contains a `jti` (JWT ID) and user ID, store it as a revoked token
+    if (payload && payload.jti && payload.userId) {
+      await RevokedToken.create({
+        jti: payload.jti,
+        user: payload.userId,  // Set the user ID from the decoded token
+        expAt: new Date(payload.exp * 1000),  // Expiration time in milliseconds
+      });
+    }
+
+    // Clear the refresh token from the client's cookies
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+
+    return res.json({ ok: true, message: 'Logged out successfully' });
+  } catch (err) {
+    console.error('Logout error', err);
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+    return res.status(500).json({ ok: false, message: 'Logout failed' });
+  }
+};
+
 
 // Protected Profile Route
 const getProfile = async (req, res) => {
@@ -172,6 +209,7 @@ const getFavorites = async (req, res) => {
 module.exports = {
   signup,
   login,
+  logout,
   getProfile,
   updateProfile,
   changePassword,
