@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LomiHub</title>
+    <link rel="icon" type="image/x-icon" href="/customer/images/logo.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../frontend/Customer/css/customerlogin.css" />
+    <script src="https://accounts.google.com/gsi/client?hl=en" async defer></script>
+</head>
+<body>
+  <!-- Logo -->
+  <div class="logo-container text-center mt-4" id="logoContainer">
+    <img src="./images/logo.jpg" alt="Logo" class="logo-top" id="logoTop" />
+  </div>
+
+  <!-- Login Box -->
+  <div class="container d-flex justify-content-center align-items-center vh-100 pt-5">
+    <div class="login-box shadow p-4 bg-white rounded-4 text-center w-100" style="max-width: 400px;" id="loginBox">
+      <h1 class="title mb-4" id="loginTitle">Sign In</h1>
+      
+      <!-- Login Form -->
+      <form id="loginForm">
+        <div class="mb-3">
+          <input type="email" id="emailInput" class="form-control rounded-3" placeholder="Email" required />
+        </div>
+        <div class="mb-3 position-relative">
+          <input type="password" class="form-control rounded-3" id="passwordInput" placeholder="Password" required />
+          <div class="text-end mb-3">
+            <a href="forgot-password.html" class="text-decoration-none small text-warning" id="forgotPasswordLink">Forgot Password?</a>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-warning w-100 fw-bold py-2 rounded-3" id="loginButton">Log In</button>
+      </form>
+
+      <!-- Divider -->
+      <div class="my-3 d-flex align-items-center" id="divider">
+        <hr class="flex-grow-1">
+        <span class="px-2 small">or</span>
+        <hr class="flex-grow-1">
+      </div>
+
+      <!-- Google Sign-In -->
+      <div id="g_id_onload"
+           data-client_id="780475386949-agueauqasf3837unlrrbu6d27q7gumgk.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+           id="googleSignInBtn"
+           data-type="standard"
+           data-size="large"
+           data-theme="outline"
+           data-text="continue_with"
+           data-shape="pill"
+           data-logo_alignment="left"
+           data-locale="en">
+      </div>
+
+      <!-- Register Prompt -->
+      <p class="mt-3 small" id="registerPrompt">
+        Don't have an account? <a href="customersignup.html" class="text-warning text-decoration-none" id="registerLink">Register</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+</body>
+</html>
