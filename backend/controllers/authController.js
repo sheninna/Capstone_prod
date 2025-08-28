@@ -2,7 +2,8 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
-const sendPasswordResetEmail = require('../utils/mailer');
+const { sendPasswordResetEmail } = require('../utils/mailer');
+
 
 // Signup
 const signup = async (req, res) => {

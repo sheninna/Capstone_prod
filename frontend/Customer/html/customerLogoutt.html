@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout</title>
+</head>
+<body>
+    <h1>Logged Out Successfully</h1>
+    <button id="loginButton">Go to Login Page</button>
+
+    <script>
+        // Function to log out the user
+        document.getElementById("loginButton").addEventListener("click", () => {
+            // Remove the token from localStorage on logout
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+
+            // Redirect to the login page
+            window.location.href = 'customerlogin.html';
+        });
+
+        // Optionally, automatically log out when the page is loaded
+        window.onload = () => {
+            // Remove the token from localStorage and redirect
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+        };
+    </script>
+</body>
+</html>

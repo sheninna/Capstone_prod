@@ -1,45 +1,59 @@
 document.addEventListener('DOMContentLoaded', () => {
   const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-  const forgotEmail = document.getElementById('forgotEmail');
+  const emailInput = document.getElementById('forgotEmail');
   const forgotMessage = document.getElementById('forgotMessage');
+  const sendLinkButton = document.getElementById('sendLinkButton');
 
-  forgotPasswordForm.addEventListener('submit', async function (event) {
-    event.preventDefault(); // Prevent default form submission
+  forgotPasswordForm.addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent the default form submission behavior
 
-    const email = forgotEmail.value;
+    const email = emailInput.value.trim();
 
-    const data = {
-      email
-    };
+    // Clear previous messages
+    forgotMessage.textContent = '';
+
+    // Basic validation for email
+    if (!email) {
+      forgotMessage.textContent = 'Please enter your email address.';
+      return;
+    }
+
+    // Disable the button while the request is being processed
+    sendLinkButton.disabled = true;
+    sendLinkButton.textContent = 'Sending...';
 
     try {
-      // Send POST request to forgot password API
+      // Send the request to your backend API for the forgot password process
       const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        // Show success message
+        // If successful, show the success message
         forgotMessage.classList.remove('text-danger');
         forgotMessage.classList.add('text-success');
-        forgotMessage.textContent = 'Password reset link sent to your email.';
+        forgotMessage.textContent = result.message || 'Please check your email for the password reset link.';
       } else {
-        // Show error message (user not found)
+        // If there's an error, show the error message
         forgotMessage.classList.remove('text-success');
         forgotMessage.classList.add('text-danger');
-        forgotMessage.textContent = result.message || 'Error sending password reset email';
+        forgotMessage.textContent = result.message || 'An error occurred while sending the reset link.';
       }
     } catch (error) {
-      console.error('Error during forgot password request:', error);
+      console.error('Error during password reset request:', error);
       forgotMessage.classList.remove('text-success');
       forgotMessage.classList.add('text-danger');
       forgotMessage.textContent = 'An error occurred. Please try again later.';
+    } finally {
+      // Re-enable the button and reset text
+      sendLinkButton.disabled = false;
+      sendLinkButton.textContent = 'Send Reset Link';
     }
   });
 });

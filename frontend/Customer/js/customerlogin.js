@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Check if user is already logged in (redirect if so)
   if (localStorage.getItem('authToken')) {
-    window.location.href = 'customerLogout.html'; // Redirect to homepage if logged in
+    // If token is found, redirect to the dashboard
+    window.location.href = 'customerLogoutt.html'; // Redirect to dashboard if logged in
   }
 
   const loginForm = document.getElementById('loginForm');
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('user', JSON.stringify(result.user));
 
         alert('Login Successful!');
-        window.location.href = 'customerLogout.html'; // Redirect to dashboard
+        window.location.href = 'customerLogoutt.html'; // Redirect to dashboard
       } else {
         alert(result.message || 'Login Failed!');
       }
