@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Check if user is already logged in (redirect if so)
   if (localStorage.getItem('authToken')) {
-    window.location.href = 'homepage.html'; // Redirect to homepage if logged in
+    window.location.href = 'customerLogout.html'; // Redirect to homepage if logged in
   }
 
   const loginForm = document.getElementById('loginForm');
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const passwordInput = document.getElementById('passwordInput');
 
   loginForm.addEventListener('submit', async function (event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault(); 
 
     const email = emailInput.value;
     const password = passwordInput.value;
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const result = await response.json();
 
-      console.log('Backend Response:', result);  // Debugging line
+      console.log('Backend Response:', result);  
 
       if (response.ok) {
         // Store JWT token in localStorage
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('user', JSON.stringify(result.user));
 
         alert('Login Successful!');
-        window.location.href = 'dashboard.html'; // Redirect to dashboard
+        window.location.href = 'customerLogout.html'; // Redirect to dashboard
       } else {
         alert(result.message || 'Login Failed!');
       }

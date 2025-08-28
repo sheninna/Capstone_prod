@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Test</title>
+</head>
+<body>
+    <h1>Simple Logout Test</h1>
+    
+    <!-- Logout Button -->
+    <button id="logoutButton">Logout</button>
+
+    <!-- Logout Confirmation Message -->
+    <div id="logoutMessage" style="display:none;">
+        <p>You have successfully logged out!</p>
+        <!-- Login Button to return to the login page -->
+        <button id="loginButton" style="display:none;">Go to Login Page</button>
+    </div>
+
+    <script>
+        // Set the token in localStorage for testing purposes (this would be done during login)
+        localStorage.setItem("token", "your_jwt_token_here"); // Replace with your token
+
+        // Function to log out the user
+        document.getElementById("logoutButton").addEventListener("click", async () => {
+            const token = localStorage.getItem("token"); // Get the token from localStorage
+
+            if (!token) {
+                alert("No token found, you are not logged in!");
+                return;
+            }
+
+            // Make the logout request to the backend
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/logout", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,  // Send the token in the Authorization header
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // On successful logout, clear the token from localStorage and notify the user
+                    localStorage.removeItem("token");
+
+                    // Show a logout message and the login button
+                    document.getElementById("logoutMessage").style.display = "block";
+                    document.getElementById("logoutButton").style.display = "none"; // Hide the logout button after logout
+                    document.getElementById("loginButton").style.display = "block"; // Show the login button
+
+                    alert(data.message || "You have been logged out successfully.");
+                } else {
+                    alert(data.message || "Failed to log out.");
+                }
+            } catch (error) {
+                console.error("Logout error", error);
+                alert("An error occurred during logout.");
+            }
+        });
+
+        // Redirect to login page when login button is clicked
+        document.getElementById("loginButton").addEventListener("click", () => {
+            window.location.href = "../html/customerlogin.html"; // Change this to your actual login page URL
+        });
+    </script>
+</body>
+</html>

@@ -52,8 +52,6 @@ const login = async (req, res) => {
 };
 
 
-
-
 const logout = async (req, res) => {
   try {
     // Check for the refresh token in cookies or the Authorization header
@@ -78,6 +76,8 @@ const logout = async (req, res) => {
     // Clear the refresh token from the client's cookies
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
 
+    // Optionally, you can also clear the access token from the front-end (if stored in localStorage or sessionStorage)
+
     return res.json({ ok: true, message: 'Logged out successfully' });
   } catch (err) {
     console.error('Logout error', err);
@@ -85,6 +85,7 @@ const logout = async (req, res) => {
     return res.status(500).json({ ok: false, message: 'Logout failed' });
   }
 };
+
 
 
 // Protected Profile Route

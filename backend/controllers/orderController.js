@@ -43,24 +43,6 @@ const placeOrder = async (req, res) => {
       source: source || 'online',
     };
 
-    // Handle order types (reservation, delivery, pickup)
-    if (orderType === 'reservation') {
-      newOrder.reservationDate = date;  
-      newOrder.reservationTime = time;  
-      newOrder.numberOfPeople = people; 
-      newOrder.deliveryAddress = null;  
-    } else if (orderType === 'delivery') {
-      newOrder.deliveryAddress = address; 
-      newOrder.reservationDate = null;    
-      newOrder.reservationTime = null;    
-      newOrder.numberOfPeople = null;     
-    } else if (orderType === 'pickup') {
-      newOrder.pickupTime = time;         
-      newOrder.deliveryAddress = null;    
-      newOrder.reservationDate = null;    
-      newOrder.numberOfPeople = null;     
-    }
-
     const order = new Order(newOrder);
     await order.save();
 
