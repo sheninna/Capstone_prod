@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
 const sendPasswordResetEmail = require('../utils/mailer');
 
@@ -8,28 +8,23 @@ const sendPasswordResetEmail = require('../utils/mailer');
 const signup = async (req, res) => {
   const { username, email, password } = req.body;
 
-  console.log('Received data:', req.body);  // Add this log
-
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({
       username,
       email,
-      password: hashedPassword,
+      password,
     });
 
     await newUser.save();
 
-    // Generate a JWT token
+    // Generate JWT token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(201).json({ token, user: newUser });
   } catch (err) {
-    console.error('Error:', err);  
     res.status(500).json({ message: err.message });
   }
 };
@@ -37,35 +32,27 @@ const signup = async (req, res) => {
 // Login
 const login = async (req, res) => {
   const { email, password } = req.body;
-  
   try {
-    // Find the user by email
     const user = await User.findOne({ email });
-    console.log('User found:', user);  // Debugging line
-
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Check if the password matches
     const isMatch = await user.matchPassword(password);
-    console.log('Password Match:', isMatch);  // Debugging line
-
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    // Generate JWT token
-    const jti = new Date().getTime().toString();  // Using current timestamp as a unique ID for `jti`
     const token = jwt.sign(
-      { id: user._id, email: user.email, jti: jti },
+      { id: user._id, email: user.email },  // Include email in the token payload
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    console.log('JWT Token:', token);  // Debugging line
 
-    // Send the token and user info back to the client
     res.json({ token, user });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
 
 const logout = async (req, res) => {
   try {
