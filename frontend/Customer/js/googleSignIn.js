@@ -1,26 +1,21 @@
 function handleCredentialResponse(response) {
-  const idToken = response.credential;  // Google ID token received from frontend
+  const idToken = response.credential;
+  console.log('ID TOKEN:', idToken);
 
-  // Send the ID token to the backend for verification
   fetch('http://localhost:5000/api/auth/google-sign-in', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ token: idToken }),  // Send the Google ID token to backend
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: idToken }),
   })
   .then(res => res.json())
   .then(data => {
     if (data.success) {
       console.log('User authenticated:', data.user);
-
-      // Store the JWT token received from backend in localStorage (or sessionStorage)
-      localStorage.setItem('jwtToken', data.token);  // Store token for future requests
-
-      // Redirect to the customer dashboard or homepage after successful login
-      window.location.href = '/customerDashboard.html';  // Replace with the appropriate page
+      localStorage.setItem('jwtToken', data.token);
+      // Wait for manual redirect
+      console.log('Copy the token, then run: window.location.href = "../html/customerLogout.html"');
     } else {
-      console.error('Authentication failed');
+      console.error('Authentication failed:', data.message || data.error);
     }
   })
   .catch(err => {

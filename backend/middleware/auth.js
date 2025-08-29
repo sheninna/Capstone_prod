@@ -2,7 +2,8 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/user');
 const RevokedToken = require('../models/revokedToken');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);  // Your Google Client ID
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);  
+
 
 const protect = async (req, res, next) => {
   let token = req.cookies?.refreshToken || req.headers.authorization?.split(' ')[1];  // Check cookies first, then header
@@ -13,16 +14,16 @@ const protect = async (req, res, next) => {
 
   try {
     // Check if it's a Google ID token (JWT)
-    if (token.startsWith('eyJhbGciOiJSUzI1NiIs')) {  // Google ID token starts with this string
+    if (token.startsWith('eyJhbGciOiJSUzI1NiIs')) {  
       // Verify the Google ID token
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,  // Ensure the token is for your app
-      });
+     const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: CLIENT_ID,  
+     }); 
 
-      const payload = ticket.getPayload();  // Extract the user information from the token payload
-      const googleUserId = payload.sub;  // Google's unique user ID
-      const email = payload.email;  // User's email from Google
+      const payload = ticket.getPayload(); 
+      const googleUserId = payload.sub;  
+      const email = payload.email; 
 
       // Check if the Google user exists in your database
       let user = await User.findOne({ email });

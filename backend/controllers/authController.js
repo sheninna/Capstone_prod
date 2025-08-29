@@ -4,53 +4,86 @@ const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
 const { sendPasswordResetEmail } = require('../utils/mailer');
 const { OAuth2Client } = require('google-auth-library');
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;  // Store your Google Client ID in .env
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;  
+console.log('Backend expects GOOGLE_CLIENT_ID:', CLIENT_ID);
 const client = new OAuth2Client(CLIENT_ID);
 
 
 
 // Google Sign-In handler
 const googleSignIn = async (req, res) => {
-  const { token } = req.body;  // Google ID token received from the frontend
-  console.log('Received Google token:', token);  // Log the token
+  const { token } = req.body;
+  console.log('Received Google token:', token);
+
+  if (!token) {
+    return res.status(400).json({ success: false, message: 'No Google token provided' });
+  }
+
+  if (!CLIENT_ID) {
+    console.error('GOOGLE_CLIENT_ID is not set in environment');
+    return res.status(500).json({ success: false, message: 'Server not configured for Google Sign-In' });
+  }
 
   try {
-    // Verify the Google ID token
+    // Verify the Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,  // Your Google Client ID
+      audience: CLIENT_ID,
     });
 
-    const payload = ticket.getPayload();  // Get user info from the token payload
-    const googleUserId = payload.sub;  // Google's unique user ID
-    const email = payload.email;  // User's email from Google
+    const payload = ticket.getPayload();
+    console.log('Token payload:', payload);
+    console.log('Audience in token (payload.aud):', payload.aud);
+    console.log('Backend expects CLIENT_ID:', CLIENT_ID);
 
-    console.log('Google payload:', payload);  // Log the payload for debugging
-
-    // Check if the user already exists in the database
-    let user = await User.findOne({ email });
-    if (!user) {
-      // If the user doesn't exist, create a new one
-      user = new User({
-        email,
-        username: payload.name || email,  // Set username from Google or email
-        googleId: googleUserId,
-        profilePicUrl: payload.picture,
-      });
-      await user.save();  // Save the new user to the database
+    if (payload.aud !== CLIENT_ID) {
+      console.error(`Mismatch: payload.aud = ${payload.aud}, expected CLIENT_ID = ${CLIENT_ID}`);
+      throw new Error('Token audience mismatch');
     }
 
-    // Generate a JWT token for your app (for authentication)
+    if (!payload || !payload.email) {
+      throw new Error('Token payload missing required fields');
+    }
+
+    const googleUserId = payload.sub;
+    const email = payload.email;
+    const name = payload.name;
+    const profilePicUrl = payload.picture;
+
+    console.log('Google payload:', { googleUserId, email, name });
+
+    // Step 1: Check if the user already exists in the database
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // If the user doesn't exist, create a new user
+      console.log('User not found, creating new user...');
+      user = new User({
+        email,
+        username: name || email,
+        googleId: googleUserId,
+        profilePicUrl,
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // If the user exists but the googleId is missing, update the user record
+      console.log('User found but googleId is missing, updating...');
+      user.googleId = googleUserId;
+      if (!user.profilePicUrl && profilePicUrl) user.profilePicUrl = profilePicUrl;
+      await user.save();
+    }
+
+    // Step 2: Generate a JWT token for the user
     const jwtToken = jwt.sign(
       { id: user._id, email: user.email },
-      process.env.JWT_SECRET,  // JWT secret from your .env
-      { expiresIn: '1h' }  // JWT token expiration time
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
     );
 
-    // Respond with the JWT token and user data
-    res.json({
+    // Step 3: Return the JWT token and user info
+    return res.json({
       success: true,
-      token: jwtToken,  // JWT token for your app
+      token: jwtToken,
       user: {
         id: user._id,
         email: user.email,
@@ -59,10 +92,16 @@ const googleSignIn = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error verifying Google token:', error);
-    res.status(400).json({ success: false, message: 'Google authentication failed' });
+    console.error('Error verifying Google token:', error && (error.stack || error.message) || error);
+    return res.status(400).json({
+      success: false,
+      message: 'Google authentication failed',
+      error: error.message,
+      backendClientId: CLIENT_ID // for debugging
+    });
   }
 };
+
 
 
 
