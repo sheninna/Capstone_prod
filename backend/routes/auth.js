@@ -3,6 +3,7 @@ const router = express.Router();
 const upload = require('../middleware/multerConfig');
 const protect = require('../middleware/auth');
 const {
+  googleSignIn,
   signup,
   login,
   logout,
@@ -15,6 +16,8 @@ const {
   getFavorites,
 } = require('../controllers/authController');
 
+
+router.post('/google-sign-in', googleSignIn);
 router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', logout); 

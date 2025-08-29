@@ -3,6 +3,67 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
 const { sendPasswordResetEmail } = require('../utils/mailer');
+const { OAuth2Client } = require('google-auth-library');
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;  // Store your Google Client ID in .env
+const client = new OAuth2Client(CLIENT_ID);
+
+
+
+// Google Sign-In handler
+const googleSignIn = async (req, res) => {
+  const { token } = req.body;  // Google ID token received from the frontend
+  console.log('Received Google token:', token);  // Log the token
+
+  try {
+    // Verify the Google ID token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,  // Your Google Client ID
+    });
+
+    const payload = ticket.getPayload();  // Get user info from the token payload
+    const googleUserId = payload.sub;  // Google's unique user ID
+    const email = payload.email;  // User's email from Google
+
+    console.log('Google payload:', payload);  // Log the payload for debugging
+
+    // Check if the user already exists in the database
+    let user = await User.findOne({ email });
+    if (!user) {
+      // If the user doesn't exist, create a new one
+      user = new User({
+        email,
+        username: payload.name || email,  // Set username from Google or email
+        googleId: googleUserId,
+        profilePicUrl: payload.picture,
+      });
+      await user.save();  // Save the new user to the database
+    }
+
+    // Generate a JWT token for your app (for authentication)
+    const jwtToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,  // JWT secret from your .env
+      { expiresIn: '1h' }  // JWT token expiration time
+    );
+
+    // Respond with the JWT token and user data
+    res.json({
+      success: true,
+      token: jwtToken,  // JWT token for your app
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        profilePicUrl: user.profilePicUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Error verifying Google token:', error);
+    res.status(400).json({ success: false, message: 'Google authentication failed' });
+  }
+};
+
 
 
 // Signup
@@ -207,6 +268,7 @@ const getFavorites = async (req, res) => {
 };
 
 module.exports = {
+  googleSignIn,
   signup,
   login,
   logout,
