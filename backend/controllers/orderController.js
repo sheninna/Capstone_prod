@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Food = require('../models/Food');
 const PosOrder = require('../models/posOrder');
+const Notification = require('../models/notification');
 const { sendOrderReceiptEmail, sendStatusUpdateEmail } = require('../utils/mailer');
 
 // Place Order (Authenticated)
@@ -47,7 +48,14 @@ const placeOrder = async (req, res) => {
     await order.save();
 
     // Send order receipt email
-    await sendOrderReceiptEmail(order, email);  
+    await sendOrderReceiptEmail(order, email);
+
+    // Create notification for user
+    await Notification.create({
+      userId: userId,
+      message: `Your order has been placed successfully. Order ID: ${order._id}`,
+      type: 'success',
+    });
 
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
@@ -91,6 +99,7 @@ const placePosOrder = async (req, res) => {
 
     const order = new PosOrder(newOrder);
     await order.save();
+
 
     res.status(201).json({ message: 'Walk-in order placed successfully', order });
   } catch (err) {

@@ -121,10 +121,11 @@ const signup = async (req, res) => {
 
     await newUser.save();
 
-    // Generate JWT token
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  // Generate JWT token with unique jti
+  const jti = require('crypto').randomBytes(16).toString('hex');
+  const token = jwt.sign({ id: newUser._id, jti }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.status(201).json({ token, user: newUser });
+  res.status(201).json({ token, user: newUser });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -140,8 +141,10 @@ const login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Generate JWT token with unique jti
+    const jti = require('crypto').randomBytes(16).toString('hex');
     const token = jwt.sign(
-      { id: user._id, email: user.email },  // Include email in the token payload
+      { id: user._id, email: user.email, jti },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -165,11 +168,11 @@ const logout = async (req, res) => {
     // Decode the token to get its payload (including the `jti` and user ID)
     const payload = jwt.decode(token);  // Decode without verifying just to get the payload
 
-    // If the token contains a `jti` (JWT ID) and user ID, store it as a revoked token
-    if (payload && payload.jti && payload.userId) {
+    // Always store the token's jti and user ID for revocation
+    if (payload && payload.jti && payload.id) {
       await RevokedToken.create({
         jti: payload.jti,
-        user: payload.userId,  // Set the user ID from the decoded token
+        user: payload.id,  // Set the user ID from the decoded token
         expAt: new Date(payload.exp * 1000),  // Expiration time in milliseconds
       });
     }
