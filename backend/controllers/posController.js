@@ -34,7 +34,7 @@ const posLogin = async (req, res) => {
 const getOnlineOrders = async (req, res) => {
   try {
     // Retrieve all orders where the source is 'online'
-    const orders = await Order.find({ source: 'online' }).populate('user').populate('items'); // Populate to get user and items data
+    const orders = await Order.find({ source: 'online' }).populate('user').populate('items'); 
     res.json(orders);  
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving orders', error: err.message });

@@ -15,8 +15,10 @@ const protect = require('./middleware/auth');
 dotenv.config();
 
 const app = express();
+
 app.use(express.json());
 app.use(cors());  
+app.use('/uploads', express.static('uploads'));
 
 
 // MongoDB connection
@@ -28,7 +30,6 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.log(err));
 
 // Routes
-
 app.use('/api/auth', authRoutes); 
 app.use('/api/orders', orderRoutes); 
 app.use('/api/foods', foodRoutes); 

@@ -8,13 +8,13 @@ const {
   getAllFoods,
 } = require('../controllers/foodController');
 
-// POST /api/foods - Only admin can add food
+// Only admin can add food
 router.post('/', adminOnly, upload.single('image'), addFood);
 
-// DELETE /api/foods/:id - Only admin can delete food
+// Only admin can delete food
 router.delete('/:id', adminOnly, deleteFood);
 
-// GET /api/foods - Get all foods for customers to browse
+// Get all foods for customers to browse
 router.get('/', getAllFoods);
 
 module.exports = router;

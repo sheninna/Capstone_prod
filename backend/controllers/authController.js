@@ -166,21 +166,18 @@ const logout = async (req, res) => {
     }
 
     // Decode the token to get its payload (including the `jti` and user ID)
-    const payload = jwt.decode(token);  // Decode without verifying just to get the payload
+    const payload = jwt.decode(token);  
 
     // Always store the token's jti and user ID for revocation
     if (payload && payload.jti && payload.id) {
       await RevokedToken.create({
         jti: payload.jti,
-        user: payload.id,  // Set the user ID from the decoded token
+        user: payload.id,  
         expAt: new Date(payload.exp * 1000),  // Expiration time in milliseconds
       });
     }
-
     // Clear the refresh token from the client's cookies
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
-
-    // Optionally, you can also clear the access token from the front-end (if stored in localStorage or sessionStorage)
 
     return res.json({ ok: true, message: 'Logged out successfully' });
   } catch (err) {
@@ -189,7 +186,6 @@ const logout = async (req, res) => {
     return res.status(500).json({ ok: false, message: 'Logout failed' });
   }
 };
-
 
 
 // Protected Profile Route
