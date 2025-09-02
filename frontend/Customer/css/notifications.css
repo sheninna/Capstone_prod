@@ -58,6 +58,11 @@ body {
     margin: 0 4px;
     cursor: pointer;
 }
+.navbar-nav .icon-circle.active {
+    background: #F7DE5E;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .icon-circle:hover {
     background: #F7DE5E;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -409,9 +414,10 @@ body {
   font-size: 0.9rem;
   color: #666;
   white-space: nowrap;
+  margin: 0 12px 12px 12px;
+
 }
 
-/* --- Toast Notification --- */
 #NotificationArea {
   position: fixed;
   top: 20px;
