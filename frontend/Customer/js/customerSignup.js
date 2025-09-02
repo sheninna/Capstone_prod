@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signupForm');
+  const usernameInput = document.getElementById('username');
   const emailInput = document.querySelector('input[type="email"]');
   const passwordInput = document.getElementById('password');
   const confirmPasswordInput = document.getElementById('confirm-password');
@@ -7,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   signupForm.addEventListener('submit', async function (event) {
     event.preventDefault(); 
 
+    const username = usernameInput.value;
     const email = emailInput.value;
     const password = passwordInput.value;
     const confirmPassword = confirmPasswordInput.value;
@@ -17,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const data = { email, password, username: 'testUsername' }; 
+    const data = { username, email, password };
 
     try {
       const response = await fetch('http://localhost:5000/api/auth/signup', {
