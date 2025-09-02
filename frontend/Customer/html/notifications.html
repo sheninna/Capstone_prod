@@ -11,46 +11,95 @@
     <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
-    <nav class="navbar navbar-expand-lg ">
-        <div class="container">
-        <a class="navbar-brand">
-          <img class= "logo " src="../assets/logo.jpg"></a>
+      <nav class="navbar navbar-expand-lg ">
+          <div class="container">
+          <a class="navbar-brand">
+            <img class= "logo "src="../assets/logo.jpg"></a>
 
-            <!-- Mobile Side Toggle Button -->
-            <button class="navbar-toggler d-lg-none" type="button" aria-label="Toggle navigation" onclick="openNavSidebar()">
-                <span class="navbar-toggler-icon"></span>
+              <!-- Mobile Side Toggle Button -->
+              <button class="navbar-toggler d-lg-none" type="button" aria-label="Toggle navigation" onclick="openNavSidebar()">
+                  <span class="navbar-toggler-icon"></span>
+              </button>
+
+              <!-- Desktop Navbar -->
+              <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
+                  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                      <li class="nav-item">
+                          <a class="nav-link active" href="homepage.html">Home</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="ordernow.html">Order Now</a>
+                      </li>
+                  </ul>
+                  <ul class="navbar-nav">
+                      <li class="nav-item">
+                          <a class="nav-link" href="notifications.html">
+                              <span class="icon-circle active"><i class="fas fa-bell fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="account.html">
+                              <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                              <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+                          </a>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </nav>  
+
+    <!-- Mobile Navbar -->
+    <div id="mobileNavSidebar" class="mobile-nav-sidebar">
+      <div class="mobile-nav-header">
+        <button class="close-btn" onclick="closeNavSidebar()" aria-label="Close">&times;</button>
+      </div>
+      <ul class="navbar-nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="homepage.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="ordernow.html">Order Now</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="notifications.html">Notifications
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="account.html">Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div id="mobileNavSidebarBackdrop" class="mobile-nav-backdrop" onclick="closeNavSidebar()"></div>
+
+
+      <!-- Logout Modal -->
+    <div
+      class="modal fade"
+      id="logoutModal"
+      tabindex="-1"
+      aria-labelledby="logoutModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutModalLabel">
+          <div class="modal-body">Are you sure you want to log out?</div>
+          <div class="modal-footer">
+            <a href="customerlogin.html" class="btn-logout">Logout</a>
+            <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+              Cancel
             </button>
-
-            <!-- Desktop Navbar -->
-            <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="homepage.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="ordernow.html">Order Now</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="notifications.html">
-                            <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="account.html">
-                            <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                            <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+          </div>
         </div>
-    </nav>  
+      </div>
+    </div> 
 
   <!-- Mobile Navbar -->
   <div id="mobileNavSidebar" class="mobile-nav-sidebar">
@@ -66,6 +115,15 @@
       </li>
       <li class="nav-item">
         <a class="nav-link active" href="notifications.html">
+          <li class="nav-item">
+  <a href="#" class="nav-link position-relative">
+    <i class="fa fa-bell"></i>
+    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      0
+    </span>
+  </a>
+</li>
+
            Notifications
         </a>
       </li>
@@ -101,26 +159,6 @@
 </main>
     
 
-    <!-- Logout Modal -->
-  <div
-    class="modal fade"
-    id="logoutModal"
-    tabindex="-1"
-    aria-labelledby="logoutModalLabel"
-    aria-hidden="true">
-    
-    <div class="modal-dialog">
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutModalLabel">
-        <div class="modal-body">Are you sure you want to log out?</div>
-        <div class="modal-footer">
-          <a href="customerlogin.html" class="btn-logout">Logout</a>
-          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
 
 

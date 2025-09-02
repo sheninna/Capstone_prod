@@ -60,7 +60,7 @@ body {
   font-size: 24px;
   font-weight: 600;
 }
-
+input[type="text"],
 input[type="email"],
 input[type="password"] {
   width: 100%;
