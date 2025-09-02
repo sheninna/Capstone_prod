@@ -13,7 +13,7 @@ const submitFeedback = async (req, res) => {
     const newFeedback = new Feedback({
       feedback,
       rating,
-      userId: req.user.id,  // User ID from JWT payload (stored in req.user by the middleware)
+      userId: req.user.id,  
     });
 
     // Save feedback to the database

@@ -10,6 +10,7 @@ const orderRoutes = require('./routes/orders');
 const posAuthRoutes = require('./routes/posAuth');
 const feedbackRoutes = require('./routes/feedback');
 const notificationRoutes = require('./routes/notifications');
+const otpRoutes = require('./routes/otp');
 const protect = require('./middleware/auth');
 
 dotenv.config();
@@ -31,6 +32,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Routes
 app.use('/api/auth', authRoutes); 
+app.use('/api/otp', otpRoutes);
 app.use('/api/orders', orderRoutes); 
 app.use('/api/foods', foodRoutes); 
 app.use('/api/admin', adminAuthRoutes);

@@ -6,7 +6,6 @@ const revokedTokenSchema = new mongoose.Schema({
   expAt: { type: Date, required: true },
 }, { timestamps: true });
 
-
 // TTL index: when expAt passes, MongoDB auto-removes the record
 revokedTokenSchema.index({ expAt: 1 }, { expireAfterSeconds: 0 });
 

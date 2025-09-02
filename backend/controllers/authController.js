@@ -97,7 +97,7 @@ const googleSignIn = async (req, res) => {
       success: false,
       message: 'Google authentication failed',
       error: error.message,
-      backendClientId: CLIENT_ID // for debugging
+      backendClientId: CLIENT_ID 
     });
   }
 };
@@ -191,7 +191,7 @@ const logout = async (req, res) => {
 // Protected Profile Route
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user);  // Use the user ID from the JWT payload
+    const user = await User.findById(req.user);  
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -207,7 +207,7 @@ const updateProfile = async (req, res) => {
     const { phoneNumber } = req.body;
     const profilePicUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-    const userId = req.user;  // This should be a valid MongoDB ObjectId
+    const userId = req.user;  
     const updateData = {
       phoneNumber: phoneNumber || undefined,
       profilePicUrl: profilePicUrl || undefined,
@@ -219,7 +219,7 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);  // Return the updated user
+    res.json(user);  
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

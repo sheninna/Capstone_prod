@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendLinkButton = document.getElementById('sendLinkButton');
 
   forgotPasswordForm.addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the default form submission behavior
+    event.preventDefault(); 
 
     const email = emailInput.value.trim();
 
