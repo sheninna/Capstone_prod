@@ -1,3 +1,27 @@
+function showOtpModal(email) {
+  const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
+  otpModal.show();
+
+  document.getElementById('submitOtpBtn').onclick = async function() {
+    const otp = document.getElementById('otpInput').value;
+    const response = await fetch('http://localhost:5000/api/otp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp })
+    });
+    const result = await response.json();
+    if (response.ok) {
+      otpModal.hide();
+      localStorage.setItem('authToken', result.token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+      window.location.href = "../html/customerLogout.html";
+    } else {
+      document.getElementById('otpError').innerText = result.message;
+      document.getElementById('otpError').style.display = 'block';
+    }
+  };
+}
+
 function handleCredentialResponse(response) {
   const idToken = response.credential;
   console.log('ID TOKEN:', idToken);
@@ -8,12 +32,21 @@ function handleCredentialResponse(response) {
     body: JSON.stringify({ token: idToken }),
   })
   .then(res => res.json())
-  .then(data => {
+  .then(async data => {
     if (data.success) {
-      console.log('User authenticated:', data.user);
-      localStorage.setItem('jwtToken', data.token);
-      // Wait for manual redirect
-      console.log('Copy the token, then run: window.location.href = "../html/customerLogout.html"');
+      const email = data.user.email;
+      // Send OTP to user's email
+      const otpResponse = await fetch('http://localhost:5000/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const otpResult = await otpResponse.json();
+      if (otpResponse.ok) {
+        showOtpModal(email);
+      } else {
+        alert(otpResult.message || 'Failed to send OTP!');
+      }
     } else {
       console.error('Authentication failed:', data.message || data.error);
     }

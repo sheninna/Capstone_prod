@@ -31,8 +31,8 @@ body {
 .logo-top {
   width: auto;
   height: auto;
-  max-width: 120px;
-  max-height: 120px;
+  max-width: 110px;
+  max-height: 110px;
   /* Responsive sizing using viewport units */
   width: clamp(80px, 20vw, 120px);
   height: clamp(80px, 20vw, 120px);

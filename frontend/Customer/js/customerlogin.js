@@ -9,6 +9,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const emailInput = document.getElementById('emailInput');
   const passwordInput = document.getElementById('passwordInput');
 
+  // Helper to show OTP modal
+  function showOtpModal(email) {
+    const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
+    otpModal.show();
+
+    document.getElementById('submitOtpBtn').onclick = async function() {
+      const otp = document.getElementById('otpInput').value;
+      // Send OTP to backend for verification
+      const response = await fetch('http://localhost:5000/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      const result = await response.json();
+      if (response.ok) {
+        otpModal.hide();
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        alert('Login Successful!');
+        window.location.href = '../html/customerLogout.html';
+      } else {
+        document.getElementById('otpError').innerText = result.message;
+        document.getElementById('otpError').style.display = 'block';
+      }
+    };
+  }
+
   loginForm.addEventListener('submit', async function (event) {
     event.preventDefault(); 
 
@@ -18,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = { email, password };
 
     try {
-      // Send POST request to backend login API
+      // Step 1: Check credentials
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
@@ -32,12 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Backend Response:', result);  
 
       if (response.ok) {
-        // Store JWT token in localStorage
-        localStorage.setItem('authToken', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-
-        alert('Login Successful!');
-        window.location.href = '../html/customerLogout.html'; // Redirect to dashboard
+        // Step 2: Send OTP
+        const otpResponse = await fetch('http://localhost:5000/api/otp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const otpResult = await otpResponse.json();
+        if (otpResponse.ok) {
+          showOtpModal(email);
+        } else {
+          alert(otpResult.message || 'Failed to send OTP!');
+        }
       } else {
         alert(result.message || 'Login Failed!');
       }

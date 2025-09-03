@@ -52,11 +52,10 @@ const googleSignIn = async (req, res) => {
 
     console.log('Google payload:', { googleUserId, email, name });
 
-    // Step 1: Check if the user already exists in the database
+    // Check if the user already exists in the database
     let user = await User.findOne({ email });
 
     if (!user) {
-      // If the user doesn't exist, create a new user
       console.log('User not found, creating new user...');
       user = new User({
         email,
@@ -66,21 +65,20 @@ const googleSignIn = async (req, res) => {
       });
       await user.save();
     } else if (!user.googleId) {
-      // If the user exists but the googleId is missing, update the user record
       console.log('User found but googleId is missing, updating...');
       user.googleId = googleUserId;
       if (!user.profilePicUrl && profilePicUrl) user.profilePicUrl = profilePicUrl;
       await user.save();
     }
 
-    // Step 2: Generate a JWT token for the user
+    // Generate a JWT token for the user
     const jwtToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Step 3: Return the JWT token and user info
+    // Return the JWT token and user info
     return res.json({
       success: true,
       token: jwtToken,
@@ -250,6 +248,8 @@ const forgotPassword = async (req, res) => {
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const resetLink = `http://localhost:5000/api/auth/reset-password?token=${token}`;
 
+    console.log('Reset link:', resetLink);
+
     await sendPasswordResetEmail(email, resetLink);
 
     res.status(200).json({ message: 'Password reset link sent to your email' });
@@ -272,8 +272,8 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    // DO NOT hash here, just assign
+    user.password = newPassword;
     await user.save();
 
     res.status(200).json({ message: 'Password has been reset successfully' });

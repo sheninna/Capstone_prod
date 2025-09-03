@@ -33,7 +33,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,  // profile pic can be updated later
   },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }]
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Food' }],
+  resetToken: {
+    type: String,
+    default: null,
+  },
+  resetTokenExpires: {
+    type: Date,
+    default: null,
+  }
 });
 
 // Hash the password before saving
