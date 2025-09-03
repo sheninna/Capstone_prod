@@ -246,7 +246,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const resetLink = `http://localhost:5000/api/auth/reset-password?token=${token}`;
+    const resetLink = `http://127.0.0.1:5501/frontend/Customer/html/resetpassword.html?token=${token}`;
 
     console.log('Reset link:', resetLink);
 

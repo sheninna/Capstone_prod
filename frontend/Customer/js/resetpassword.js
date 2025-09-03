@@ -15,14 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const newPassword = newPasswordInput.value.trim();
     const confirmPassword = confirmPasswordInput.value.trim();
 
+    // Clear previous message and styles
     resetMessage.textContent = '';
+    resetMessage.classList.remove('text-danger', 'text-success');
 
+    // Password length validation
     if (newPassword.length < 6) {
       resetMessage.textContent = 'Password must be at least 6 characters.';
       resetMessage.classList.add('text-danger');
       return;
     }
 
+    // Password match validation
     if (newPassword !== confirmPassword) {
       resetMessage.textContent = 'Passwords do not match.';
       resetMessage.classList.add('text-danger');
@@ -33,12 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     resetButton.textContent = 'Resetting...';
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/resetpassword', {
+      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, password: newPassword }),
+        body: JSON.stringify({ token, newPassword }),
       });
 
       const result = await response.json();
@@ -64,23 +68,23 @@ document.addEventListener('DOMContentLoaded', () => {
       resetButton.textContent = 'Reset Password';
     }
   });
-});
 
+  // Toggle password visibility
+  document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetId = button.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      const icon = button.querySelector('i');
 
-document.querySelectorAll('.toggle-password').forEach(button => {
-  button.addEventListener('click', () => {
-    const targetId = button.getAttribute('data-target');
-    const input = document.getElementById(targetId);
-    const icon = button.querySelector('i');
-
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      input.type = 'password';
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
   });
 });

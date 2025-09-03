@@ -62,7 +62,6 @@ const sendOrderReceiptEmail = async (order, email) => {
 const sendStatusUpdateEmail = async (order, email, newStatus) => {
   let statusMessage = '';
   
-  // Customize the email content based on the status
   switch (newStatus) {
     case 'in process':
       statusMessage = `
