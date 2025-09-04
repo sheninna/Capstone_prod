@@ -13,72 +13,45 @@ const client = new OAuth2Client(CLIENT_ID);
 // Google Sign-In handler
 const googleSignIn = async (req, res) => {
   const { token } = req.body;
-  console.log('Received Google token:', token);
-
-  if (!token) {
-    return res.status(400).json({ success: false, message: 'No Google token provided' });
-  }
-
-  if (!CLIENT_ID) {
-    console.error('GOOGLE_CLIENT_ID is not set in environment');
-    return res.status(500).json({ success: false, message: 'Server not configured for Google Sign-In' });
-  }
+  if (!token) return res.status(400).json({ success: false, message: 'No Google token provided' });
 
   try {
-    // Verify the Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    console.log('Token payload:', payload);
-    console.log('Audience in token (payload.aud):', payload.aud);
-    console.log('Backend expects CLIENT_ID:', CLIENT_ID);
-
-    if (payload.aud !== CLIENT_ID) {
-      console.error(`Mismatch: payload.aud = ${payload.aud}, expected CLIENT_ID = ${CLIENT_ID}`);
-      throw new Error('Token audience mismatch');
-    }
-
-    if (!payload || !payload.email) {
-      throw new Error('Token payload missing required fields');
-    }
-
     const googleUserId = payload.sub;
     const email = payload.email;
     const name = payload.name;
     const profilePicUrl = payload.picture;
 
-    console.log('Google payload:', { googleUserId, email, name });
-
-    // Check if the user already exists in the database
     let user = await User.findOne({ email });
 
     if (!user) {
-      console.log('User not found, creating new user...');
+      // Create new user with Google info
       user = new User({
         email,
         username: name || email,
         googleId: googleUserId,
         profilePicUrl,
+        password: Math.random().toString(36).slice(-8) // random password, won't be used
       });
       await user.save();
-    } else if (!user.googleId) {
-      console.log('User found but googleId is missing, updating...');
+    } else {
+      // Always update googleId and profilePicUrl for existing users
       user.googleId = googleUserId;
-      if (!user.profilePicUrl && profilePicUrl) user.profilePicUrl = profilePicUrl;
+      if (profilePicUrl) user.profilePicUrl = profilePicUrl;
       await user.save();
     }
 
-    // Generate a JWT token for the user
     const jwtToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Return the JWT token and user info
     return res.json({
       success: true,
       token: jwtToken,
@@ -87,19 +60,17 @@ const googleSignIn = async (req, res) => {
         email: user.email,
         username: user.username,
         profilePicUrl: user.profilePicUrl,
+        googleId: user.googleId
       },
     });
   } catch (error) {
-    console.error('Error verifying Google token:', error && (error.stack || error.message) || error);
     return res.status(400).json({
       success: false,
       message: 'Google authentication failed',
       error: error.message,
-      backendClientId: CLIENT_ID 
     });
   }
 };
-
 
 
 
@@ -156,17 +127,14 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // Check for the refresh token in cookies or the Authorization header
     const token = req.cookies?.refreshToken || req.headers.authorization?.split(' ')[1];
 
     if (!token) {
       return res.status(400).json({ message: 'No token, authorization denied' });
     }
 
-    // Decode the token to get its payload (including the `jti` and user ID)
     const payload = jwt.decode(token);  
 
-    // Always store the token's jti and user ID for revocation
     if (payload && payload.jti && payload.id) {
       await RevokedToken.create({
         jti: payload.jti,
@@ -174,7 +142,6 @@ const logout = async (req, res) => {
         expAt: new Date(payload.exp * 1000),  // Expiration time in milliseconds
       });
     }
-    // Clear the refresh token from the client's cookies
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
 
     return res.json({ ok: true, message: 'Logged out successfully' });
@@ -272,7 +239,6 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // DO NOT hash here, just assign
     user.password = newPassword;
     await user.save();
 

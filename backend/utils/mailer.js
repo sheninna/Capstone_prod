@@ -149,7 +149,7 @@ const sendOtpEmail = async (email, otp) => {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: 'Your Secure OTP Code for Login',
+    subject: 'Your OTP Code for Account Registration',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 420px; margin: auto; border: 1px solid #e0e0e0; padding: 32px; border-radius: 10px; background: #fafbfc;">
         <div style="text-align:center; margin-bottom: 24px;">
@@ -157,7 +157,7 @@ const sendOtpEmail = async (email, otp) => {
           <h1 style="color:#FFEB99; margin: 16px 0 0 0;">El Callejon Lomi Hauz</h1>
         </div>
         <h2 style="color: #2d7ff9; text-align:center;">Your OTP Code</h2>
-        <p style="font-size: 18px; color: #FFFFFF; text-align:center;">Enter this code to log in to your account:</p>
+        <p style="font-size: 18px; color: #FFFFFF; text-align:center;">Enter this code to complete your account registration:</p>
         <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #333; margin: 24px 0; text-align: center;">${otp}</div>
         <p style="color: #888; text-align:center;">This code will expire in <b>5 minutes</b>.</p>
         <hr style="margin: 32px 0;">

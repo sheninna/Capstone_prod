@@ -15,18 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const newPassword = newPasswordInput.value.trim();
     const confirmPassword = confirmPasswordInput.value.trim();
 
-    // Clear previous message and styles
+    
     resetMessage.textContent = '';
     resetMessage.classList.remove('text-danger', 'text-success');
 
-    // Password length validation
+    
     if (newPassword.length < 6) {
       resetMessage.textContent = 'Password must be at least 6 characters.';
       resetMessage.classList.add('text-danger');
       return;
     }
 
-    // Password match validation
+    
     if (newPassword !== confirmPassword) {
       resetMessage.textContent = 'Passwords do not match.';
       resetMessage.classList.add('text-danger');

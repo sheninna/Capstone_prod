@@ -32,26 +32,19 @@ function handleCredentialResponse(response) {
     body: JSON.stringify({ token: idToken }),
   })
   .then(res => res.json())
-  .then(async data => {
+  .then(data => {
     if (data.success) {
-      const email = data.user.email;
-      // Send OTP to user's email
-      const otpResponse = await fetch('http://localhost:5000/api/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const otpResult = await otpResponse.json();
-      if (otpResponse.ok) {
-        showOtpModal(email);
-      } else {
-        alert(otpResult.message || 'Failed to send OTP!');
-      }
+      // Google authentication successful
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      window.location.href = "../html/customerLogout.html";
     } else {
+      alert(data.message || 'Google Sign-In failed!');
       console.error('Authentication failed:', data.message || data.error);
     }
   })
   .catch(err => {
     console.error('Error during Google authentication:', err);
+    alert('Google Sign-In error!');
   });
 }
