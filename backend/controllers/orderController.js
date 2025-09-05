@@ -63,6 +63,10 @@ const placeOrder = async (req, res) => {
   }
 };
 
+
+
+
+
 // POS Order (For Walk-in Orders)
 const placePosOrder = async (req, res) => {
   const { items, name, source } = req.body;
@@ -107,6 +111,8 @@ const placePosOrder = async (req, res) => {
   }
 };
 
+
+
 // Get Order History for a User
 const getUserOrders = async (req, res) => {
   try {
@@ -116,6 +122,7 @@ const getUserOrders = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // Get All Orders (Admin Dashboard, POS, etc.)
 const getAllOrders = async (req, res) => {
@@ -154,15 +161,27 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+
+
+
+
+
 // Update Order Status (Admin Only)
 const updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  const validStatuses = ['pending', 'in process', 'out for delivery', 'delivered', 'ready for pick-up'];
+  const validStatuses = [
+    'pending',
+    'in process',
+    'out for delivery',
+    'delivered',
+    'ready for pick-up',
+    'declined' 
+  ];
 
   if (!status || !validStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, out for delivery, delivered.' });
+    return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, out for delivery, delivered, ready for pick-up, declined.' });
   }
 
   try {
@@ -174,10 +193,26 @@ const updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
-    const statusesToNotify = ['in process', 'out for delivery', 'delivered', 'ready for pick-up'];
+    const statusesToNotify = [
+      'in process',
+      'out for delivery',
+      'delivered',
+      'ready for pick-up',
+      'declined'
+    ];
 
     if (statusesToNotify.includes(status)) {
       await sendStatusUpdateEmail(order, order.user.email, status);
+
+      if (status === 'declined') {
+        await Notification.create({
+          userId: order.user._id,
+          message: `Your order ${order._id} has been declined. Please contact support if you have questions.`,
+          type: 'error',
+          read: false,
+          createdAt: new Date()
+        });
+      }
     }
 
     res.json({

@@ -23,7 +23,7 @@ const orderSchema = new mongoose.Schema({
   pickupTime: String,
   status: {
   type: String,
-  enum: ['pending', 'in process', 'out for delivery', 'ready for pick-up', 'delivered'],
+  enum: ['pending', 'in process', 'out for delivery', 'ready for pick-up', 'delivered', 'declined'],
   default: 'pending',
 }
 });
