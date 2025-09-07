@@ -1,0 +1,129 @@
+    body {
+      background-color: #f2e7c9;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    .sidebar {
+      background-color: #f4c95d;
+      min-height:95vh;
+      padding: 20px 10px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      margin-left: 10px;
+      margin-top: 15px;
+    }
+    .sidebar img.logo {
+      width: 60px;
+      margin-bottom: 30px;
+    }
+    .sidebar .nav-link {
+      background: #fff;
+      border-radius: 12px;
+      width: 50px;
+      height: 50px;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+    }
+
+    .sidebar .nav-link.active {
+      background-color: #F7DE5E;
+    }
+    .sidebar .logout {
+      margin-top: auto;
+      background: #f4c95d;
+      border: none;
+    }
+
+    /* Content */
+    .content {
+      margin-left: 100px;
+      padding: 20px;
+      height: 85vh;       
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+
+    }
+    .dashboard-header {
+      background: #e5bb47;
+      border-radius: 8px;
+      padding: 20px;
+      margin-left: 100px;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      margin-right: 17px;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    #datetime {
+      font-size: 1rem;
+      color: #333;
+    }
+
+    .alert-custom {
+      background: #eaf4ff;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
+    
+    .stats-card {
+      background: #fff7dc;
+      border-radius: 12px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    .stats-card h3 {
+      font-weight: bold;
+      color: #007bff;
+    }
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+      height: 100%;
+    }
+    .best-selling-list {
+      list-style: none;
+      padding: 0;
+    }
+    .best-selling-list li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .best-selling-list img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .view-reports {
+      font-size: 0.85rem;
+      float: right;
+      color: #007bff;
+      cursor: pointer;
+    }
+
+    #dailySalesChart,
+    #ordersByTypeChart {
+      height: 250px !important; /* adjust as needed */
+    }
+
+    
