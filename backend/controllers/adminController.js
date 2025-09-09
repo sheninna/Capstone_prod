@@ -23,17 +23,23 @@ const signup = async (req, res) => {
 
 // Admin Login
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
+  console.log('Login attempt:', username, password);
   try {
-    const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: 'Invalid credentials' });
-
+    const admin = await Admin.findOne({ username });
+    if (!admin) {
+      console.log('Admin not found');
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
     const isMatch = await admin.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
+    if (!isMatch) {
+      console.log('Password mismatch');
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
     const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token, admin });
   } catch (err) {
+    console.error('Server error:', err);
     res.status(500).json({ message: err.message });
   }
 };

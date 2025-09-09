@@ -217,3 +217,21 @@ document.getElementById('saveBusinessInfo').addEventListener('click', function (
     alert("✅ Business information saved successfully!");
 
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Redirect to login if not authenticated
+  if (!localStorage.getItem('adminToken')) {
+    window.location.replace('../html/adminlogin.html');
+  }
+
+  // Logout functionality
+  const logoutBtn = document.getElementById('logoutButton');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('adminToken');
+      window.location.replace('../html/adminlogin.html');
+    });
+  }
+});

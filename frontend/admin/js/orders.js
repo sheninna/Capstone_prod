@@ -8,8 +8,95 @@ function renderOnlineOrders() {
         <td>${order.date}</td>
         <td>${order.customer}</td>
         <td>${order.method}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="online">View Order</button></td>
         <td>${order.payment}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="online">View Order</button></td>
+        
+      </tr>
+    `;
+  });
+}
+
+function renderWalkinOrders() {
+  const tbody = document.getElementById("walkin-orders-body");
+  tbody.innerHTML = "";
+  walkinOrders.forEach(order => {
+    tbody.innerHTML += `
+      <tr data-id="${order.id}">
+        <td>${order.id}</td>
+        <td>${new Date().toLocaleDateString()}</td>
+        <td>${order.table}</td>
+        <td>${order.payment}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="walkin">View Order</button></td>
+        <td>
+          <select class="form-select form-select-sm status-dropdown">
+            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
+            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function renderConfirmedOrders() {
+  const container = document.getElementById("confirmed-orders-table");
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle order-table">
+        <thead class="table-primary">
+          <tr>
+            <th>Order ID</th>
+            <th>Order Placed</th>
+            <th>Customer Name</th>
+            <th>Order Method</th>
+            <th>Payment Method</th>
+            <th>Order Details</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="confirmed-orders-body"></tbody>
+      </table>
+    </div>
+  `;
+
+  const tbody = document.getElementById("confirmed-orders-body");
+  tbody.innerHTML = "";
+
+  // Online confirmed orders
+  onlineOrders.filter(order => order.status === "Confirmed").forEach(order => {
+    tbody.innerHTML += `
+      <tr data-id="${order.id}">
+        <td>${order.id}</td>
+        <td>${order.date}</td>
+        <td>${order.customer}</td>
+        <td>${order.method}</td>
+        <td>${order.payment}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="online">View Order</button></td>
+        <td>
+          <select class="form-select form-select-sm status-dropdown">
+            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+            <option ${order.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
+            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
+            <option ${order.status === "On Delivery" ? "selected" : ""}>On Delivery</option>
+            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
+            <option ${order.status === "Declined" ? "selected" : ""}>Declined</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  });
+
+  // Walk-in confirmed orders
+  walkinOrders.filter(order => order.status === "Confirmed").forEach(order => {
+    tbody.innerHTML += `
+      <tr data-id="${order.id}">
+        <td>${order.id}</td>
+        <td>${new Date().toLocaleDateString()}</td>
+        <td>Walk-in</td>
+        <td>Walk-in</td>
+        <td>${order.payment}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="walkin">View Order</button></td>
         <td>
           <select class="form-select form-select-sm status-dropdown">
             <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
@@ -25,29 +112,60 @@ function renderOnlineOrders() {
   });
 }
 
-function renderWalkinOrders() {
-  const tbody = document.getElementById("walkin-orders-body");
+function renderDeclinedOrders() {
+  const container = document.getElementById("declined-orders-table");
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle order-table">
+        <thead class="table-primary">
+          <tr>
+            <th>Order ID</th>
+            <th>Order Placed</th>
+            <th>Customer Name</th>
+            <th>Order Method</th>
+            <th>Payment Method</th>
+            <th>Order Details</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="declined-orders-body"></tbody>
+      </table>
+    </div>
+  `;
+
+  const tbody = document.getElementById("declined-orders-body");
   tbody.innerHTML = "";
-  walkinOrders.forEach(order => {
+
+  // Online declined orders
+  onlineOrders.filter(order => order.status === "Declined").forEach(order => {
+    tbody.innerHTML += `
+      <tr data-id="${order.id}">
+        <td>${order.id}</td>
+        <td>${order.date}</td>
+        <td>${order.customer}</td>
+        <td>${order.method}</td>
+        <td>${order.payment}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="online">View Order</button></td>
+        <td>${order.status}</td>
+      </tr>
+    `;
+  });
+
+  // Walk-in declined orders
+  walkinOrders.filter(order => order.status === "Declined").forEach(order => {
     tbody.innerHTML += `
       <tr data-id="${order.id}">
         <td>${order.id}</td>
         <td>${new Date().toLocaleDateString()}</td>
-        <td>${order.table}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="walkin">View Order</button></td>
+        <td>Walk-in</td>
+        <td>Walk-in</td>
         <td>${order.payment}</td>
-        <td>
-          <select class="form-select form-select-sm status-dropdown">
-            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
-            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
-          </select>
-        </td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="walkin">View Order</button></td>
+        <td>${order.status}</td>
       </tr>
     `;
   });
 }
-
 
 function setupModal() {
   document.addEventListener("click", e => {
@@ -62,8 +180,8 @@ function setupModal() {
           <p><strong>Date:</strong> ${order.date}</p>
           <p><strong>Customer:</strong> ${order.customer}</p>
           <p><strong>Method:</strong> ${order.method}</p>
-          <p><strong>Payment:</strong> ${order.payment}</p>
           <p><strong>Status:</strong> ${order.status}</p>
+          <p><strong>Payment:</strong> ${order.payment}</p>
         `;
       } else {
         order = walkinOrders.find(o => o.id === id);
@@ -71,8 +189,8 @@ function setupModal() {
           <p><strong>Order ID:</strong> ${order.id}</p>
           <p><strong>Date:</strong> ${order.date}</p>
           <p><strong>Table Number:</strong> ${order.table}</p>
-          <p><strong>Payment:</strong> ${order.payment}</p>
           <p><strong>Status:</strong> ${order.status}</p>
+          <p><strong>Payment:</strong> ${order.payment}</p>
         `;
       }
 
@@ -156,16 +274,42 @@ function showOrderModal(order, type) {
     `;
   }
 
+  // Add action buttons
+  let actionButtons = `
+    <div class="mt-4 text-end">
+      <button class="btn btn-success me-2" id="confirmOrderBtn" data-id="${order.id}" data-type="${type}">Confirm</button>
+      <button class="btn btn-danger" id="declineOrderBtn" data-id="${order.id}" data-type="${type}">Decline</button>
+    </div>
+  `;
+
   modalBody.innerHTML = `
     <div class="order-details">
       ${leftHtml}
       ${rightHtml}
     </div>
+    ${actionButtons}
   `;
 
   // Show modal
   const modal = new bootstrap.Modal(document.getElementById("order-modal"));
   modal.show();
+
+  // Attach event listeners for buttons
+  document.getElementById("confirmOrderBtn").onclick = function() {
+    // Your logic to confirm the order
+    order.status = "Confirmed";
+    modal.hide();
+    // Optionally re-render tables or show a message
+    renderOnlineOrders();
+    renderWalkinOrders();
+  };
+  document.getElementById("declineOrderBtn").onclick = function() {
+    // Your logic to decline the order
+    order.status = "Declined";
+    modal.hide();
+    renderOnlineOrders();
+    renderWalkinOrders();
+  };
 }
 
 
@@ -221,3 +365,26 @@ const walkinOrders = [
     items: [{ name: "Tapsilog", qty: 1, price: 75 }]
   }
 ];
+
+// ====== AUTH CHECK & LOGOUT ======
+document.addEventListener('DOMContentLoaded', function() {
+  // Redirect to login if not authenticated
+  if (!localStorage.getItem('adminToken')) {
+    window.location.replace('../html/adminlogin.html');
+  }
+
+  // Logout functionality
+  const logoutBtn = document.getElementById('logoutButton');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('adminToken');
+      window.location.replace('../html/adminlogin.html');
+    });
+  }
+});
+
+// Call this when the Confirmed tab is shown
+document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
+
+// Optionally, call it on page load if needed

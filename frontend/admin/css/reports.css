@@ -74,6 +74,7 @@
   font-size: 0.9rem;
 }
 
+
 .table-container {
   max-height: calc(100vh - 220px); /* adjust based on your header height */
   overflow-y: auto;

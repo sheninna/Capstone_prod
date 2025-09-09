@@ -72,6 +72,16 @@
     margin-bottom: 20px;
 }
 
+#search{
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+#orderTypeSelect{
+  padding: 8px;
+  padding-right: 30px;
+}
+
 .search-bar input[type="text"] {
     padding: 8px;
     border: 1px solid #ccc;
@@ -85,12 +95,28 @@
   padding: 20px;
 }
 
+.nav-link{
+  color: #000;
+}
+
+.nav-link:hover{
+  color: #000;
+}
+
+.form-select{
+  width: 121px;
+  display: block; 
+  margin: 0 auto;
+}
+
+
+
 .orders-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
   background: #fff;
-  border-radius: 10px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
@@ -106,6 +132,7 @@
   padding: 10px;
   border-bottom: 1px solid #ddd;
 }
+
 
 .btn-view {
   background-color: #ffd900;

@@ -26,25 +26,25 @@ Orders.forEach(order => {
     <td>${order.orderPlaced}</td>
     <td>${order.Name}</td>
     <td>${order.orderType}</td>
-    <td>
-      <button class="btn btn-sm btn-warning view-order-btn" data-id="${order.orderId}">
-        View Orders
-      </button>
-    </td>
     <td>${order.totalAmount}</td>
     <td>${order.paymentMethod}</td>
     <td>
-      <span class="badge ${
+    <span class="badge ${
         order.status === "Completed"
           ? "bg-success"
           : order.status === "Declined"
           ? "bg-danger"
           : "bg-secondary"
       }">
-        ${order.status}
+      ${order.status}
       </span>
-    </td>
-  `;
+      </td>
+      <td>
+        <button class="btn btn-sm btn-warning view-order-btn" data-id="${order.orderId}">
+          View Orders
+        </button>
+      </td>
+      `;
 
   tableBody.appendChild(row);
 });
@@ -192,15 +192,33 @@ document.getElementById("OTModal").addEventListener("shown.bs.modal", function (
 });
 
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const params = new URLSearchParams(window.location.search);
-    const modalId = params.get("modal");
+document.addEventListener("DOMContentLoaded", function () {
+  const params = new URLSearchParams(window.location.search);
+  const modalId = params.get("modal");
 
-    if (modalId) {
-      const modalEl = document.getElementById(modalId);
-      if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
-      }
+  if (modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
     }
-  });
+  }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Redirect to login if not authenticated
+  if (!localStorage.getItem('adminToken')) {
+    window.location.replace('../html/adminlogin.html');
+  }
+
+  // Logout functionality
+  const logoutBtn = document.getElementById('logoutButton');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('adminToken');
+      window.location.replace('../html/adminlogin.html');
+    });
+  }
+});
