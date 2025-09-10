@@ -6,12 +6,20 @@ const { sendOrderReceiptEmail, sendStatusUpdateEmail } = require('../utils/maile
 
 // Place Order (Authenticated)
 const placeOrder = async (req, res) => {
-  const { items, name, phone, orderType, address, people, date, time, source } = req.body;
+  const { items, name, phone, orderType, address, people, date, time, source, paymentMethod, paymentProof } = req.body;
   const userId = req.user.id;  
   const email = req.user.email;
 
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'Items must be an array' });
+  }
+
+  // Require payment method and payment proof for online orders
+  if (!paymentMethod || paymentMethod !== 'gcash') {
+    return res.status(400).json({ error: 'Online orders require GCash as payment method.' });
+  }
+  if (!paymentProof) {
+    return res.status(400).json({ error: 'Payment proof is required for online orders.' });
   }
 
   try {
@@ -42,6 +50,9 @@ const placeOrder = async (req, res) => {
       date, 
       time,
       source: source || 'online',
+      paymentMethod,
+      paymentProof,
+      orderPlaced: new Date()
     };
 
     const order = new Order(newOrder);
@@ -63,17 +74,18 @@ const placeOrder = async (req, res) => {
   }
 };
 
-
-
-
-
 // POS Order (For Walk-in Orders)
 const placePosOrder = async (req, res) => {
-  const { items, name, source } = req.body;
+  const { items, name, source, paymentMethod, paymentProof } = req.body;
   const userId = req.user._id;  
 
   if (!Array.isArray(items)) {
     return res.status(400).json({ error: 'Items must be an array' });
+  }
+
+  // Require payment method for walk-in orders
+  if (!paymentMethod || (paymentMethod !== 'cash' && paymentMethod !== 'gcash')) {
+    return res.status(400).json({ error: 'Walk-in orders require payment method: cash or gcash.' });
   }
 
   try {
@@ -99,19 +111,23 @@ const placePosOrder = async (req, res) => {
       items,
       totalAmount,
       source: source || 'walk-in',
+      paymentMethod,
+      orderPlaced: new Date()
     };
+
+    // Attach payment proof if provided (optional for walk-in)
+    if (paymentProof) {
+      newOrder.paymentProof = paymentProof;
+    }
 
     const order = new PosOrder(newOrder);
     await order.save();
-
 
     res.status(201).json({ message: 'Walk-in order placed successfully', order });
   } catch (err) {
     res.status(500).json({ message: 'Error placing walk-in order', error: err.message });
   }
 };
-
-
 
 // Get Order History for a User
 const getUserOrders = async (req, res) => {

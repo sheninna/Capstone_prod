@@ -145,23 +145,33 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
 };
 
 
-const sendOtpEmail = async (email, otp) => {
+const sendOtpEmail = async (email, otp, name = '') => {
   const mailOptions = {
-    from: process.env.GMAIL_USER,
+    from: `"El Callejon Lomi Hauz" <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: 'Your OTP Code for Account Registration',
+    subject: 'Your Lomi Hauz OTP Code – Complete Your Registration',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 420px; margin: auto; border: 1px solid #e0e0e0; padding: 32px; border-radius: 10px; background: #fafbfc;">
         <div style="text-align:center; margin-bottom: 24px;">
           <img src="https://res.cloudinary.com/dcl8dksb0/image/upload/v1756827552/logo_b5s2mg.png" alt="Logo" style="height:67px;">
           <h1 style="color:#FFEB99; margin: 16px 0 0 0;">El Callejon Lomi Hauz</h1>
         </div>
-        <h2 style="color: #2d7ff9; text-align:center;">Your OTP Code</h2>
-        <p style="font-size: 18px; color: #FFFFFF; text-align:center;">Enter this code to complete your account registration:</p>
+        <h2 style="color: #2d7ff9; text-align:center;">Hello${name ? ' ' + name : ''},</h2>
+        <p style="font-size: 18px; color: #222; text-align:center;">
+          Thank you for registering with <b>El Callejon Lomi Hauz</b>!
+        </p>
+        <p style="font-size: 18px; color: #222; text-align:center;">
+          Your One-Time Password (OTP) is:
+        </p>
         <div style="font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #333; margin: 24px 0; text-align: center;">${otp}</div>
         <p style="color: #888; text-align:center;">This code will expire in <b>5 minutes</b>.</p>
         <hr style="margin: 32px 0;">
-        <p style="font-size: 14px; color: #aaa; text-align:center;">If you did not request this code, please ignore this email.</p>
+        <p style="font-size: 14px; color: #aaa; text-align:center;">
+          If you did not request this code, please ignore this email.<br>
+        </p>
+        <p style="font-size: 13px; color: #aaa; text-align:center;">
+          &copy; ${new Date().getFullYear()} El Callejon Lomi Hauz
+        </p>
       </div>
     `,
   };

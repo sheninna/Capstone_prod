@@ -1,4 +1,4 @@
-    body {
+body {
       background-color: #f2e7c9;
       font-family: Arial, sans-serif;
     }
@@ -181,6 +181,13 @@ select {
   vertical-align: middle;
 }
 
+.order-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa; /* or your header color */
+  z-index: 2;
+}
+
 .order-details {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -221,4 +228,17 @@ select {
   border-radius: 10px;
   background: #fff;
   padding: 10px;
+}
+
+.table-responsive {
+  max-height: 360px; /* Adjust this value so 8 rows fit, including header */
+  overflow-y: auto;
+}
+
+/* Optional: sticky header for better UX */
+.order-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 2;
 }

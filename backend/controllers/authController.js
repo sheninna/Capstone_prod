@@ -30,17 +30,11 @@ const googleSignIn = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create new user with Google info
-      user = new User({
-        email,
-        username: name || email,
-        googleId: googleUserId,
-        profilePicUrl,
-        password: Math.random().toString(36).slice(-8) // random password, won't be used
+      return res.status(400).json({
+        success: false,
+        message: 'No account found for this Google email. Please register first using your email and password.',
       });
-      await user.save();
     } else {
-      // Always update googleId and profilePicUrl for existing users
       user.googleId = googleUserId;
       if (profilePicUrl) user.profilePicUrl = profilePicUrl;
       await user.save();
@@ -105,9 +99,12 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    console.log('Login attempt for:', email);
+    console.log('User found:', user);
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
     const isMatch = await user.matchPassword(password);
+    console.log('Password match:', isMatch);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     // Generate JWT token with unique jti

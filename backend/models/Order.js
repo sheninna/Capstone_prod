@@ -6,9 +6,10 @@ const orderSchema = new mongoose.Schema({
   totalAmount: Number,
   name: String,
   phone: String,
-  orderType: { type: String, enum: ['reservation', 'delivery', 'pickup', 'walk-in'], required: function() {
-      return this.source !== 'walk-in'; 
-    },
+  orderType: { 
+    type: String, 
+    enum: ['reservation', 'delivery', 'pickup', 'walk-in'], 
+    required: function() { return this.source !== 'walk-in'; },
     default: 'walk-in',  
   },
   address: String,
@@ -22,10 +23,27 @@ const orderSchema = new mongoose.Schema({
   deliveryAddress: String,
   pickupTime: String,
   status: {
-  type: String,
-  enum: ['pending', 'in process', 'out for delivery', 'ready for pick-up', 'delivered', 'declined'],
-  default: 'pending',
-}
+    type: String,
+    enum: ['pending', 'in process', 'out for delivery', 'ready for pick-up', 'delivered', 'declined'],
+    default: 'pending',
+  },
+  paymentMethod: {
+    type: String,
+    enum: {
+      values: ['gcash', 'cash'],
+      message: 'Payment method must be either gcash or cash'
+    },
+    required: true
+  },
+  paymentProof: {
+    type: String, // Store image URL or file path
+    required: function() { return this.source !== 'walk-in'; }
+  },
+  orderPlaced: {
+    type: Date,
+    default: Date.now,
+    required: true
+  }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

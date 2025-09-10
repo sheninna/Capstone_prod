@@ -1,16 +1,45 @@
+let onlineOrders = [];
+let walkinOrders = [];
+
+// Fetch orders from backend and split into online/walk-in
+async function fetchOrders() {
+  try {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch('http://localhost:5000/api/orders', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error('Not authorized or server error');
+    const orders = await response.json();
+    // Only show orders that are NOT completed
+    onlineOrders = orders.filter(order =>
+      (order.orderType === "online" || order.orderType === "reservation" || order.orderType === "delivery" || order.orderType === "pickup") &&
+      order.status !== "Completed"
+    );
+    walkinOrders = orders.filter(order =>
+      (order.orderType === "walk-in" || order.source === "walk-in" || order.method === "Walk-in") &&
+      order.status !== "Completed"
+    );
+    renderOnlineOrders();
+    renderWalkinOrders();
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+  }
+}
+
 function renderOnlineOrders() {
   const tbody = document.getElementById("online-orders-body");
   tbody.innerHTML = "";
   onlineOrders.forEach(order => {
     tbody.innerHTML += `
-      <tr data-id="${order.id}">
-        <td>${order.id}</td>
-        <td>${order.date}</td>
-        <td>${order.customer}</td>
-        <td>${order.method}</td>
-        <td>${order.payment}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="online">View Order</button></td>
-        
+      <tr data-id="${order._id}">
+        <td>${order._id}</td>
+        <td>${order.date || ""}</td>
+        <td>${order.name || order.customerName || ""}</td>
+        <td>${order.orderType || order.method || ""}</td>
+        <td>${order.paymentMethod || order.payment || ""}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="online">View Order</button></td>
       </tr>
     `;
   });
@@ -21,12 +50,12 @@ function renderWalkinOrders() {
   tbody.innerHTML = "";
   walkinOrders.forEach(order => {
     tbody.innerHTML += `
-      <tr data-id="${order.id}">
-        <td>${order.id}</td>
-        <td>${new Date().toLocaleDateString()}</td>
-        <td>${order.table}</td>
-        <td>${order.payment}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order.id}" data-type="walkin">View Order</button></td>
+      <tr data-id="${order._id}">
+        <td>${order._id}</td>
+        <td>${order.date || new Date().toLocaleDateString()}</td>
+        <td>${order.table || ""}</td>
+        <td>${order.paymentMethod || order.payment || ""}</td>
+        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="walkin">View Order</button></td>
         <td>
           <select class="form-select form-select-sm status-dropdown">
             <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
@@ -202,8 +231,7 @@ function setupModal() {
 
 // Init
 document.addEventListener("DOMContentLoaded", () => {
-  renderOnlineOrders();
-  renderWalkinOrders();
+  fetchOrders();
   setupModal();
 
   // Table toggle
@@ -328,43 +356,6 @@ document.addEventListener("click", (e) => {
 });
 
 
-
-const onlineOrders = [
-  {
-    id: "O1001",
-    customer: "Juan Dela Cruz",
-    method: "Pickup", // Delivery, Pickup, Reservation
-    payment: "GCash",
-    status: "Pending",
-    date: "2025-09-02",
-    time: "12:00 PM",
-    persons: 3,
-    total: 75,
-    items: [{ name: "Tapsilog", qty: 1, price: 75 },
-      { name: "Lomi", qty: 1, price: 50 },
-      { name: "Lomi", qty: 1, price: 50 },
-      { name: "ddf", qty: 2, price: 50 },
-      { name: "sfd", qty: 1, price: 50 },
-          { name: "Lomi", qty: 1, price: 50 },
-      { name: "Lomi", qty: 1, price: 50 },
-          { name: "Lomi", qty: 1, price: 50 },
-      { name: "Lomi", qty: 1, price: 50 },
-    
-    ],
-    paymentProof: "../assets/gcash.jpg"
-  }
-];
-
-const walkinOrders = [
-  {
-    id: "W1001",
-    table: 5,
-    payment: "Cash",
-    status: "Completed",
-    total: 75,
-    items: [{ name: "Tapsilog", qty: 1, price: 75 }]
-  }
-];
 
 // ====== AUTH CHECK & LOGOUT ======
 document.addEventListener('DOMContentLoaded', function() {
