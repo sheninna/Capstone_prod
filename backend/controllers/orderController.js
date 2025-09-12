@@ -38,6 +38,17 @@ const placeOrder = async (req, res) => {
 
     const totalAmount = calculateTotalAmount(items, foodPriceMap);
 
+    // Generate unique 5-digit orderNumber FIRST
+    let orderNumber;
+    let isUnique = false;
+    while (!isUnique) {
+      orderNumber = Math.floor(10000 + Math.random() * 90000);
+      const existingOrder = await Order.findOne({ orderNumber });
+      const existingPosOrder = await PosOrder.findOne({ orderNumber });
+      if (!existingOrder && !existingPosOrder) isUnique = true;
+    }
+
+    // Now create the newOrder object
     let newOrder = {
       user: userId,
       items,
@@ -52,7 +63,8 @@ const placeOrder = async (req, res) => {
       source: source || 'online',
       paymentMethod,
       paymentProof,
-      orderPlaced: new Date()
+      orderPlaced: new Date(),
+      orderNumber // <-- Add here
     };
 
     const order = new Order(newOrder);
@@ -73,6 +85,8 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ message: 'Error placing order', error: err.message });
   }
 };
+
+
 
 // POS Order (For Walk-in Orders)
 const placePosOrder = async (req, res) => {
@@ -105,6 +119,16 @@ const placePosOrder = async (req, res) => {
 
     const totalAmount = calculateTotalAmount(items, foodPriceMap);
 
+    // Generate unique 5-digit orderNumber
+    let orderNumber;
+    let isUnique = false;
+    while (!isUnique) {
+      orderNumber = Math.floor(10000 + Math.random() * 90000);
+      const existingOrder = await Order.findOne({ orderNumber });
+      const existingPosOrder = await PosOrder.findOne({ orderNumber });
+      if (!existingOrder && !existingPosOrder) isUnique = true;
+    }
+
     let newOrder = {
       user: userId,
       name,
@@ -112,8 +136,10 @@ const placePosOrder = async (req, res) => {
       totalAmount,
       source: source || 'walk-in',
       paymentMethod,
-      orderPlaced: new Date()
+      orderPlaced: new Date(),
     };
+
+    newOrder.orderNumber = orderNumber;
 
     // Attach payment proof if provided (optional for walk-in)
     if (paymentProof) {
@@ -156,9 +182,10 @@ const getAllOrders = async (req, res) => {
         orderDetails.date = order.reservationDate;
         orderDetails.time = order.reservationTime;
         orderDetails.people = order.numberOfPeople;
-        orderDetails.address = null; 
+        // Do NOT overwrite address, keep original
       } else if (order.orderType === 'delivery') {
-        orderDetails.address = order.deliveryAddress;
+        // Use address if present, otherwise deliveryAddress
+        orderDetails.address = order.address || order.deliveryAddress || null;
         orderDetails.date = null;  
         orderDetails.time = null;  
         orderDetails.people = null;  

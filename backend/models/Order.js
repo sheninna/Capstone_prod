@@ -43,6 +43,11 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     required: true
+  },
+  orderNumber: {
+    type: Number,
+    unique: true,
+    required: true
   }
 });
 
