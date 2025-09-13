@@ -11,6 +11,7 @@ const posAuthRoutes = require('./routes/posAuth');
 const feedbackRoutes = require('./routes/feedback');
 const notificationRoutes = require('./routes/notifications');
 const otpRoutes = require('./routes/otp');
+const businessInfoRoutes = require('./routes/businessInfo');
 const protect = require('./middleware/auth');
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/pos', posAuthRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/protected-endpoint', protect);
+app.use('/api/business-info', businessInfoRoutes);
 
 app.listen(5000, () => {
   console.log('Server running on port 5000');

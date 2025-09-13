@@ -1,6 +1,5 @@
 const Feedback = require('../models/feedback');  // Feedback model
 
-// Controller to handle the feedback submission
 const submitFeedback = async (req, res) => {
   const { feedback, rating } = req.body;
 

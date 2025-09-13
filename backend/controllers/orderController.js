@@ -208,7 +208,6 @@ const getAllOrders = async (req, res) => {
 
 
 
-
 // Update Order Status (Admin Only)
 const updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
@@ -217,6 +216,7 @@ const updateOrderStatus = async (req, res) => {
   const validStatuses = [
     'pending',
     'in process',
+    'confirmed', 
     'out for delivery',
     'delivered',
     'ready for pick-up',

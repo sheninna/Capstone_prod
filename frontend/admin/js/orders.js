@@ -1,6 +1,7 @@
 let onlineOrders = [];
 let walkinOrders = [];
 let foodPriceMap = {};
+let orders = [];
 
 // Fetch orders from backend and split into online/walk-in
 async function fetchOrders() {
@@ -12,21 +13,19 @@ async function fetchOrders() {
       }
     });
     if (!response.ok) throw new Error('Not authorized or server error');
-    const orders = await response.json();
-    console.log(orders); // Check if orderNumber is present and 5 digits
+    orders = await response.json(); 
     onlineOrders = orders.filter(order =>
       order.orderType === "online" ||
       order.orderType === "reservation" ||
       order.orderType === "delivery" ||
       order.orderType === "pickup"
     );
-
     walkinOrders = orders.filter(order =>
       order.orderType === "walk-in" ||
       order.source === "walk-in" ||
       order.method === "Walk-in"
     );
-    renderOnlineOrders();
+    renderMainTable();
     renderWalkinOrders();
   } catch (err) {
     console.error('Error fetching orders:', err);
@@ -109,53 +108,42 @@ function renderConfirmedOrders() {
   const tbody = document.getElementById("confirmed-orders-body");
   tbody.innerHTML = "";
 
-  // Online confirmed orders
-  onlineOrders.filter(order => order.status === "Confirmed").forEach(order => {
-    tbody.innerHTML += `
-      <tr data-id="${order._id}">
-        <td>${order.orderNumber || order._id}</td>
-        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
-        <td>${order.name || order.customerName || ""}</td>
-        <td>${order.orderType || order.method || ""}</td>
-        <td>${order.paymentMethod || order.payment || ""}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="online">View Order</button></td>
-        <td>
-          <select class="form-select form-select-sm status-dropdown">
-            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${order.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
-            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
-            <option ${order.status === "On Delivery" ? "selected" : ""}>On Delivery</option>
-            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
-            <option ${order.status === "Declined" ? "selected" : ""}>Declined</option>
-          </select>
-        </td>
-      </tr>
-    `;
-  });
+  // Combine online and walk-in confirmed orders
+  const confirmedOrders = [
+    ...onlineOrders.filter(order => order.status === "confirmed"),
+    ...walkinOrders.filter(order => order.status === "confirmed")
+  ];
 
-  // Walk-in confirmed orders
-  walkinOrders.filter(order => order.status === "Confirmed").forEach(order => {
-    tbody.innerHTML += `
-      <tr data-id="${order._id}">
-        <td>${order.orderNumber || order._id}</td>
-        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
-        <td>${order.name || "Walk-in"}</td>
-        <td>Walk-in</td>
-        <td>${order.paymentMethod || ""}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="walkin">View Order</button></td>
-        <td>
-          <select class="form-select form-select-sm status-dropdown">
-            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${order.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
-            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
-            <option ${order.status === "On Delivery" ? "selected" : ""}>On Delivery</option>
-            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
-            <option ${order.status === "Declined" ? "selected" : ""}>Declined</option>
-          </select>
-        </td>
+  if (confirmedOrders.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">No confirmed orders.</td>
       </tr>
     `;
-  });
+  } else {
+    confirmedOrders.forEach(order => {
+      tbody.innerHTML += `
+        <tr data-id="${order._id}">
+          <td>${order.orderNumber || order._id}</td>
+          <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+          <td>${order.name || order.customerName || "Walk-in"}</td>
+          <td>${order.orderType || order.method || "Walk-in"}</td>
+          <td>${order.paymentMethod || order.payment || ""}</td>
+          <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="${order.orderType === "walk-in" ? "walkin" : "online"}">View Order</button></td>
+          <td>
+            <select class="form-select form-select-sm status-dropdown">
+              <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option ${order.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
+              <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
+              <option ${order.status === "On Delivery" ? "selected" : ""}>On Delivery</option>
+              <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
+              <option ${order.status === "Declined" ? "selected" : ""}>Declined</option>
+            </select>
+          </td>
+        </tr>
+      `;
+    });
+  }
 }
 
 function renderDeclinedOrders() {
@@ -182,35 +170,29 @@ function renderDeclinedOrders() {
   const tbody = document.getElementById("declined-orders-body");
   tbody.innerHTML = "";
 
-  // Online declined orders
-  onlineOrders.filter(order => order.status === "Declined").forEach(order => {
-    tbody.innerHTML += `
-      <tr data-id="${order._id}">
-        <td>${order.orderNumber || order._id}</td>
-        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
-        <td>${order.name || order.customerName || ""}</td>
-        <td>${order.orderType || order.method || ""}</td>
-        <td>${order.paymentMethod || order.payment || ""}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="online">View Order</button></td>
-        <td>${order.status}</td>
+  // Filter all declined orders from the full orders array
+  const declinedOrders = orders.filter(order => order.status === "declined");
+  if (declinedOrders.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">No declined orders.</td>
       </tr>
     `;
-  });
-
-  // Walk-in declined orders
-  walkinOrders.filter(order => order.status === "Declined").forEach(order => {
-    tbody.innerHTML += `
-      <tr data-id="${order._id}">
-        <td>${order.orderNumber || order._id}</td>
-        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : new Date().toLocaleDateString()}</td>
-        <td>${order.name || "Walk-in"}</td>
-        <td>Walk-in</td>
-        <td>${order.paymentMethod || ""}</td>
-        <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="walkin">View Order</button></td>
-        <td>${order.status}</td>
-      </tr>
-    `;
-  });
+  } else {
+    declinedOrders.forEach(order => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${order.orderNumber || order._id}</td>
+          <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+          <td>${order.name || "Walk-in"}</td>
+          <td>${order.orderType || "Walk-in"}</td>
+          <td>${order.paymentMethod || ""}</td>
+          <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="${order.orderType === "walk-in" ? "walkin" : "online"}">View Order</button></td>
+          <td>${order.status}</td>
+        </tr>
+      `;
+    });
+  }
 }
 
 function setupModal() {
@@ -343,19 +325,22 @@ function showOrderModal(order, type) {
   modal.show();
 
   // Attach event listeners for buttons
-  document.getElementById("confirmOrderBtn").onclick = function() {
-    // Your logic to confirm the order (e.g., send API request)
-    order.status = "confirmed";
+  document.getElementById("confirmOrderBtn").onclick = async function() {
+    await updateOrderStatus(order._id, "confirmed");
+    const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
     modal.hide();
-    renderOnlineOrders();
-    renderWalkinOrders();
+    await fetchOrders();
+    renderConfirmedOrders();
+    renderMainTable(); // <-- Add this
   };
-  document.getElementById("declineOrderBtn").onclick = function() {
-    // Your logic to decline the order (e.g., send API request)
-    order.status = "declined";
-    modal.hide();
-    renderOnlineOrders();
-    renderWalkinOrders();
+
+  document.getElementById("declineOrderBtn").onclick = async function() {
+    await updateOrderStatus(order._id, "declined");
+    const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
+    modal.hide(); // This closes the modal
+    await fetchOrders();
+    renderDeclinedOrders();
+    renderMainTable();
   };
 }
 
@@ -393,15 +378,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Call this when the Confirmed tab is shown
 document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
-
-// Optionally, call it on page load if needed
+document.getElementById('declined-tab').addEventListener('shown.bs.tab', renderDeclinedOrders);
 
 const ordersWithDetails = allOrders.map(order => {
   let orderDetails = {
     ...order.toObject(),
-    orderNumber: order.orderNumber // <-- Ensure this is present
+    orderNumber: order.orderNumber 
   };
-  // ...existing code...
+
   return orderDetails;
 });
 res.json(ordersWithDetails);
+
+
+async function updateOrderStatus(orderId, status) {
+  try {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status })
+    });
+    if (!response.ok) throw new Error('Failed to update order status');
+    return await response.json();
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    alert('Failed to update order status.');
+  }
+}
+
+// Re-render online orders excluding confirmed and declined
+function renderMainTable() {
+  const tbody = document.getElementById("online-orders-body");
+  tbody.innerHTML = "";
+  const filteredOrders = onlineOrders.filter(order =>
+    order.status !== "confirmed" &&
+    order.status !== "declined"
+  );
+  if (filteredOrders.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">No orders.</td>
+      </tr>
+    `;
+  } else {
+    filteredOrders.forEach(order => {
+      tbody.innerHTML += `
+        <tr data-id="${order._id}">
+          <td>${order.orderNumber ? order.orderNumber : '-----'}</td>
+          <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+          <td>${order.name || order.customerName || ""}</td>
+          <td>${order.orderType || order.method || ""}</td>
+          <td>${order.paymentMethod || order.payment || ""}</td>
+          <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="online">View Order</button></td>
+        </tr>
+      `;
+    });
+  }
+}
+
+
+renderMainTable();
