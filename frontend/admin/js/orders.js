@@ -262,7 +262,7 @@ function showOrderModal(order, type) {
     const subtotal = price * item.quantity;
     leftHtml += `
       <div class="item-row">
-        <span>${item.quantity} × ${item.name}</span>
+        <span>${item.quantity} × ${item.name}${item.portion ? ` <em>(${item.portion})</em>` : ''}</span>
         <span>₱${subtotal.toFixed(2)}</span>
       </div>
     `;

@@ -9,74 +9,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    document.getElementById('addBtn').addEventListener('click', function() {
+    document.getElementById('addBtn').addEventListener('click', async function() {
         const name = document.getElementById('Name').value.trim();
         const price = document.getElementById('Price').value.trim();
         const category = document.getElementById('Category').value;
         const portion = document.getElementById('Portion').value;
         const imageInput = document.getElementById('Image');
         const file = imageInput.files[0];
-        
+
         // Validation
         if (!name || !price || category === "Select" || !file) {
             alert('Please fill out all required fields including the image.');
             return;
         }
-
         if (isNaN(parseFloat(price)) || !isFinite(price)) {
             alert('Please enter a valid price.');
             return;
         }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const table = document.getElementById('menuTable');
-            const tbody = table.querySelector('tbody');
-            const noDataRow = document.getElementById('noDataRow');
-            
-            if (noDataRow) {
-                noDataRow.remove(); // ✅ remove message row when adding
-            }
-            
-            const row = tbody.insertRow();
-            row.insertCell(0).textContent = name;
-            row.insertCell(1).textContent = '₱' + parseFloat(price).toFixed(2);
-            row.insertCell(2).textContent = category;
-            row.insertCell(3).textContent = (portion === "Select") ? "" : portion;
 
-            const imgCell = row.insertCell(4);
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'menu-img';
-            img.alt = name;
-            imgCell.appendChild(img);
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', price);
+        formData.append('category', category);
+        formData.append('portion', portion);
+        formData.append('image', file);
 
-            img.addEventListener('click', function() {
-                document.getElementById('previewImage').src = this.src;
-                document.getElementById('imagePreviewModal').style.display = 'flex';
+        try {
+            const token = localStorage.getItem('adminToken');
+            const response = await fetch('http://localhost:5000/api/foods', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
             });
-
-            const actionsCell = row.insertCell(5);
-            actionsCell.innerHTML = `
-                <button class="action-btn edit-btn">Edit</button>
-                <button class="action-btn delete-btn">Delete</button>
-            `;
-
-            actionsCell.querySelector('.delete-btn').addEventListener('click', function() {
-                openDeleteModal(row);
-            });
-            actionsCell.querySelector('.edit-btn').addEventListener('click', function() {
-                openEditModal(row);
-            });
-
+            if (!response.ok) throw new Error('Failed to add food');
+            await loadMenu();
             // Clear form
             document.getElementById('Name').value = '';
             document.getElementById('Price').value = '';
             document.getElementById('Category').selectedIndex = 0;
             document.getElementById('Portion').selectedIndex = 0;
             document.getElementById('Image').value = '';
-        };
-        reader.readAsDataURL(file);
+        } catch (err) {
+            alert('Error adding food.');
+            console.error(err);
+        }
     });
 
     let currentEditingRow = null;
@@ -94,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('editModal').style.display = 'flex';
     }
     
-    document.getElementById('saveEditBtn').addEventListener('click', function() {
+    document.getElementById('saveEditBtn').addEventListener('click', async function() {
         if (!currentEditingRow) return;
         
         const name = document.getElementById('editName').value.trim();
@@ -112,19 +90,29 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        const cells = currentEditingRow.cells;
-        cells[0].textContent = name;
-        cells[1].textContent = '₱' + parseFloat(price).toFixed(2);
-        cells[2].textContent = category;
-        cells[3].textContent = portion; 
-        
+        const id = currentEditingRow.getAttribute('data-id');
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', price);
+        formData.append('category', category);
+        formData.append('portion', portion);
         const newFile = document.getElementById('editImage').files[0];
-        if (newFile) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                cells[4].querySelector('img').src = e.target.result;
-            };
-            reader.readAsDataURL(newFile);
+        if (newFile) formData.append('image', newFile);
+
+        try {
+            const token = localStorage.getItem('adminToken');
+            const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            if (!response.ok) throw new Error('Failed to update food');
+            await loadMenu();
+        } catch (err) {
+            alert('Error updating food.');
+            console.error(err);
         }
         
         document.getElementById('editModal').style.display = 'none';
@@ -202,20 +190,38 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-document.getElementById('saveBusinessInfo').addEventListener('click', function () {
-    const businessInfo = {
-        contact: document.getElementById('businessContact').value.trim(),
-        email: document.getElementById('businessEmail').value.trim(),
-        address: document.getElementById('businessAddress').value.trim(),
-        website: document.getElementById('businessWebsite').value.trim(),
-        gcashName: document.getElementById('businessGcashName').value.trim(),
-        qrFile: document.getElementById('businessQR').files[0] || null
-    };
+document.getElementById('saveBusinessInfo').addEventListener('click', async function () {
+    const contact = document.getElementById('businessContact').value.trim();
+    const email = document.getElementById('businessEmail').value.trim();
+    const address = document.getElementById('businessAddress').value.trim();
+    const website = document.getElementById('businessWebsite').value.trim();
+    const gcashName = document.getElementById('businessGcashName').value.trim();
+    // For QR, you may want to handle file upload separately
+    // Here we just send the file name as a placeholder
+    const gcashQRInput = document.getElementById('businessQR');
+    let gcashQR = '';
+    if (gcashQRInput && gcashQRInput.files.length > 0) {
+        gcashQR = gcashQRInput.files[0].name;
+    }
 
-    console.log("Business Info Saved:", businessInfo);
-
-    alert("✅ Business information saved successfully!");
-
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch('http://localhost:5000/api/business-info', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ contact, email, address, website, gcashName, gcashQR })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || result.message || 'Failed to update business info');
+        alert('✅ Business information saved successfully!');
+        loadBusinessInfo();
+    } catch (err) {
+        alert('Error updating business info: ' + err.message);
+        console.error(err);
+    }
 });
 
 
@@ -234,4 +240,86 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.replace('../html/adminlogin.html');
     });
   }
+});
+
+
+async function loadBusinessInfo() {
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch('http://localhost:5000/api/business-info', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch business info');
+        const info = await response.json();
+        if (info) {
+            document.getElementById('businessContact').value = info.contact || '';
+            document.getElementById('businessEmail').value = info.email || '';
+            document.getElementById('businessAddress').value = info.address || '';
+            document.getElementById('businessWebsite').value = info.website || '';
+            document.getElementById('businessGcashName').value = info.gcashName || '';
+            // Optionally preview QR if you want
+            // if (info.gcashQR) { ... }
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadBusinessInfo);
+
+async function loadMenu() {
+    try {
+        const response = await fetch('http://localhost:5000/api/foods');
+        const foods = await response.json();
+        const tbody = document.querySelector('#menuTable tbody');
+        tbody.innerHTML = '';
+        if (foods.length === 0) {
+            tbody.innerHTML = `<tr id="noDataRow"><td colspan="6">No menu items yet</td></tr>`;
+        } else {
+            foods.forEach(food => {
+                tbody.innerHTML += `
+                    <tr data-id="${food._id}">
+                        <td>${food.name}</td>
+                        <td>₱${parseFloat(food.price).toFixed(2)}</td>
+                        <td>${food.category}</td>
+                        <td>${food.portion || ''}</td>
+                        <td>
+                            ${food.image ? `<img src="http://localhost:5000/${food.image}" class="menu-img" style="width:60px;height:50px;object-fit:cover;border-radius:5px;">` : ''}
+                        </td>
+                        <td>
+                            <button class="action-btn edit-btn">Edit</button>
+                            <button class="action-btn delete-btn">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    } catch (err) {
+        console.error('Error loading menu:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadMenu);
+
+document.querySelector('#menuTable').addEventListener('click', async function (e) {
+    if (e.target.classList.contains('delete-btn')) {
+        const row = e.target.closest('tr');
+        const id = row.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this menu item?')) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to delete food');
+                await loadMenu();
+            } catch (err) {
+                alert('Error deleting food.');
+                console.error(err);
+            }
+        }
+    }
 });

@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const protect = require('../middleware/auth');
+const adminOnly = require('../middleware/adminOnly');
 const {
   getBusinessInfo,
   updateBusinessInfo
 } = require('../controllers/businessInfoController');
 
-router.get('/', protect, getBusinessInfo);
-router.put('/', protect, updateBusinessInfo);
+router.get('/', adminOnly, getBusinessInfo);
+router.put('/', adminOnly, updateBusinessInfo);
 
 module.exports = router;

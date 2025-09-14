@@ -6,6 +6,7 @@ const FoodSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   isAvailable: { type: Boolean, default: true },
   image: { type: String },
+  portion: { type: String } 
 });
 
 module.exports = mongoose.model('Food', FoodSchema);
