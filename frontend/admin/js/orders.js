@@ -3,17 +3,29 @@ let walkinOrders = [];
 let foodPriceMap = {};
 let orders = [];
 
+// Use either adminToken or posToken for authentication
+function getAuthToken() {
+  return localStorage.getItem('adminToken') || localStorage.getItem('posToken');
+}
+
 // Fetch orders from backend and split into online/walk-in
 async function fetchOrders() {
   try {
-    const token = localStorage.getItem('adminToken');
+    const token = getAuthToken();
     const response = await fetch('http://localhost:5000/api/orders', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    if (response.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('posToken');
+      window.location.replace('../html/poslogin.html');
+      return;
+    }
     if (!response.ok) throw new Error('Not authorized or server error');
-    orders = await response.json(); 
+    orders = await response.json();
     onlineOrders = orders.filter(order =>
       order.orderType === "online" ||
       order.orderType === "reservation" ||
@@ -29,6 +41,7 @@ async function fetchOrders() {
     renderWalkinOrders();
   } catch (err) {
     console.error('Error fetching orders:', err);
+    // Optionally show a message or redirect
   }
 }
 
@@ -202,198 +215,107 @@ function setupModal() {
       const type = e.target.dataset.type;
       let order;
       if (type === "online") {
-        order = onlineOrders.find(o => o.id === id);
-        document.getElementById("modal-order-details").innerHTML = `
-          <p><strong>Order ID:</strong> ${order.id}</p>
-          <p><strong>Date:</strong> ${order.date}</p>
-          <p><strong>Customer:</strong> ${order.customer}</p>
-          <p><strong>Method:</strong> ${order.method}</p>
-          <p><strong>Status:</strong> ${order.status}</p>
-          <p><strong>Payment:</strong> ${order.payment}</p>
-        `;
+        order = onlineOrders.find(o => o._id === id);
       } else {
-        order = walkinOrders.find(o => o.id === id);
-        document.getElementById("modal-order-details").innerHTML = `
-          <p><strong>Order ID:</strong> ${order.id}</p>
-          <p><strong>Date:</strong> ${order.date}</p>
-          <p><strong>Table Number:</strong> ${order.table}</p>
-          <p><strong>Status:</strong> ${order.status}</p>
-          <p><strong>Payment:</strong> ${order.payment}</p>
+        order = walkinOrders.find(o => o._id === id);
+      }
+
+      const modalBody = document.getElementById("modal-order-body");
+
+      let leftHtml = `<div class="order-items">`;
+      order.items.forEach(item => {
+        const price = foodPriceMap[item.name] || 0;
+        const subtotal = price * item.quantity;
+        leftHtml += `
+          <div class="item-row">
+            <span>${item.quantity} × ${item.name}${item.portion ? ` <em>(${item.portion})</em>` : ''}</span>
+            <span>₱${subtotal.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      leftHtml += `
+        <div class="order-total">Total ₱${order.totalAmount ? order.totalAmount.toFixed(2) : 'N/A'}</div>
+      `;
+
+      if (type === "online") {
+        if (order.orderType === "delivery") {
+          leftHtml += `
+            <div class="order-extra">
+              <p><strong>Address:</strong> ${order.address || order.deliveryAddress || 'N/A'}</p>
+              <p><strong>Phone Number:</strong> ${order.phone || 'N/A'}</p>
+            </div>
+          `;
+        } else if (order.orderType === "pickup") {
+          leftHtml += `<p class="order-extra"><strong>Pickup:</strong> Customer will pick up their order</p>`;
+        } else if (order.orderType === "reservation") {
+          leftHtml += `
+            <div class="order-extra">
+              <p><strong>Date to Come:</strong> ${order.reservationDate ? new Date(order.reservationDate).toLocaleDateString() : (order.date ? new Date(order.date).toLocaleDateString() : 'N/A')}</p>
+              <p><strong>Time to Come:</strong> ${order.reservationTime || order.time || 'N/A'}</p>
+              <p><strong>No. of Persons:</strong> ${order.numberOfPeople || order.people || 'N/A'}</p>
+            </div>
+          `;
+        }
+      }
+
+      leftHtml += `</div>`;
+
+      let rightHtml = "";
+      if (type === "online" && order.paymentProof) {
+        rightHtml = `
+          <div class="order-proof">
+            <img src="${order.paymentProof}" alt="Payment Proof" style="max-width: 300px;">
+          </div>
         `;
       }
 
+      // Add action buttons
+      let actionButtons = `
+        <div class="mt-4 text-end">
+          <button class="btn btn-success me-2" id="confirmOrderBtn" data-id="${order._id}" data-type="${type}">Confirm</button>
+          <button class="btn btn-danger" id="declineOrderBtn" data-id="${order._id}" data-type="${type}">Decline</button>
+        </div>
+      `;
+
+      modalBody.innerHTML = `
+        <div class="order-details">
+          ${leftHtml}
+          ${rightHtml}
+        </div>
+        ${actionButtons}
+      `;
+
+      // Show modal
       const modal = new bootstrap.Modal(document.getElementById("order-modal"));
       modal.show();
+
+      // Attach event listeners for buttons
+      document.getElementById("confirmOrderBtn").onclick = async function() {
+        await updateOrderStatus(order._id, "confirmed");
+        const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
+        modal.hide();
+        await fetchOrders();
+        renderConfirmedOrders();
+        renderMainTable();
+      };
+
+      document.getElementById("declineOrderBtn").onclick = async function() {
+        await updateOrderStatus(order._id, "declined");
+        const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
+        modal.hide();
+        await fetchOrders();
+        renderDeclinedOrders();
+        renderMainTable();
+      };
     }
   });
 }
 
-// Init
-document.addEventListener("DOMContentLoaded", async () => {
-  await fetchFoodPrices();
-  fetchOrders();
-  setupModal();
-
-  // Table toggle
-  const orderTypeSelect = document.getElementById("orderTypeSelect");
-  const onlineTable = document.getElementById("online-table");
-  const walkinTable = document.getElementById("walkin-table");
-  function toggleTables() {
-    if (orderTypeSelect.value === "Online") {
-      onlineTable.style.display = "block";
-      walkinTable.style.display = "none";
-    } else {
-      onlineTable.style.display = "none";
-      walkinTable.style.display = "block";
-    }
-  }
-  toggleTables();
-  orderTypeSelect.addEventListener("change", toggleTables);
-});
-
-
-
-function showOrderModal(order, type) {
-  const modalBody = document.getElementById("modal-order-body");
-
-  let leftHtml = `<div class="order-items">`;
-  order.items.forEach(item => {
-    const price = foodPriceMap[item.name] || 0;
-    const subtotal = price * item.quantity;
-    leftHtml += `
-      <div class="item-row">
-        <span>${item.quantity} × ${item.name}${item.portion ? ` <em>(${item.portion})</em>` : ''}</span>
-        <span>₱${subtotal.toFixed(2)}</span>
-      </div>
-    `;
-  });
-
-  leftHtml += `
-    <div class="order-total">Total ₱${order.totalAmount ? order.totalAmount.toFixed(2) : 'N/A'}</div>
-  `;
-
-  if (type === "online") {
-    if (order.orderType === "delivery") {
-      leftHtml += `
-        <div class="order-extra">
-          <p><strong>Address:</strong> ${order.address || order.deliveryAddress || 'N/A'}</p>
-          <p><strong>Phone Number:</strong> ${order.phone || 'N/A'}</p>
-        </div>
-      `;
-    } else if (order.orderType === "pickup") {
-      leftHtml += `<p class="order-extra"><strong>Pickup:</strong> Customer will pick up their order</p>`;
-    } else if (order.orderType === "reservation") {
-      leftHtml += `
-        <div class="order-extra">
-          <p><strong>Date to Come:</strong> ${order.reservationDate ? new Date(order.reservationDate).toLocaleDateString() : (order.date ? new Date(order.date).toLocaleDateString() : 'N/A')}</p>
-          <p><strong>Time to Come:</strong> ${order.reservationTime || order.time || 'N/A'}</p>
-          <p><strong>No. of Persons:</strong> ${order.numberOfPeople || order.people || 'N/A'}</p>
-        </div>
-      `;
-    }
-  }
-
-  leftHtml += `</div>`;
-
-  let rightHtml = "";
-  if (type === "online" && order.paymentProof) {
-    rightHtml = `
-      <div class="order-proof">
-        <img src="${order.paymentProof}" alt="Payment Proof" style="max-width: 300px;">
-      </div>
-    `;
-  }
-
-  // Add action buttons
-  let actionButtons = `
-    <div class="mt-4 text-end">
-      <button class="btn btn-success me-2" id="confirmOrderBtn" data-id="${order._id}" data-type="${type}">Confirm</button>
-      <button class="btn btn-danger" id="declineOrderBtn" data-id="${order._id}" data-type="${type}">Decline</button>
-    </div>
-  `;
-
-  modalBody.innerHTML = `
-    <div class="order-details">
-      ${leftHtml}
-      ${rightHtml}
-    </div>
-    ${actionButtons}
-  `;
-
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById("order-modal"));
-  modal.show();
-
-  // Attach event listeners for buttons
-  document.getElementById("confirmOrderBtn").onclick = async function() {
-    await updateOrderStatus(order._id, "confirmed");
-    const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
-    modal.hide();
-    await fetchOrders();
-    renderConfirmedOrders();
-    renderMainTable(); // <-- Add this
-  };
-
-  document.getElementById("declineOrderBtn").onclick = async function() {
-    await updateOrderStatus(order._id, "declined");
-    const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
-    modal.hide(); // This closes the modal
-    await fetchOrders();
-    renderDeclinedOrders();
-    renderMainTable();
-  };
-}
-
-// Attach click events
-document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("view-order")) {
-    const id = e.target.dataset.id;
-    const type = e.target.dataset.type;
-    let order;
-
-    if (type === "online") order = onlineOrders.find(o => o._id === id);
-    else order = walkinOrders.find(o => o._id === id);
-
-    if (order) showOrderModal(order, type);
-  }
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Redirect to login if not authenticated
-  if (!localStorage.getItem('adminToken')) {
-    window.location.replace('../html/adminlogin.html');
-  }
-
-  // Logout functionality
-  const logoutBtn = document.getElementById('logoutButton');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      localStorage.removeItem('adminToken');
-      window.location.replace('../html/adminlogin.html');
-    });
-  }
-});
-
-// Call this when the Confirmed tab is shown
-document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
-document.getElementById('declined-tab').addEventListener('shown.bs.tab', renderDeclinedOrders);
-
-const ordersWithDetails = allOrders.map(order => {
-  let orderDetails = {
-    ...order.toObject(),
-    orderNumber: order.orderNumber 
-  };
-
-  return orderDetails;
-});
-res.json(ordersWithDetails);
-
-
+// Update order status using either token
 async function updateOrderStatus(orderId, status) {
   try {
-    const token = localStorage.getItem('adminToken');
+    const token = getAuthToken();
     const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: {
@@ -440,5 +362,46 @@ function renderMainTable() {
   }
 }
 
+// Init: Only one DOMContentLoaded listener, check for either token
+document.addEventListener("DOMContentLoaded", async () => {
+  const token = getAuthToken();
+  if (!token) {
+    window.location.replace('../html/poslogin.html');
+    return;
+  }
 
-renderMainTable();
+  // Logout functionality
+  const logoutBtn = document.querySelector('.btn-danger');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('posToken');
+      window.location.replace('../html/poslogin.html');
+    });
+  }
+
+  await fetchFoodPrices();
+  await fetchOrders();
+  setupModal();
+
+  // Table toggle
+  const orderTypeSelect = document.getElementById("orderTypeSelect");
+  const onlineTable = document.getElementById("online-table");
+  const walkinTable = document.getElementById("walkin-table");
+  function toggleTables() {
+    if (orderTypeSelect.value === "Online") {
+      onlineTable.style.display = "block";
+      walkinTable.style.display = "none";
+    } else {
+      onlineTable.style.display = "none";
+      walkinTable.style.display = "block";
+    }
+  }
+  toggleTables();
+  orderTypeSelect.addEventListener("change", toggleTables);
+
+  // Tab listeners
+  document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
+  document.getElementById('declined-tab').addEventListener('shown.bs.tab', renderDeclinedOrders);
+});
