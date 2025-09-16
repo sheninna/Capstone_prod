@@ -1,4 +1,4 @@
-const Feedback = require('../models/feedback');  // Feedback model
+const Feedback = require('../models/feedback');  
 
 const submitFeedback = async (req, res) => {
   const { feedback, rating } = req.body;

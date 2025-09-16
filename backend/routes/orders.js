@@ -14,7 +14,7 @@ const {
 router.post('/', protect, placeOrder);
 router.post('/pos', posAuth, placePosOrder);
 router.get('/:userId', getUserOrders);
-router.get('/', adminOnly, getAllOrders);
-router.patch('/:orderId/status', adminOnly, updateOrderStatus);
+router.get('/', posAuth, getAllOrders);
+router.patch('/:orderId/status', posAuth, updateOrderStatus);
 
 module.exports = router;

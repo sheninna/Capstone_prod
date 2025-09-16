@@ -15,39 +15,52 @@ const Orders = [
 ];
 
 
-const tableBody = document.querySelector(".reports-table tbody");
-tableBody.innerHTML = ""; 
+async function fetchCompletedOrders() {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('posToken');
+  try {
+    const response = await fetch('http://localhost:5000/api/orders?status=completed', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch completed orders');
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching completed orders:', err);
+    return [];
+  }
+}
 
-Orders.forEach(order => {
-  const row = document.createElement("tr");
+async function renderReportsTable() {
+  const Orders = await fetchCompletedOrders();
+  const tableBody = document.querySelector(".reports-table tbody");
+  tableBody.innerHTML = "";
 
-  row.innerHTML = `
-    <td>${order.orderId}</td>
-    <td>${order.orderPlaced}</td>
-    <td>${order.Name}</td>
-    <td>${order.orderType}</td>
-    <td>${order.totalAmount}</td>
-    <td>${order.paymentMethod}</td>
-    <td>
-    <span class="badge ${
-        order.status === "Completed"
-          ? "bg-success"
-          : order.status === "Declined"
-          ? "bg-danger"
-          : "bg-secondary"
-      }">
-      ${order.status}
-      </span>
+  Orders.forEach(order => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${order.orderNumber || order.orderId || order._id}</td>
+      <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+      <td>${order.name || order.customerName || ""}</td>
+      <td>${order.orderType || ""}</td>
+      <td>₱${order.totalAmount ? Number(order.totalAmount).toFixed(2) : "0.00"}</td>
+      <td>${order.paymentMethod || order.payment || ""}</td>
+      <td>
+        <span class="badge bg-success">${order.status || "Completed"}</span>
       </td>
       <td>
-        <button class="btn btn-sm btn-warning view-order-btn" data-id="${order.orderId}">
+        <button class="btn btn-sm btn-warning view-order-btn" data-id="${order._id}">
           View Orders
         </button>
       </td>
-      `;
+    `;
+    tableBody.appendChild(row);
+  });
+}
 
-  tableBody.appendChild(row);
-});
+// Call this on page load
+document.addEventListener("DOMContentLoaded", renderReportsTable);
+
 
 document.addEventListener("click", function (e) {
   if (e.target.classList.contains("view-order-btn")) {

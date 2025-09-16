@@ -8,7 +8,7 @@ function getAuthToken() {
   return localStorage.getItem('adminToken') || localStorage.getItem('posToken');
 }
 
-// Fetch orders from backend and split into online/walk-in
+
 async function fetchOrders() {
   try {
     const token = getAuthToken();
@@ -18,7 +18,6 @@ async function fetchOrders() {
       }
     });
     if (response.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('adminToken');
       localStorage.removeItem('posToken');
       window.location.replace('../html/poslogin.html');
@@ -41,7 +40,6 @@ async function fetchOrders() {
     renderWalkinOrders();
   } catch (err) {
     console.error('Error fetching orders:', err);
-    // Optionally show a message or redirect
   }
 }
 
@@ -61,6 +59,22 @@ function renderOnlineOrders() {
   const tbody = document.getElementById("online-orders-body");
   tbody.innerHTML = "";
   onlineOrders.forEach(order => {
+    let statusOptions = "";
+    // Only online orders with pickup type get pickup statuses
+    if (order.orderType === "pickup") {
+      statusOptions = `
+        <option ${order.status === "pending" ? "selected" : ""}>Pending</option>
+        <option ${order.status === "in process" ? "selected" : ""}>In Process</option>
+        <option ${order.status === "ready for pick-up" ? "selected" : ""}>Ready for Pick-up</option>
+        <option ${order.status === "completed" ? "selected" : ""}>Completed</option>
+      `;
+    } else {
+      statusOptions = `
+        <option ${order.status === "pending" ? "selected" : ""}>Pending</option>
+        <option ${order.status === "in process" ? "selected" : ""}>In Process</option>
+        <option ${order.status === "completed" ? "selected" : ""}>Completed</option>
+      `;
+    }
     tbody.innerHTML += `
       <tr data-id="${order._id}">
         <td>${order.orderNumber ? order.orderNumber : '-----'}</td>
@@ -68,6 +82,11 @@ function renderOnlineOrders() {
         <td>${order.name || order.customerName || ""}</td>
         <td>${order.orderType || order.method || ""}</td>
         <td>${order.paymentMethod || order.payment || ""}</td>
+        <td>
+          <select class="form-select form-select-sm status-dropdown">
+            ${statusOptions}
+          </select>
+        </td>
         <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="online">View Order</button></td>
       </tr>
     `;
@@ -78,6 +97,12 @@ function renderWalkinOrders() {
   const tbody = document.getElementById("walkin-orders-body");
   tbody.innerHTML = "";
   walkinOrders.forEach(order => {
+    // Walk-in orders should NOT have pickup status options
+    const statusOptions = `
+      <option ${order.status === "pending" ? "selected" : ""}>Pending</option>
+      <option ${order.status === "in process" ? "selected" : ""}>In Process</option>
+      <option ${order.status === "completed" ? "selected" : ""}>Completed</option>
+    `;
     tbody.innerHTML += `
       <tr data-id="${order._id}">
         <td>${order.orderNumber || order._id}</td>
@@ -87,9 +112,7 @@ function renderWalkinOrders() {
         <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="walkin">View Order</button></td>
         <td>
           <select class="form-select form-select-sm status-dropdown">
-            <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
-            <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
+            ${statusOptions}
           </select>
         </td>
       </tr>
@@ -121,11 +144,7 @@ function renderConfirmedOrders() {
   const tbody = document.getElementById("confirmed-orders-body");
   tbody.innerHTML = "";
 
-  // Combine online and walk-in confirmed orders
-  const confirmedOrders = [
-    ...onlineOrders.filter(order => order.status === "confirmed"),
-    ...walkinOrders.filter(order => order.status === "confirmed")
-  ];
+  const confirmedOrders = orders.filter(order => order.status === "in process");
 
   if (confirmedOrders.length === 0) {
     tbody.innerHTML = `
@@ -135,6 +154,23 @@ function renderConfirmedOrders() {
     `;
   } else {
     confirmedOrders.forEach(order => {
+      let statusOptions = "";
+      // Only show pickup status
+      if (order.orderType === "pickup") {
+        statusOptions = `
+          <option value="pending" ${order.status === "pending" ? "selected" : ""}>Pending</option>
+          <option value="in process" ${order.status === "in process" ? "selected" : ""}>In Process</option>
+          <option value="ready for pick-up" ${order.status === "ready for pick-up" ? "selected" : ""}>Ready for Pick-up</option>
+          <option value="completed" ${order.status === "completed" ? "selected" : ""}>Completed</option>
+        `;
+      } else {
+        statusOptions = `
+          <option value="pending" ${order.status === "pending" ? "selected" : ""}>Pending</option>
+          <option value="in process" ${order.status === "in process" ? "selected" : ""}>In Process</option>
+          <option value="on delivery" ${order.status === "on delivery" ? "selected" : ""}>On Delivery</option>
+          <option value="completed" ${order.status === "completed" ? "selected" : ""}>Completed</option>
+        `;
+      }
       tbody.innerHTML += `
         <tr data-id="${order._id}">
           <td>${order.orderNumber || order._id}</td>
@@ -145,18 +181,14 @@ function renderConfirmedOrders() {
           <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="${order.orderType === "walk-in" ? "walkin" : "online"}">View Order</button></td>
           <td>
             <select class="form-select form-select-sm status-dropdown">
-              <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-              <option ${order.status === "Confirmed" ? "selected" : ""}>Confirmed</option>
-              <option ${order.status === "In Process" ? "selected" : ""}>In Process</option>
-              <option ${order.status === "On Delivery" ? "selected" : ""}>On Delivery</option>
-              <option ${order.status === "Completed" ? "selected" : ""}>Completed</option>
-              <option ${order.status === "Declined" ? "selected" : ""}>Declined</option>
+              ${statusOptions}
             </select>
           </td>
         </tr>
       `;
     });
   }
+  setupStatusDropdownListener();
 }
 
 function renderDeclinedOrders() {
@@ -183,8 +215,7 @@ function renderDeclinedOrders() {
   const tbody = document.getElementById("declined-orders-body");
   tbody.innerHTML = "";
 
-  // Filter all declined orders from the full orders array
-  const declinedOrders = orders.filter(order => order.status === "declined");
+  const declinedOrders = orders.filter(order => order.status === "completed");
   if (declinedOrders.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -270,7 +301,6 @@ function setupModal() {
         `;
       }
 
-      // Add action buttons
       let actionButtons = `
         <div class="mt-4 text-end">
           <button class="btn btn-success me-2" id="confirmOrderBtn" data-id="${order._id}" data-type="${type}">Confirm</button>
@@ -286,27 +316,77 @@ function setupModal() {
         ${actionButtons}
       `;
 
-      // Show modal
       const modal = new bootstrap.Modal(document.getElementById("order-modal"));
       modal.show();
 
-      // Attach event listeners for buttons
       document.getElementById("confirmOrderBtn").onclick = async function() {
-        await updateOrderStatus(order._id, "confirmed");
-        const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
         modal.hide();
-        await fetchOrders();
-        renderConfirmedOrders();
-        renderMainTable();
+
+        // Instantly remove from Orders tab
+        const row = document.querySelector(`tr[data-id="${order._id}"]`);
+        if (row) row.remove();
+
+        // Instantly add to Confirmed tab
+        const confirmedTbody = document.getElementById("confirmed-orders-body");
+        if (confirmedTbody) {
+          confirmedTbody.innerHTML += `
+            <tr data-id="${order._id}">
+              <td>${order.orderNumber || order._id}</td>
+              <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+              <td>${order.name || order.customerName || "Walk-in"}</td>
+              <td>${order.orderType || order.method || "Walk-in"}</td>
+              <td>${order.paymentMethod || order.payment || ""}</td>
+              <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="${order.orderType === "walk-in" ? "walkin" : "online"}">View Order</button></td>
+              <td>
+                <select class="form-select form-select-sm status-dropdown">
+                  <option value="pending">Pending</option>
+                  <option value="in process" selected>In Process</option>
+                  <option value="on delivery">On Delivery</option>
+                  <option value="ready for pick-up">Ready for Pick-up</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </td>
+            </tr>
+          `;
+        }
+
+        // Backend update and re-render tabs
+        const result = await updateOrderStatus(order._id, "in process");
+        if (result) {
+          await fetchOrders();
+          renderConfirmedOrders();
+        }
       };
 
       document.getElementById("declineOrderBtn").onclick = async function() {
-        await updateOrderStatus(order._id, "declined");
-        const modal = bootstrap.Modal.getInstance(document.getElementById("order-modal"));
         modal.hide();
-        await fetchOrders();
-        renderDeclinedOrders();
-        renderMainTable();
+
+        // Instantly remove from Orders tab
+        const row = document.querySelector(`tr[data-id="${order._id}"]`);
+        if (row) row.remove();
+
+        // Instantly add to Declined tab
+        const declinedTbody = document.getElementById("declined-orders-body");
+        if (declinedTbody) {
+          declinedTbody.innerHTML += `
+            <tr data-id="${order._id}">
+              <td>${order.orderNumber || order._id}</td>
+              <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
+              <td>${order.name || "Walk-in"}</td>
+              <td>${order.orderType || "Walk-in"}</td>
+              <td>${order.paymentMethod || ""}</td>
+              <td><button class="btn btn-sm btn-warning view-order" data-id="${order._id}" data-type="${order.orderType === "walk-in" ? "walkin" : "online"}">View Order</button></td>
+              <td>Completed</td>
+            </tr>
+          `;
+        }
+
+        // Backend update and re-render tabs
+        const result = await updateOrderStatus(order._id, "completed");
+        if (result) {
+          await fetchOrders();
+          renderDeclinedOrders();
+        }
       };
     }
   });
@@ -324,21 +404,25 @@ async function updateOrderStatus(orderId, status) {
       },
       body: JSON.stringify({ status })
     });
-    if (!response.ok) throw new Error('Failed to update order status');
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.message || 'Failed to update order status.');
+      return null;
+    }
     return await response.json();
   } catch (err) {
     console.error('Error updating order status:', err);
     alert('Failed to update order status.');
+    return null;
   }
 }
 
-// Re-render online orders excluding confirmed and declined
 function renderMainTable() {
   const tbody = document.getElementById("online-orders-body");
   tbody.innerHTML = "";
   const filteredOrders = onlineOrders.filter(order =>
-    order.status !== "confirmed" &&
-    order.status !== "declined"
+    order.status !== "in process" &&
+    order.status !== "completed"
   );
   if (filteredOrders.length === 0) {
     tbody.innerHTML = `
@@ -362,7 +446,6 @@ function renderMainTable() {
   }
 }
 
-// Init: Only one DOMContentLoaded listener, check for either token
 document.addEventListener("DOMContentLoaded", async () => {
   const token = getAuthToken();
   if (!token) {
@@ -370,7 +453,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Logout functionality
   const logoutBtn = document.querySelector('.btn-danger');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', function(e) {
@@ -385,7 +467,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchOrders();
   setupModal();
 
-  // Table toggle
   const orderTypeSelect = document.getElementById("orderTypeSelect");
   const onlineTable = document.getElementById("online-table");
   const walkinTable = document.getElementById("walkin-table");
@@ -401,7 +482,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   toggleTables();
   orderTypeSelect.addEventListener("change", toggleTables);
 
-  // Tab listeners
   document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
   document.getElementById('declined-tab').addEventListener('shown.bs.tab', renderDeclinedOrders);
 });

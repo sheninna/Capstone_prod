@@ -61,7 +61,7 @@ const sendOrderReceiptEmail = async (order, email) => {
 
 const sendStatusUpdateEmail = async (order, email, newStatus) => {
   let statusMessage = '';
-  
+
   switch (newStatus) {
     case 'in process':
       statusMessage = `
@@ -76,9 +76,9 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
       `;
       break;
 
-    case 'out for delivery':
+    case 'on delivery':
       statusMessage = `
-        <h3>Your Order is Out for Delivery</h3>
+        <h3>Your Order is On Delivery</h3>
         <p>Your order ID: <strong>${order._id}</strong> is now on its way to your address. Expect delivery soon!</p>
         <p>Items:</p>
         <ul>
@@ -89,10 +89,10 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
       `;
       break;
 
-    case 'delivered':
+    case 'ready for pick-up':
       statusMessage = `
-        <h3>Your Order Has Been Delivered</h3>
-        <p>Your order ID: <strong>${order._id}</strong> has been successfully delivered to the address provided.</p>
+        <h3>Your Order is Ready for Pick Up</h3>
+        <p>Your order ID: <strong>${order._id}</strong></p>
         <p>Items:</p>
         <ul>
           ${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join('')}
@@ -102,10 +102,10 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
       `;
       break;
 
-    case 'ready for pick-up':
+    case 'delivered':
       statusMessage = `
-        <h3>Your Order is ready for Pick Up</h3>
-        <p>Your order ID: <strong>${order._id}</strong></p>
+        <h3>Your Order Has Been Delivered</h3>
+        <p>Your order ID: <strong>${order._id}</strong> has been successfully delivered to the address provided.</p>
         <p>Items:</p>
         <ul>
           ${order.items.map(item => `<li>${item.name} x${item.quantity}</li>`).join('')}
@@ -132,7 +132,7 @@ const sendStatusUpdateEmail = async (order, email, newStatus) => {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: `Your Order Status - ${newStatus}`,
+    subject: `Your Order Status - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
     html: statusMessage,
   };
 

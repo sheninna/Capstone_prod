@@ -155,6 +155,7 @@ const placePosOrder = async (req, res) => {
   }
 };
 
+
 // Get Order History for a User
 const getUserOrders = async (req, res) => {
   try {
@@ -184,7 +185,6 @@ const getAllOrders = async (req, res) => {
         orderDetails.people = order.numberOfPeople;
         // Do NOT overwrite address, keep original
       } else if (order.orderType === 'delivery') {
-        // Use address if present, otherwise deliveryAddress
         orderDetails.address = order.address || order.deliveryAddress || null;
         orderDetails.date = null;  
         orderDetails.time = null;  
@@ -205,6 +205,18 @@ const getAllOrders = async (req, res) => {
 };
 
 
+// Get All Completed Orders (for Reports)
+const getCompletedOrders = async (req, res) => {
+  try {
+    // Fetch completed orders from both Order and PosOrder collections
+    const orders = await Order.find({ status: 'completed' }).populate('user').populate('items');
+    const posOrders = await PosOrder.find({ status: 'completed' }).populate('user').populate('items');
+    const allCompleted = [...orders, ...posOrders];
+    res.json(allCompleted);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching completed orders', error: err.message });
+  }
+};
 
 
 
@@ -216,19 +228,26 @@ const updateOrderStatus = async (req, res) => {
   const validStatuses = [
     'pending',
     'in process',
-    'confirmed', 
-    'out for delivery',
-    'delivered',
+    'on delivery',
     'ready for pick-up',
-    'declined' 
+    'completed'
   ];
 
   if (!status || !validStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, out for delivery, delivered, ready for pick-up, declined.' });
+    return res.status(400).json({ message: 'Invalid status. Valid statuses are: pending, in process, on delivery, ready for pick-up, completed.' });
   }
 
   try {
-    const order = await Order.findById(orderId).populate('user');
+    // Try to find in Order collection first
+    let order = await Order.findById(orderId).populate('user');
+    let isPosOrder = false;
+
+    // If not found, try in PosOrder collection
+    if (!order) {
+      order = await PosOrder.findById(orderId).populate('user');
+      isPosOrder = true;
+    }
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
@@ -238,13 +257,14 @@ const updateOrderStatus = async (req, res) => {
 
     const statusesToNotify = [
       'in process',
-      'out for delivery',
+      'on delivery',
       'delivered',
       'ready for pick-up',
       'declined'
     ];
 
-    if (statusesToNotify.includes(status)) {
+    // Only send email if order has a user with an email
+    if (statusesToNotify.includes(status) && order.user && order.user.email) {
       await sendStatusUpdateEmail(order, order.user.email, status);
 
       if (status === 'declined') {
@@ -289,5 +309,6 @@ module.exports = {
   placePosOrder,
   getUserOrders,
   getAllOrders,
+  getCompletedOrders,
   updateOrderStatus,
 };
