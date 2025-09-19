@@ -411,24 +411,53 @@ function createSizedProductCard(product, category) {
           return;
         }
 
-        const summary = `
-          Order Type: ${orderType.toUpperCase()} <br>
-          Total: ₱${total.toFixed(2)}
+        // Build order details HTML
+        let detailsHtml = `
+          <strong>Order Type:</strong> ${orderType.toUpperCase()}<br>
+          <strong>Total:</strong> ₱${total.toFixed(2)}<br>
+          <strong>Items:</strong>
+          <ul>
+            ${cart.map(item => `<li>${item.name} x${item.quantity} - ₱${(item.price * item.quantity).toFixed(2)}</li>`).join('')}
+          </ul>
         `;
-        document.getElementById('orderSummary').innerHTML = summary;
 
-        const orderModal = new bootstrap.Modal(document.getElementById('orderSuccessModal'));
-        orderModal.show();
+        document.getElementById('orderDetailsBody').innerHTML = detailsHtml;
+        document.getElementById('amountPaid').value = '';
+        document.getElementById('changeDisplay').textContent = '';
+        document.getElementById('proceedOrderBtn').style.display = 'none';
 
-        // Clear cart
-        cart = [];
-        updateCartDisplay();
-        updateTotal();
-        
-        // Reset all quantity displays
-        document.querySelectorAll('[id^="qty-"]').forEach(element => {
-          element.textContent = '0';
-        });
+        // Show modal
+        const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+        orderDetailsModal.show();
+
+        // Calculate change button
+        document.getElementById('calculateChangeBtn').onclick = function() {
+          const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+          if (isNaN(amountPaid)) {
+            document.getElementById('changeDisplay').textContent = 'Please enter a valid amount.';
+            document.getElementById('proceedOrderBtn').style.display = 'none';
+            return;
+          }
+          const change = amountPaid - total;
+          if (change >= 0) {
+            document.getElementById('changeDisplay').textContent = `Change: ₱${change.toFixed(2)}`;
+            document.getElementById('proceedOrderBtn').style.display = 'inline-block';
+          } else {
+            document.getElementById('changeDisplay').textContent = 'Insufficient payment!';
+            document.getElementById('proceedOrderBtn').style.display = 'none';
+          }
+        };
+
+        // Proceed order button
+        document.getElementById('proceedOrderBtn').onclick = function() {
+          // Here you can send the order to the backend or show a success message
+          alert('Order placed successfully!');
+          orderDetailsModal.hide();
+          cart = [];
+          updateCartDisplay();
+          updateTotal();
+          updateAllQuantityDisplays();
+        };
       }
 
       // Initialize the application

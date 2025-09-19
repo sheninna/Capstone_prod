@@ -9,30 +9,106 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    let selectedPortions = []; // Only declare ONCE
+
+    // --- Portion Modal Logic ---
+    const setPortionBtn = document.getElementById('setPortionBtn');
+    if (setPortionBtn) {
+        setPortionBtn.addEventListener('click', function() {
+            document.getElementById('portionModal').style.display = 'flex';
+        });
+    }
+
+    const portionModal = document.getElementById('portionModal');
+    if (portionModal) {
+        portionModal.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    }
+
+    const portionModalDialog = document.querySelector('#portionModal .modal-dialog, #portionModal .custom-modal-dialog');
+    if (portionModalDialog) {
+        portionModalDialog.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    }
+
+    const closePortionModal = document.getElementById('closePortionModal');
+    if (closePortionModal) {
+        closePortionModal.addEventListener('click', function() {
+            document.getElementById('portionModal').style.display = 'none';
+        });
+    }
+
+    document.querySelectorAll('.portion-checkbox').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
+            if (priceInput) {
+                priceInput.disabled = !cb.checked;
+                if (!cb.checked) priceInput.value = '';
+            }
+            // Disable main price input if any portion is checked
+            const anyChecked = Array.from(document.querySelectorAll('.portion-checkbox')).some(box => box.checked);
+            const mainPriceInput = document.getElementById('Price');
+            if (mainPriceInput) {
+                mainPriceInput.disabled = anyChecked;
+            }
+        });
+    });
+
+    const savePortionBtn = document.getElementById('savePortionBtn');
+    if (savePortionBtn) {
+        savePortionBtn.addEventListener('click', function() {
+            selectedPortions = [];
+            let valid = true;
+            document.querySelectorAll('.portion-checkbox').forEach(cb => {
+                if (cb.checked) {
+                    const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
+                    if (!priceInput || !priceInput.value.trim() || isNaN(parseFloat(priceInput.value.trim()))) {
+                        alert(`Please enter a valid price for ${cb.value} portion.`);
+                        valid = false;
+                    } else {
+                        selectedPortions.push({ portion: cb.value, price: parseFloat(priceInput.value.trim()) });
+                    }
+                }
+            });
+            if (valid) {
+                document.getElementById('portionModal').style.display = 'none';
+            }
+        });
+    }
+
+    // --- Add Product Logic ---
     document.getElementById('addBtn').addEventListener('click', async function() {
         const name = document.getElementById('Name').value.trim();
         const price = document.getElementById('Price').value.trim();
         const category = document.getElementById('Category').value;
-        const portion = document.getElementById('Portion').value;
         const imageInput = document.getElementById('Image');
         const file = imageInput.files[0];
 
         // Validation
-        if (!name || !price || category === "Select" || !file) {
+        if (!name || category === "Select" || !file) {
             alert('Please fill out all required fields including the image.');
-            return;
-        }
-        if (isNaN(parseFloat(price)) || !isFinite(price)) {
-            alert('Please enter a valid price.');
             return;
         }
 
         const formData = new FormData();
         formData.append('name', name);
-        formData.append('price', price);
         formData.append('category', category);
-        formData.append('portion', portion);
         formData.append('image', file);
+
+        if (selectedPortions.length > 0) {
+            formData.append('portions', JSON.stringify(selectedPortions));
+        } else {
+            if (!price || isNaN(parseFloat(price))) {
+                alert('Please enter a valid price.');
+                return;
+            }
+            formData.append('portion', 'N/A');
+            formData.append('price', price);
+        }
 
         try {
             const token = localStorage.getItem('adminToken');
@@ -49,8 +125,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('Name').value = '';
             document.getElementById('Price').value = '';
             document.getElementById('Category').selectedIndex = 0;
-            document.getElementById('Portion').selectedIndex = 0;
             document.getElementById('Image').value = '';
+            selectedPortions = [];
+            document.querySelectorAll('.portion-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.portion-price').forEach(pi => { pi.value = ''; pi.disabled = true; });
         } catch (err) {
             alert('Error adding food.');
             console.error(err);
@@ -257,8 +335,6 @@ async function loadBusinessInfo() {
             document.getElementById('businessAddress').value = info.address || '';
             document.getElementById('businessWebsite').value = info.website || '';
             document.getElementById('businessGcashName').value = info.gcashName || '';
-            // Optionally preview QR if you want
-            // if (info.gcashQR) { ... }
         }
     } catch (err) {
         console.error(err);
@@ -277,12 +353,23 @@ async function loadMenu() {
             tbody.innerHTML = `<tr id="noDataRow"><td colspan="6">No menu items yet</td></tr>`;
         } else {
             foods.forEach(food => {
+                // Handle portions/prices display
+                let portionDisplay = 'N/A';
+                let priceDisplay = '';
+                if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
+                    portionDisplay = food.portions.map(p => p.portion).join(', ');
+                    priceDisplay = food.portions.map(p => `${p.portion}: ₱${parseFloat(p.price).toFixed(2)}`).join('<br>');
+                } else {
+                    portionDisplay = food.portion || 'N/A';
+                    priceDisplay = `₱${parseFloat(food.price).toFixed(2)}`;
+                }
+
                 tbody.innerHTML += `
                     <tr data-id="${food._id}">
                         <td>${food.name}</td>
-                        <td>₱${parseFloat(food.price).toFixed(2)}</td>
+                        <td>${priceDisplay}</td>
                         <td>${food.category}</td>
-                        <td>${food.portion || ''}</td>
+                        <td>${portionDisplay}</td>
                         <td>
                             ${food.image ? `<img src="http://localhost:5000/${food.image}" class="menu-img" style="width:60px;height:50px;object-fit:cover;border-radius:5px;">` : ''}
                         </td>
@@ -302,24 +389,189 @@ async function loadMenu() {
 document.addEventListener('DOMContentLoaded', loadMenu);
 
 document.querySelector('#menuTable').addEventListener('click', async function (e) {
+    const row = e.target.closest('tr');
+    if (!row || !row.hasAttribute('data-id')) return;
+    const id = row.getAttribute('data-id');
+
+    // Edit button logic
+    if (e.target.classList.contains('edit-btn')) {
+        // Fill modal fields with row data
+        document.getElementById('editName').value = row.cells[0].textContent;
+        document.getElementById('editPrice').value = row.cells[1].textContent.replace('₱', '');
+        document.getElementById('editCategory').value = row.cells[2].textContent;
+        document.getElementById('editPortion').value = row.cells[3].textContent;
+        document.getElementById('editPreview').src = row.cells[4].querySelector('img') ? row.cells[4].querySelector('img').src : '';
+        document.getElementById('editModal').setAttribute('data-id', id);
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    // Delete button logic
     if (e.target.classList.contains('delete-btn')) {
-        const row = e.target.closest('tr');
-        const id = row.getAttribute('data-id');
-        if (confirm('Are you sure you want to delete this menu item?')) {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to delete food');
-                await loadMenu();
-            } catch (err) {
-                alert('Error deleting food.');
-                console.error(err);
-            }
-        }
+        document.getElementById('deleteModal').setAttribute('data-id', id);
+        document.getElementById('deleteModal').style.display = 'flex';
     }
 });
+
+// Save Edit Modal changes
+document.getElementById('saveEditBtn').addEventListener('click', async function() {
+    const modal = document.getElementById('editModal');
+    const id = modal.getAttribute('data-id');
+    const name = document.getElementById('editName').value.trim();
+    const price = document.getElementById('editPrice').value.trim();
+    const category = document.getElementById('editCategory').value;
+    const portion = document.getElementById('editPortion').value;
+    const newFile = document.getElementById('editImage').files[0];
+
+    if (!name || !price) {
+        alert('Please fill out all required fields.');
+        return;
+    }
+    if (isNaN(parseFloat(price)) || !isFinite(price)) {
+        alert('Please enter a valid price.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('price', price);
+    formData.append('category', category);
+    formData.append('portion', portion);
+    if (newFile) formData.append('image', newFile);
+
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        if (!response.ok) throw new Error('Failed to update food');
+        await loadMenu();
+    } catch (err) {
+        alert('Error updating food.');
+        console.error(err);
+    }
+
+    modal.style.display = 'none';
+    document.getElementById('editImage').value = '';
+});
+
+// Delete Modal confirm
+document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    const modal = document.getElementById('deleteModal');
+    const id = modal.getAttribute('data-id');
+    try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) throw new Error('Failed to delete food');
+        await loadMenu();
+    } catch (err) {
+        alert('Error deleting food.');
+        console.error(err);
+    }
+    modal.style.display = 'none';
+});
+
+// Close modals
+document.getElementById('closeModal').addEventListener('click', function() {
+    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editImage').value = '';
+});
+document.getElementById('closeDeleteModal').addEventListener('click', function() {
+    document.getElementById('deleteModal').style.display = 'none';
+});
+document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+    document.getElementById('deleteModal').style.display = 'none';
+});
+
+// Optional: Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    if (event.target === document.getElementById('editModal')) {
+        document.getElementById('editModal').style.display = 'none';
+        document.getElementById('editImage').value = '';
+    }
+    if (event.target === document.getElementById('deleteModal')) {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+});
+
+// // --- Portion Modal Logic (CLEANED & FIXED) ---
+// let selectedPortions = [];
+
+// document.addEventListener('DOMContentLoaded', function () {
+//     // Open modal when button is clicked
+//     const setPortionBtn = document.getElementById('setPortionBtn');
+//     if (setPortionBtn) {
+//         setPortionBtn.addEventListener('click', function() {
+//             document.getElementById('portionModal').style.display = 'flex';
+//         });
+//     }
+
+//     // Close modal when clicking the background
+//     const portionModal = document.getElementById('portionModal');
+//     if (portionModal) {
+//         portionModal.addEventListener('click', function(event) {
+//             if (event.target === this) {
+//                 this.style.display = 'none';
+//             }
+//         });
+//     }
+
+//     // Prevent closing when clicking inside the modal dialog
+//     const portionModalDialog = document.querySelector('#portionModal .modal-dialog, #portionModal .custom-modal-dialog');
+//     if (portionModalDialog) {
+//         portionModalDialog.addEventListener('click', function(event) {
+//             event.stopPropagation();
+//         });
+//     }
+
+//     // Close modal when clicking the close button
+//     const closePortionModal = document.getElementById('closePortionModal');
+//     if (closePortionModal) {
+//         closePortionModal.addEventListener('click', function() {
+//             document.getElementById('portionModal').style.display = 'none';
+//         });
+//     }
+
+//     // Enable/disable price input based on checkbox in modal
+//     document.querySelectorAll('.portion-checkbox').forEach(cb => {
+//         cb.addEventListener('change', function() {
+//             const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
+//             if (priceInput) {
+//                 priceInput.disabled = !cb.checked;
+//                 if (!cb.checked) priceInput.value = '';
+//             }
+//         });
+//     });
+
+//     // Save Portions button logic
+//     const savePortionBtn = document.getElementById('savePortionBtn');
+//     if (savePortionBtn) {
+//         savePortionBtn.addEventListener('click', function() {
+//             selectedPortions = [];
+//             let valid = true;
+//             document.querySelectorAll('.portion-checkbox').forEach(cb => {
+//                 if (cb.checked) {
+//                     const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
+//                     if (!priceInput || !priceInput.value.trim() || isNaN(parseFloat(priceInput.value.trim()))) {
+//                         alert(`Please enter a valid price for ${cb.value} portion.`);
+//                         valid = false;
+//                     } else {
+//                         selectedPortions.push({ portion: cb.value, price: parseFloat(priceInput.value.trim()) });
+//                     }
+//                 }
+//             });
+//             // If no portions are checked, that's OK (will use main price input)
+//             if (valid) {
+//                 document.getElementById('portionModal').style.display = 'none';
+//             }
+//         });
+//     }
+// });

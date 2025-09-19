@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Food = require('../models/Food');
 const PosOrder = require('../models/posOrder');
 const Notification = require('../models/notification');
+const CompletedOrder = require('../models/CompletedOrder');
 const { sendOrderReceiptEmail, sendStatusUpdateEmail } = require('../utils/mailer');
 
 // Place Order (Authenticated)
@@ -205,14 +206,11 @@ const getAllOrders = async (req, res) => {
 };
 
 
-// Get All Completed Orders (for Reports)
+// Get All Completed Orders (from CompletedOrder collection)
 const getCompletedOrders = async (req, res) => {
   try {
-    // Fetch completed orders from both Order and PosOrder collections
-    const orders = await Order.find({ status: 'completed' }).populate('user').populate('items');
-    const posOrders = await PosOrder.find({ status: 'completed' }).populate('user').populate('items');
-    const allCompleted = [...orders, ...posOrders];
-    res.json(allCompleted);
+    const completedOrders = await CompletedOrder.find({ status: 'completed' });
+    res.json(completedOrders);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching completed orders', error: err.message });
   }
@@ -254,6 +252,36 @@ const updateOrderStatus = async (req, res) => {
 
     order.status = status;
     await order.save();
+
+    // If status is completed, archive to CompletedOrder collection and remove from original collection
+    if (status === 'completed') {
+      await CompletedOrder.create({
+        originalOrderId: order._id,
+        user: order.user,
+        items: order.items,
+        totalAmount: order.totalAmount,
+        name: order.name,
+        phone: order.phone,
+        orderType: order.orderType,
+        address: order.address,
+        people: order.people,
+        date: order.date,
+        time: order.time,
+        source: order.source,
+        paymentMethod: order.paymentMethod,
+        paymentProof: order.paymentProof,
+        orderPlaced: order.orderPlaced,
+        orderNumber: order.orderNumber,
+        status: order.status
+      });
+
+      // Remove from original collection
+      if (isPosOrder) {
+        await PosOrder.findByIdAndDelete(order._id);
+      } else {
+        await Order.findByIdAndDelete(order._id);
+      }
+    }
 
     const statusesToNotify = [
       'in process',

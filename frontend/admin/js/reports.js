@@ -16,9 +16,9 @@ const Orders = [
 
 
 async function fetchCompletedOrders() {
-  const token = localStorage.getItem('adminToken') || localStorage.getItem('posToken');
+  const token = localStorage.getItem('adminToken');
   try {
-    const response = await fetch('http://localhost:5000/api/orders?status=completed', {
+    const response = await fetch('http://localhost:5000/api/orders/orders/completed', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

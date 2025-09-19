@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema({
   pickupTime: String,
   status: {
     type: String,
-    enum: ['pending', 'in process', 'on delivery', 'ready for pick-up', 'delivered', 'confirmed', 'declined'],
+    enum: ['pending', 'in process', 'on delivery', 'ready for pick-up', 'delivered', 'confirmed', 'declined', 'completed'],
     default: 'pending',
   },
   paymentMethod: {

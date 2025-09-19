@@ -1,4 +1,4 @@
-    body {
+body {
       background-color: #f2e7c9;
       font-family: Arial, sans-serif;
       overflow: hidden;
@@ -126,4 +126,17 @@
       height: 250px !important; /* adjust as needed */
     }
 
-    
+    /* Best Selling Card Styles */
+#bestSellingList .d-flex {
+  transition: box-shadow 0.2s, background 0.2s;
+}
+#bestSellingList .d-flex:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  background: #fffbe6;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+

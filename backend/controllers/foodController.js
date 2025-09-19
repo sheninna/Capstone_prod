@@ -4,23 +4,43 @@ const path = require('path');
 
 // Add food (only admin can add)
 const addFood = async (req, res) => {
-  const { name, category, price, portion } = req.body; // <-- Add portion here
+  const { name, category, price, portion, portions } = req.body;
   let image = null;
   if (req.file) {
-    // Save as 'uploads/filename.jpg' for web access
     image = path.join('uploads', req.file.filename).replace(/\\/g, '/');
-  } // Store the image path
+  }
 
-  if (!name || !category || price === undefined) {
-    return res.status(400).json({ error: 'Missing required fields: name, category, or price' });
+  console.log('BODY:', req.body);
+  console.log('FILE:', req.file);
+
+  if (!name || !category) {
+    return res.status(400).json({ error: 'Missing required fields: name or category' });
   }
 
   try {
-    const food = new Food({ name, category, price, portion, image }); 
+    let food;
+    if (portions) {
+      let parsedPortions;
+      try {
+        parsedPortions = JSON.parse(portions);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid portions format' });
+      }
+      if (!Array.isArray(parsedPortions) || parsedPortions.length === 0) {
+        return res.status(400).json({ error: 'At least one portion is required' });
+      }
+      food = new Food({ name, category, portions: parsedPortions, image });
+    } else {
+      if (price === undefined || price === null || isNaN(Number(price))) {
+        return res.status(400).json({ error: 'Missing or invalid price' });
+      }
+      food = new Food({ name, category, price: Number(price), portion: portion || 'N/A', image });
+    }
     await food.save();
     res.status(201).json(food);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Add food error:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 };
 
@@ -39,8 +59,8 @@ const deleteFood = async (req, res) => {
 // Get all foods (for customers to browse)
 const getAllFoods = async (req, res) => {
   try {
-    const foods = await Food.find();  
-    res.json(foods);  
+    const foods = await Food.find();
+    res.json(foods);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -48,6 +68,6 @@ const getAllFoods = async (req, res) => {
 
 module.exports = {
   addFood,
-  deleteFood, 
+  deleteFood,
   getAllFoods,
 };

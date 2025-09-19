@@ -88,17 +88,26 @@ new Chart(ctxDaily, {
 
 
 const bestSellingList = document.getElementById("bestSellingList");
-bestSellingList.innerHTML = ""; 
-dashboardData.bestSelling
-  .slice(0, 5) 
-  .forEach(item => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <img src="${item.img}" alt="${item.name}" style="width:30px; height:30px; margin-right:10px; border-radius:50%">
-      ${item.name} <span style="float:right;"></span>
-    `;
-    bestSellingList.appendChild(li);
-  });
+bestSellingList.innerHTML = "";
+
+dashboardData.bestSelling.slice(0, 5).forEach(item => {
+  const col = document.createElement("div");
+  col.className = "col-12 col-md-6";
+
+  col.innerHTML = `
+    <div class="d-flex align-items-center p-2 rounded-3 shadow-sm bg-light h-100">
+      <img src="${item.img}" alt="${item.name}" class="me-3" style="width:48px; height:48px; object-fit:cover; border-radius:12px; border:2px solid #ffd700;">
+      <div class="flex-grow-1">
+        <div class="fw-semibold fs-6 mb-1">${item.name}</div>
+        <div class="text-muted small">
+          <i class="bi bi-bag-check-fill text-success me-1"></i>
+          Sold: <span class="fw-bold">${item.sold}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  bestSellingList.appendChild(col);
+});
 
 
 const ordersChartCanvas = document.getElementById("ordersByTypeChart");

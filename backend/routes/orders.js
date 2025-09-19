@@ -9,6 +9,7 @@ const {
   getUserOrders,
   getAllOrders,
   updateOrderStatus,
+  getCompletedOrders
 } = require('../controllers/orderController');
 
 router.post('/', protect, placeOrder);
@@ -16,5 +17,6 @@ router.post('/pos', posAuth, placePosOrder);
 router.get('/:userId', getUserOrders);
 router.get('/', posAuth, getAllOrders);
 router.patch('/:orderId/status', posAuth, updateOrderStatus);
+router.get('/orders/completed', adminOnly, getCompletedOrders);
 
 module.exports = router;

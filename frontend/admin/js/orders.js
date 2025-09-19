@@ -144,7 +144,12 @@ function renderConfirmedOrders() {
   const tbody = document.getElementById("confirmed-orders-body");
   tbody.innerHTML = "";
 
-  const confirmedOrders = orders.filter(order => order.status === "in process");
+  // Show orders with status "in process", "on delivery", or "ready for pick-up" as confirmed
+  const confirmedOrders = orders.filter(order =>
+    order.status === "in process" ||
+    order.status === "on delivery" ||
+    order.status === "ready for pick-up"
+  );
 
   if (confirmedOrders.length === 0) {
     tbody.innerHTML = `
@@ -155,7 +160,6 @@ function renderConfirmedOrders() {
   } else {
     confirmedOrders.forEach(order => {
       let statusOptions = "";
-      // Only show pickup status
       if (order.orderType === "pickup") {
         statusOptions = `
           <option value="pending" ${order.status === "pending" ? "selected" : ""}>Pending</option>
@@ -420,9 +424,9 @@ async function updateOrderStatus(orderId, status) {
 function renderMainTable() {
   const tbody = document.getElementById("online-orders-body");
   tbody.innerHTML = "";
+  // Only show orders that are still "pending"
   const filteredOrders = onlineOrders.filter(order =>
-    order.status !== "in process" &&
-    order.status !== "completed"
+    order.status === "pending"
   );
   if (filteredOrders.length === 0) {
     tbody.innerHTML = `
@@ -444,6 +448,32 @@ function renderMainTable() {
       `;
     });
   }
+  // No dropdown in the order tab
+}
+
+function setupStatusDropdownListener() {
+  document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+    dropdown.onchange = async function(e) {
+      const tr = e.target.closest('tr');
+      const orderId = tr.getAttribute('data-id');
+      const newStatus = e.target.value;
+      const result = await updateOrderStatus(orderId, newStatus);
+      if (result) {
+        await fetchOrders();
+        renderMainTable();
+        renderOnlineOrders();
+        renderWalkinOrders();
+        renderConfirmedOrders();
+        renderDeclinedOrders();
+        // Only remove the row if status is completed AND you are in the Declined tab
+        const declinedTabActive = document.getElementById('declined-tab').classList.contains('active');
+        if (newStatus === "completed" && declinedTabActive) {
+          tr.remove();
+        }
+        // Do NOT remove the row for any status change in the Confirmed tab
+      }
+    };
+  });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

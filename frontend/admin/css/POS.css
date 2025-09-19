@@ -305,7 +305,7 @@ body {
     
     .bottom-section {
         flex-shrink: 0;
-        width: 100%;              /* make sure it stretches full width */
+        width: 100%;
         background: #fff;
         padding-top: 10px;
         border-top: 1px solid #eee;
@@ -393,3 +393,58 @@ body {
         cursor: pointer;
         font-size: 18px;
     }
+ 
+    #orderDetailsModal .modal-dialog {
+    margin-top: 150px; 
+    }
+
+    /* Professional modal design */
+#orderDetailsModal .modal-content {
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border: none;
+}
+
+#orderDetailsModal .modal-header,
+#orderDetailsModal .modal-footer {
+  border: none;
+  background: #f8f9fa;
+}
+
+#orderDetailsModal .modal-title {
+  font-family: 'Poppins', Arial, sans-serif;
+  font-weight: 600;
+  color: #333;
+}
+
+#orderDetailsModal .form-control-lg {
+  font-size: 1.15rem;
+  border-radius: 0.75rem;
+}
+
+#orderDetailsModal .btn-lg {
+  font-size: 1.1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+#orderDetailsModal .btn-success {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  border: none;
+  color: #222;
+}
+
+#orderDetailsModal .btn-primary {
+  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+  border: none;
+  color: #222;
+}
+
+#orderDetailsModal .btn-success:hover,
+#orderDetailsModal .btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+#orderDetailsModal .modal-dialog {
+  margin-top: 80px;
+}
