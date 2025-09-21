@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LomiHub</title>
+    <link rel="icon" type="image/x-icon" href="../assets/logo.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/ordernow.css">
+    <style>
+        @media (max-width: 992px) {
+            .category-alert {
+                height: auto !important;
+                min-height: 44px;
+                white-space: normal !important;
+                line-height: 1.4;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 12px;
+            }
+        }
+
+        .categories-container {
+            width: 100%;
+        }
+
+        .categories {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    
+    <nav class="navbar navbar-expand-lg ">
+        <div class="container">
+        <a class="navbar-brand">
+          <img class= "logo" src="../assets/logo.jpg"></a>
+
+            <!-- Mobile Side Toggle Button -->
+            <button class="navbar-toggler d-lg-none" type="button" aria-label="Toggle navigation" onclick="openNavSidebar()">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+              <!-- Desktop Navbar -->
+              <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
+                  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                      <li class="nav-item">
+                          <a class="nav-link" href="homepage.html">Home</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link active" href="ordernow.html">Order Now</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="myorders.html">My Orders</a>
+                      </li>
+                  </ul>
+                  <ul class="navbar-nav">
+                      <li class="nav-item">
+                          <a class="nav-link" href="notifications.html">
+                              <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="account.html">
+                              <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                              <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+                          </a>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </nav>  
+
+    <!-- Mobile Navbar -->
+    <div id="mobileNavSidebar" class="mobile-nav-sidebar">
+      <div class="mobile-nav-header">
+        <button class="close-btn" onclick="closeNavSidebar()" aria-label="Close">&times;</button>
+      </div>
+      <ul class="navbar-nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link" href="homepage.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="ordernow.html">Order Now</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="myorders.html">My Orders</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="notifications.html">Notifications
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="account.html">Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div id="mobileNavSidebarBackdrop" class="mobile-nav-backdrop" onclick="closeNavSidebar()"></div>
+
+    <!-- Logout Modal -->
+  <div
+    class="modal fade"
+    id="logoutModal"
+    tabindex="-1"
+    aria-labelledby="logoutModalLabel"
+    aria-hidden="true">
+    
+    <div class="modal-dialog">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutModalLabel">
+        <div class="modal-body">Are you sure you want to log out?</div>
+        <div class="modal-footer">
+          <a href="customerlogin.html" class="btn-logout">Logout</a>
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- Main Content -->
+
+<main>
+<div class="main-container">
+  <div class="menu-section col-lg-9">
+        <!-- Categories Container to ensure full width -->
+        <div class="categories-container">
+            <div class="categories nav nav-pills" id="categoryTabs" role="tablist">
+                <button class="category-btn active" id="dishes-tab" data-bs-toggle="tab" data-bs-target="#dishes" type="button" role="tab">Dishes</button>
+                <button class="category-btn" id="bilao-tab" data-bs-toggle="tab" data-bs-target="#bilao" type="button" role="tab">Bilao</button>
+                <button class="category-btn" id="desserts-tab" data-bs-toggle="tab" data-bs-target="#desserts" type="button" role="tab">Desserts</button>
+            </div>
+            
+            <div class="alert category-alert" role="alert">
+                <i class="fa-solid fa-circle-info"></i>
+                A minimum order of ₱200 is required when placing an order.
+            </div>
+            
+            <div class="modal fade" id="minOrderModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4">
+                <i class="fas fa-exclamation-circle text-danger mb-3" style="font-size: 2.5rem;"></i>
+                <h5 class="mb-3">Minimum Order Not Met</h5>
+                <p class="mb-3">A minimum order of ₱200 is required to proceed to checkout.</p>
+                <button class="btn w-50 mx-auto" data-bs-dismiss="modal" style="background-color: #EFCA6C;">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+          
+    <div class="tab-content">
+
+<!-- Dishes-->
+        <div class="tab-pane fade show active" id="dishes" role="tabpanel">
+          <div class="items" id="dishes-items">
+          </div>
+        </div>  
+
+  <!--Bilao-->
+    <div class="tab-pane fade" id="bilao" role="tabpanel">
+        <div class="items" id="bilao-items">
+        </div>
+    </div>
+
+<!--Desserts-->
+<div class="tab-pane fade" id="desserts" role="tabpanel">
+  <div class="items" id="desserts-items">
+        </div>
+    </div>
+</div>
+
+<!-- Desktop Cart Sidebar -->
+    <div class="content-wrapper">
+      <div id="cart-sidebar">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold">Your Order</h5>
+          <span class="badge bg-warning text-dark"><span id="cart-count">0</span> items</span>
+        </div>
+        <!-- Cart Items -->
+        <div id="cart-items" class="mb-4">
+          <div class="text-center py-5 empty-cart-message">
+            <i class="bi bi-cart-x fs-1 text-muted"></i>
+            <p class="text-muted mb-0">Your cart is empty</p>
+            <small class="text-secondary">Add some delicious items to get started!</small>
+          </div>
+        </div>
+
+        <div id="cart-summary">
+          <div class="border-top pt-3 mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Total</span>
+              <span id="subtotal" class="fw-semibold">₱0</span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Order Type</label>
+            <div class="order-type">
+                <button type="button" class="active" data-order-type="delivery">Delivery</button>
+                <button type="button" data-order-type="pickup">Pickup</button>
+                <button type="button" data-order-type="reservation">Reservation</button>
+            </div>
+            <button id="checkout-btn" class="btn btn-warning w-100 fw-semibold">Proceed to Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Mobile Floating Cart Button -->
+<div class="floating-cart-btn d-lg-none" id="floating-cart-btn">
+  <i class="bi bi-receipt fs-4"></i>
+</div>
+
+<!-- Mobile Order Summary Sidebar -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="orderSummaryMobile">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Your Order</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div id="mobile-cart-items" class="mb-3">
+      <div class="text-center py-5 empty-cart-message">
+        <i class="bi bi-cart-x fs-1 text-muted"></i>
+        <p class="text-muted mb-0">Your cart is empty</p>
+        <small class="text-secondary">Add some delicious items to get started!</small>
+      </div>
+    </div>
+
+    <div id="mobile-cart-summary">
+      <div class="border-top pt-3 mb-3">
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Total</span>
+          <span id="mobile-subtotal" class="fw-semibold">₱0</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Order Type</label>
+        <div class="order-type">
+            <button type="button" class="active" data-order-type="delivery">Delivery</button>
+            <button type="button" data-order-type="pickup">Pickup</button>
+            <button type="button" data-order-type="reservation">Reservation</button>
+        </div>
+        <button id="mobile-checkout-btn" class="btn btn-warning w-100 fw-semibold">
+          Proceed to Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+    <!-- Checkout Modal -->
+
+<!-- Delivery Modal -->
+<div class="modal fade order-modal" id="deliveryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delivery Order</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="delivery-form">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name *</label>
+                  <input type="text" class="form-control" id="delivery-name" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" class="form-control" id="delivery-phone" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Address</label>
+                  <input type="tel" class="form-control" id="delivery-address" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="input-group">
+                  <button type="button" class="btn btn-outline-secondary" id="locate-me-btn">
+                    <i class="bi bi-geo-alt"></i> Locate Me
+                  </button>
+                </div>
+                <div id="location-status" class="form-text"></div>
+                
+                <!-- Add subtotal and total calculation -->
+                <div class="border-top pt-2 mt-2">
+                  <div class="d-flex justify-content-between">
+                    <span class="text-muted">Subtotal:</span>
+                    <span id="delivery-subtotal">₱0.00</span>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <span class="text-muted">Shipping Fee:</span>
+                    <span id="delivery-shipping-fee">₱0.00</span>
+                  </div>
+                  <div class="d-flex justify-content-between mt-2 fw-bold">
+                    <span>Total:</span>
+                    <span id="delivery-total">₱0.00</span>
+                  </div>
+                </div>
+              </div>
+            
+              
+              <div class="gcash-section mt-3">
+                <label class="form-label" style="font-weight: bold; font-size: large;">Payment Method</label>
+                <p>Scan QR to pay in Gcash</p>
+                <div class="d-flex align-items-start gap-3">
+                  <p id="gcashName"></p>
+                  <img id="gcashQR" src="../assets/gcash.jpg" alt="GCASH QR Code" class="img-fluid qr-code">
+                  <div class="flex-grow-1">
+                    <div class="mb-2">
+                      <button type="button" class="btn btn-sm btn-warning" id="delivery-upload-payment">
+                        <i class="bi bi-upload"></i> Upload Payment Proof
+                      </button>
+                      <input type="file" id="delivery-payment-upload" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="delivery-payment-preview" class="mt-2"></div>
+                    
+                    <div class="mt-2">
+                      <label class="form-label">Reference Number (Optional)</label>
+                      <input type="text" class="form-control" id="delivery-reference">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg">Place Delivery Order</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Pickup Modal -->
+<div class="modal fade order-modal" id="pickupModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Pickup Order</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="pickup-form">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name *</label>
+                  <input type="text" class="form-control" id="pickup-name" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" class="form-control" id="pickup-phone" required>
+                </div>
+              </div>
+              
+              <div class="gcash-section mt-3">
+                <label class="form-label" style="font-weight: bold; font-size: large;">Payment Method</label>
+                <p>Scan QR to pay in Gcash</p>
+                <div class="d-flex align-items-start gap-3">
+                  <p id="gcashName"></p>
+                  <img id="gcashQR" src="../assets/gcash.jpg" alt="GCASH QR Code" class="img-fluid qr-code">
+                  <div class="flex-grow-1">
+                    <div class="mb-2">
+                      <button type="button" class="btn btn-sm btn-warning" id="pickup-upload-payment">
+                        <i class="bi bi-upload"></i> Upload Payment Proof
+                      </button>
+                      <input type="file" id="pickup-payment-upload" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="pickup-payment-preview" class="mt-2"></div>
+                    
+                    <div class="mt-2">
+                      <label class="form-label">Reference Number (Optional)</label>
+                      <input type="text" class="form-control" id="pickup-reference">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg">Place Pickup Order</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Reservation Modal -->
+<div class="modal fade order-modal" id="reservationModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Reservation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="reservation-form">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name *</label>
+                  <input type="text" class="form-control" id="reservation-name" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" class="form-control" id="reservation-phone" required>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Number of People *</label>
+                  <input type="number" class="form-control" id="reservation-people" min="1" max="15" value="1" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Reservation Date *</label>
+                  <input type="date" class="form-control" id="reservation-date" required>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Reservation Time *</label>
+                <input type="time" class="form-control" id="reservation-time" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Special Requests (Optional)</label>
+                <textarea class="form-control" id="reservation-requests" rows="2"></textarea>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <p>Scan QR to pay in Gcash</p>
+                <div class="d-flex align-items-start gap-3">
+                  <p id="gcash-name"></p>
+                  <img id="gcash-qr" src="../assets/gcash.jpg" alt="GCASH QR Code" class="img-fluid qr-code">
+                  <div class="flex-grow-1">
+                    <div class="mb-2">
+                      <button type="button" class="btn btn-sm btn-warning" id="reservation-upload-payment">
+                        <i class="bi bi-upload"></i> Upload Payment Proof
+                      </button>
+                      <input type="file" id="reservation-payment-upload" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="reservation-payment-preview" class="mt-2"></div>
+                    
+                    <div class="mt-2">
+                      <label class="form-label">Reference Number (Optional)</label>
+                      <input type="text" class="form-control" id="reservation-reference">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg">Confirm Reservation</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4">
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                <h5 class="mb-3">Order placed successfully!</h5>
+                <button class="btn w-50 mx-auto" data-bs-dismiss="modal" style="background-color: #EFCA6C;">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+<script src="../js/script.js"></script>
+<script src="../js/ordernow.js"></script>
+</body>
+</html>
