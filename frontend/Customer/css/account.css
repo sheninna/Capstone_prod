@@ -57,6 +57,7 @@ body {
   margin: 0 4px;
   cursor: pointer;
 }
+
 .navbar-nav .icon-circle.active {
   background: #f7de5e;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -305,168 +306,139 @@ body {
   }
 }
 
-
-/* MAIN*/
-
-/* --- Main Layout --- */
-.notif-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start; /* keep top aligned */
-  padding: 0 1rem;
-}
-
-
-/* Heading */
-.notif-title {
+/*Account*/
+.account-title {
   font-size: 2rem;
   font-weight: bold;
   margin: 0;
   white-space: nowrap;
 }
 
-/* Actions aligned beside title */
-.notif-actions {
+.tabs {
   display: flex;
-  gap: 8px;
-  margin: 0;
-  padding-top: 0.5rem; /* match title’s top padding */
+  justify-content: center;
+  margin-top: 20px;
+  border-bottom: 1px solid #ddd;
+  gap: 150px;
 }
-
-.notif-btn {
-  padding: 8px 16px;
-  border: 1px solid #28a745;
-  background-color: white;
-  border-radius: 6px;
+.tabs button {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 0.9rem;
-  height: 38px; 
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+.tabs button.active {
+  border-bottom: 3px solid #f9d36c;
+  font-weight: bold;
+}
+.tab-content {
+  display: none;
+  padding: 20px;
+  margin: auto;
+  max-width: 600px;
+}
+.tab-content.active {
+  display: block;
 }
 
-.notif-btn:hover {
-  background-color: #d6ded8;
-  color: rgb(0, 0, 0);
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.notif-btn.danger {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-
-.notif-btn.danger:hover {
-  background-color: #f6cace;
-  color: rgb(0, 0, 0);
-}
-
-#noNotifMessage {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Profile Section */
+.profile-section {
   text-align: center;
-  justify-content: center;
+  overflow: hidden;
 }
-
-.notif-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 1rem;
-  flex-wrap: wrap;
-}
-
-.notif-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 10px;
+.profile-pic {
+  position: relative;
   display: inline-block;
-  flex-shrink: 0;
+  margin-bottom: 20px;
 }
-
-.notif-dot.green {
-  background-color: #28a745;
+.profile-pic img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
 }
-
-.notif-dot.gray {
-  background-color: #ccc;
+.edit-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #fff;
+  border-radius: 50%;
+  padding: 6px;
+  cursor: pointer;
+  border: 1px solid #ccc;
 }
-
-.notif-item p {
-  flex: 1;
-  margin: 0 10px;
-  font-size: 1rem;
-  min-width: 200px;
+.user-info {
+  margin-top: 10px;
 }
-
-.notif-time {
-  font-size: 0.9rem;
-  color: #666;
-  white-space: nowrap;
-  margin: 0 12px 12px 12px;
-
+.user-info h3 {
+  margin: 0;
 }
-
-#NotificationArea {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
+.user-info p {
+  margin: 0;
+  color: gray;
 }
-
-.toast {
-  background-color: #28a745;
-  color: white;
-  padding: 10px 15px;
+.form-group {
+  margin: 10px 0;
+  text-align: left;
+  position: relative;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  min-width: 250px;
-  max-width: 90vw;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  animation: fadeInOut 5s forwards;
+  border: 1px solid #a19f9f;
+  background: #f0eeee;
+}
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 38px;
+  cursor: pointer;
+  color: #777;
+  z-index: 2; /* Ensure it's above the input field */
+}
+.btn {
+  display: block;
+  width: 150px;
+  padding: 10px;
+  margin: 15px auto;
+  border: none;
+  border-radius: 6px;
+  background: #f9d36c;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.btn:hover {
+  background: #e6c158;
+}
+.btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(-20px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-20px); }
+.btn.save,
+.btn.cancel {
+  background: #ccc;
+}
+.btn.cancel:hover {
+  background: #b3b3b3;
 }
 
-/* --- Responsive Styles --- */
-@media (max-width: 600px) {
-  .notif-header {
-    flex-direction: column;   /* stack title and actions */
-    align-items: flex-start;  /* left align under title */
-    gap: 0.5rem;
-  }
+/*Password*/
+#password {
+  max-width: 600px;
+  margin: 10px auto;
+}
 
-  .notif-title {
-    font-size: 1.5rem;
-  }
-
-  .notif-btn {
-    font-size: 0.95rem;
-  }
-
-
-  .notif-actions {
-    width:100%;
-    justify-content: flex-start;
-    gap: 5px;
-    padding-top: 0;  /* remove extra top spacing */
-  }
-
-  .notif-btn {
-    flex: 1;                  /* buttons stretch evenly */
-    font-size: 0.85rem;
-    padding: 6px 12px;
-  }
+#passwordForm {
+  max-width: 600px;
+  margin-top: 10%;
 }

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LomiHub</title>
+    <link rel="icon" type="image/x-icon" href="../assets/logo.jpg">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/homepage.css">
+
+</head>
+<body>
+
+
+      <nav class="navbar navbar-expand-lg ">
+          <div class="container">
+          <a class="navbar-brand">
+            <img class= "logo "src="../assets/logo.jpg"></a>
+            
+              <!-- Mobile Side Toggle Button -->
+              <button class="navbar-toggler d-lg-none" type="button" aria-label="Toggle navigation" onclick="openNavSidebar()">
+                  <span class="navbar-toggler-icon"></span>
+              </button>
+
+              <!-- Desktop Navbar -->
+              <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
+                  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                      <li class="nav-item">
+                          <a class="nav-link active" href="homepage.html">Home</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="ordernow.html">Order Now</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="myorders.html">My Orders</a>
+                      </li>
+                  </ul>
+                  <ul class="navbar-nav">
+                      <li class="nav-item">
+                          <a class="nav-link" href="notifications.html">
+                              <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="account.html">
+                              <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                              <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+                          </a>
+                      </li>
+                  </ul>
+              </div>
+          </div>
+      </nav>  
+
+    <!-- Mobile Navbar -->
+    <div id="mobileNavSidebar" class="mobile-nav-sidebar">
+      <div class="mobile-nav-header">
+        <button class="close-btn" onclick="closeNavSidebar()" aria-label="Close">&times;</button>
+      </div>
+      <ul class="navbar-nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link active" href="homepage.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="ordernow.html">Order Now</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="myorders.html">My Orders</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="notifications.html">Notifications
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="account.html">Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div id="mobileNavSidebarBackdrop" class="mobile-nav-backdrop" onclick="closeNavSidebar()"></div>
+
+
+      <!-- Logout Modal -->
+    <div
+      class="modal fade"
+      id="logoutModal"
+      tabindex="-1"
+      aria-labelledby="logoutModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutModalLabel">
+          <div class="modal-body">Are you sure you want to log out?</div>
+          <div class="modal-footer">
+            <a href="customerlogin.html" class="btn-logout">Logout</a>
+            <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+<main class="main-container">
+    <!-- HERO -->
+        <section id="hero" class="py-5 position-relative">
+            <!-- Custom Shape Background -->
+            <div class="hero-shape">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                    <path fill="#ffffff" fill-opacity="1" 
+                        d="M0,320L48,293.3C96,267,192,213,288,186.7C384,160,480,160,576,186.7C672,213,768,267,864,277.3C960,288,1056,256,1152,213.3C1248,171,1344,117,1392,90.7L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z">
+                    </path>
+                </svg>
+            </div>
+
+            <div class="hero-container">
+                <div class="row g-0 align-items-center flex-wrap">
+                    <!-- Text -->
+                    <div class="col-12 col-md-6 p-4 p-md-5 d-flex flex-column justify-content-center pe-md-5 text-center text-md-start">
+                        <p style=" font-family: 'Brush Script MT', Lucida Handwriting, cursive;" class="text-danger small mb-1 fst-italic">Satisfy your cravings</p>
+                        <h1 style="padding-left: 40px;" class="fw-bold lh-sm mb-3">
+                            Feel the warmth.<br> Taste the flavor.<br>
+                            <span class="text-body-secondary">Lomi at your doorstep.</span>
+                        </h1>
+                        <button href="ordernow.html" id="orderNowBtn" class="btn btn-warning px-4 py-2 rounded-pill fw-semibold align-self-center align-self-md-start" >
+                            Order Now
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end">
+                        <img id="heroImg" src="../assets/hero.png" alt="Lomi" class="hero-img img-fluid">
+                    </div> 
+                </div>
+            </div>
+        </section>
+
+    <!-- GALLERY -->
+    <section id="galleryCarousel" class="py-5">
+        <div class="gallery-container">
+            <button class="carousel-btn prev">&#10094;</button>
+            <button class="carousel-btn next">&#10095;</button>
+            
+            <div class="card-slider">
+                <div class="cards-track" id="cardsTrack">
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/lomi.png" class="card-img" alt="lomi">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Lomi is a thick, savory noodle soup made with egg noodles, rich broth, and hearty toppings.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/sweet_and_spicy.png" class="card-img" alt="sweet & spicy">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Sweet & Spicy is a stir-fried noodle dish with a chewy texture, flavored with a blend of sweet and spicy sauce.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/plain.png" class="card-img" alt="plain">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Plain Pancit is a traditional Filipino noodle dish stir-fried with vegetables and light seasoning.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/bihon.png" class="card-img" alt="bihon">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Bihon is a Filipino noodle dish made with thin rice noodles sautéed with vegetables, meat, and savory sauce.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/tapsilog.png" class="card-img" alt="tapsilog">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Tapsilog is a popular Filipino breakfast meal made with tapa (marinated beef), garlic fried rice, and sunny-side-up egg.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/hotsilog.png" class="card-img" alt="hotsilog">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Hotsilog is a Filipino breakfast dish made with hotdog, garlic fried rice, and sunny-side-up egg.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/siomai-rice.png" class="card-img" alt="siomai-rice">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Siomai Rice is a filling meal of steamed dumplings served over seasoned rice, often with soy sauce and chili garlic.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/siomaisilog.png" class="card-img" alt="siomaisilog">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Siomaisilog is a Filipino meal made with siomai (steamed dumplings), garlic fried rice, and sunny-side-up egg.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/guisado.png" class="card-img" alt="guisado  ">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Creamy caramel custard that's a perfect ending to any meal.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/chami_bilao.png" class="card-img" alt="chami_bilao">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Sweet and Spicy Bilao offers a saucy and savory noodle dish served on a large tray, ideal for group feasts.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/Spaghetti_bilao.png" class="card-img" alt="spaghetti_bilao">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Spaghetti Bilao features sweet-style Filipino spaghetti topped with cheese, served in a tray for parties.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/palabok_bilao.png" class="card-img" alt="palabok_bilao">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Palabok Bilao is a rich noodle platter with thick sauce, shrimp, egg, and chicharon toppings, served on a bilao.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/Graham.png" class="card-img" alt="graham">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Graham is a chilled layered dessert made with graham crackers, sweetened cream, and fruit like mango or banana.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/leche-flan.png" class="card-img" alt="leche-flan">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Leche Flan is a smooth, creamy caramel custard made with eggs, milk, and sugar.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/graham-bar.png" class="card-img" alt="graham-bar">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Graham Bar is a bite-sized version of graham dessert, layered with cream and crushed graham for a sweet treat.</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-img-container">
+                            <img src="../assets/maja.png" class="card-img" alt="maja">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Maja Blanca is a creamy Filipino dessert made from coconut milk, cornstarch, and sweet corn.</p>
+                        </div>
+                    </div>
+                </d iv>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- BEST SELLING -->
+        <section id="bestSelling" class="py-5">
+          <div class="container">
+            <h2 class="text-center fw-bold mb-4">Our Best Selling</h2>
+            <div class="row g-4" id="bestSellingProducts">
+            </div>
+          </div>
+        </section>
+
+    <!-- OUR SERVICES -->
+        <section id="servicesSection" class="services-section py-5">
+            <div class="services-container">
+                <div class="services-header">
+                    <p class="pre-title">This is what we do</p>
+                    <h2 class="section-title">Our Services</h2>
+                </div>
+                
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="service-card delivery">
+                                <div class="service-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="service-title">Delivery</h3>
+                                    <div class="divider"></div>
+                                    <p class="service-description">
+                                        Our delivery service offers a convenient way to receive your items directly at your doorstep. 
+                                        We ensure fast, reliable, and contactless delivery within the designated service area. 
+                                        Simply place your order online or by phone, and we'll handle the rest.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="service-card pickup">
+                                <div class="service-icon">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="service-title">Pickup</h3>
+                                    <div class="divider"></div>
+                                    <p class="service-description">
+                                        With our pickup service, you can place your order in advance and pickup at your convenience. 
+                                        This option is perfect for those who prefer to save time and avoid waiting in lines. 
+                                        Just choose your pickup time, and your order will be ready when you arrive.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="service-card reservation">
+                                <div class="service-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="card-body">
+                                    <h3 class="service-title">Reservation</h3>
+                                    <div class="divider"></div>
+                                    <p class="service-description">
+                                        Our reservation service allows you to secure a spot in advance. 
+                                        Make your reservation online, and enjoy priority access and guaranteed availability without the wait.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </section>
+
+    <!-- YOU MIGHT ALSO LIKE -->
+        <section id="recommendationsSection" class="rec-section py-5">
+            <div class="rec-container">
+                <h2 style="text-align: center; font-size: 2rem; font-weight: bold;" class="rec-title mb-5">You Might Also Like</h2>
+
+                <div class="row g-4" id="recommendationsGrid">
+                </div>
+            </div>
+        </section>
+
+    <!-- Customer Feedback Section -->
+        <section id="customerfeedback" class="py-5">
+          <div class="container">
+            <div class="text-center mb-5">
+              <h1 class="section-title mb-3">
+                Our <span class="text-primary">Customer</span> Feedbacks
+              </h1>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+              <button class="btn bg-secondary text-white px-4 py-3 rounded-3 fw-semibold shadow-card"
+                      onclick="openReviewModal()">
+                Submit Your Review
+              </button>
+              <button class="btn btn-outline-primary px-4 py-3 rounded-3 fw-semibold"
+                      onclick="openBrowseReviewsModal()">
+                Browse Reviews
+              </button>
+            </div>
+          </div>
+        </section>
+
+    <!-- Review Modal -->
+      <div id="reviewModal" class="feedback-modal">
+        <div class="feedback-modal-content">
+          <div class="feedback-modal-header">
+            <h3 class="feedback-modal-title mb-4">Submit Your Review</h3>
+            <button class="close-btn" onclick="closeReviewModal()">&times;</button>
+          </div>
+          <div class="feedback-modal-body">
+            <p style="text-align: center; font-weight: bold; font-size: x-large; color: rgb(84, 156, 16);"><strong>Share your experience and help our community!</strong></p>
+            <h6 style="text-align: center; font-size: large; font-family: cursive;">Overall Rating</h6>
+            <div style="justify-content: center;" class="rating-stars">
+              <span class="star" data-rating="1">★</span>
+              <span class="star" data-rating="2">★</span>
+              <span class="star" data-rating="3">★</span>
+              <span class="star" data-rating="4">★</span>
+              <span class="star" data-rating="5">★</span>
+            </div>
+            <h6 class="mt-3">Your Review</h6>
+            <textarea class="review-textarea" id="reviewText" placeholder="Write your review here..."></textarea>
+          </div>
+          <div class="feedback-modal-footer">
+            <button class="submit-btn" onclick="submitReview()">Submit Review</button>
+          </div>
+        </div>
+      </div>
+
+    <!-- Browse Reviews Modal -->
+<!-- Browse Reviews Modal -->
+<div id="reviewsModal" class="feedback-modal">
+  <div class="feedback-modal-content">
+    <span class="close" onclick="closeBrowseReviewsModal()">&times;</span>
+    <h2 class="modal-title mb-1">Customers Review</h2>
+    <hr class="divider">
+
+    <!-- Rating Summary -->
+    <div class="rating-summary">
+      <div class="rating-bars">
+        <div class="rating-row">
+          <span>5★</span>
+          <div class="bar"><div id="starBar5"></div></div>
+          <span id="starPercent5">0%</span>
+        </div>
+        <div class="rating-row">
+          <span>4★</span>
+          <div class="bar"><div id="starBar4"></div></div>
+          <span id="starPercent4">0%</span>
+        </div>
+        <div class="rating-row">
+          <span>3★</span>
+          <div class="bar"><div id="starBar3"></div></div>
+          <span id="starPercent3">0%</span>
+        </div>
+        <div class="rating-row">
+          <span>2★</span>
+          <div class="bar"><div id="starBar2"></div></div>
+          <span id="starPercent2">0%</span>
+        </div>
+        <div class="rating-row">
+          <span>1★</span>
+          <div class="bar"><div id="starBar1"></div></div>
+          <span id="starPercent1">0%</span>
+        </div>
+      </div>
+
+      <!-- Side box -->
+    <div class="rating-sidebox">
+      <div class="rating-row">
+        <div class="rating-col">
+          <p>Users:</p>
+          <span id="totalReviews">0</span>
+        </div>
+        <div class="rating-col">
+          <p>Rating:</p>
+          <span id="averageRating">0.0</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Reviews list -->
+    <div class="reviews-container" id="reviewsContainer">
+      <!-- Cards will be rendered here -->
+    </div>
+  </div>
+</div>
+
+
+    <!-- Feedback Submitted Modal -->
+      <div id="feedbackSubmittedModal" class="feedback-modal">
+        <div class="feedback-modal-content">
+          <h3>🎉 Feedback Submitted!</h3>
+          <p>Thank you for sharing your experience.</p>
+          <button class="btn btn-primary mt-3" onclick="handleFeedbackOk()">
+            OK
+          </button>
+        </div>
+      </div>
+
+    <!-- Footer -->
+        <footer class="bg-text-primary text-white py-5 mt-5">
+          <div class="container">
+            <div class="row gy-4">
+              
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                  <img src="../assets/logo.jpg" class="me-3" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <div>
+                    <h3 class="fw-bold text-warning mb-0">LomiHub</h3>
+                  </div>
+                </div>
+                <p class="text-text-tertiary mb-3">
+                  Bringing authentic Filipino comfort food to your doorstep. Every dish is crafted with love, tradition, and the finest ingredients.
+                </p>
+                <div class="d-flex gap-3">
+                  <a href="#" class="text-text-tertiary transition-smooth">
+                    <i class="bi bi-facebook fs-5"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <h5 class="fw-semibold mb-3">Contact Us</h5>
+                <ul class="list-unstyled">
+                  <li id="footerContact"></li>
+                  <li id="footerEmail"></li>
+                  <li id="footerAddress"></li>
+                  <li id="footerWebsite"></li>
+                </ul>
+              </div>
+            </div>
+
+            <hr class="border-secondary mt-4">
+            <div class="text-center text-text-tertiary small pt-3">
+              © 2025 LomiHub. All Rights Reserved.
+            </div>
+          </div>
+        </footer>
+</main>
+
+
+  
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+  <script src="../js/homepage.js"></script>
+  <script src="../js/script.js"></script>
+
+</body>
+</html>   
