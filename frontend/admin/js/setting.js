@@ -274,8 +274,6 @@ document.getElementById('saveBusinessInfo').addEventListener('click', async func
     const address = document.getElementById('businessAddress').value.trim();
     const website = document.getElementById('businessWebsite').value.trim();
     const gcashName = document.getElementById('businessGcashName').value.trim();
-    // For QR, you may want to handle file upload separately
-    // Here we just send the file name as a placeholder
     const gcashQRInput = document.getElementById('businessQR');
     let gcashQR = '';
     if (gcashQRInput && gcashQRInput.files.length > 0) {
@@ -501,77 +499,3 @@ window.addEventListener('click', function(event) {
         document.getElementById('deleteModal').style.display = 'none';
     }
 });
-
-// // --- Portion Modal Logic (CLEANED & FIXED) ---
-// let selectedPortions = [];
-
-// document.addEventListener('DOMContentLoaded', function () {
-//     // Open modal when button is clicked
-//     const setPortionBtn = document.getElementById('setPortionBtn');
-//     if (setPortionBtn) {
-//         setPortionBtn.addEventListener('click', function() {
-//             document.getElementById('portionModal').style.display = 'flex';
-//         });
-//     }
-
-//     // Close modal when clicking the background
-//     const portionModal = document.getElementById('portionModal');
-//     if (portionModal) {
-//         portionModal.addEventListener('click', function(event) {
-//             if (event.target === this) {
-//                 this.style.display = 'none';
-//             }
-//         });
-//     }
-
-//     // Prevent closing when clicking inside the modal dialog
-//     const portionModalDialog = document.querySelector('#portionModal .modal-dialog, #portionModal .custom-modal-dialog');
-//     if (portionModalDialog) {
-//         portionModalDialog.addEventListener('click', function(event) {
-//             event.stopPropagation();
-//         });
-//     }
-
-//     // Close modal when clicking the close button
-//     const closePortionModal = document.getElementById('closePortionModal');
-//     if (closePortionModal) {
-//         closePortionModal.addEventListener('click', function() {
-//             document.getElementById('portionModal').style.display = 'none';
-//         });
-//     }
-
-//     // Enable/disable price input based on checkbox in modal
-//     document.querySelectorAll('.portion-checkbox').forEach(cb => {
-//         cb.addEventListener('change', function() {
-//             const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
-//             if (priceInput) {
-//                 priceInput.disabled = !cb.checked;
-//                 if (!cb.checked) priceInput.value = '';
-//             }
-//         });
-//     });
-
-//     // Save Portions button logic
-//     const savePortionBtn = document.getElementById('savePortionBtn');
-//     if (savePortionBtn) {
-//         savePortionBtn.addEventListener('click', function() {
-//             selectedPortions = [];
-//             let valid = true;
-//             document.querySelectorAll('.portion-checkbox').forEach(cb => {
-//                 if (cb.checked) {
-//                     const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
-//                     if (!priceInput || !priceInput.value.trim() || isNaN(parseFloat(priceInput.value.trim()))) {
-//                         alert(`Please enter a valid price for ${cb.value} portion.`);
-//                         valid = false;
-//                     } else {
-//                         selectedPortions.push({ portion: cb.value, price: parseFloat(priceInput.value.trim()) });
-//                     }
-//                 }
-//             });
-//             // If no portions are checked, that's OK (will use main price input)
-//             if (valid) {
-//                 document.getElementById('portionModal').style.display = 'none';
-//             }
-//         });
-//     }
-// });

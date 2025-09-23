@@ -5,6 +5,68 @@ const Notification = require('../models/notification');
 const CompletedOrder = require('../models/CompletedOrder');
 const { sendOrderReceiptEmail, sendStatusUpdateEmail } = require('../utils/mailer');
 
+// Helper function to calculate total amount for an order (supports portions)
+function calculateTotalAmount(items, foodItems) {
+  let total = 0;
+  items.forEach(item => {
+    let price = 0;
+    let matchedFood = null;
+
+    // Find all foods with this name
+    const foods = foodItems.filter(f => f.name === item.name);
+
+    if (foods.length === 1) {
+      matchedFood = foods[0];
+    } else if (foods.length > 1) {
+      if (item.portion) {
+        // Prefer food that has portions array and matching portion
+        matchedFood = foods.find(f =>
+          Array.isArray(f.portions) &&
+          f.portions.some(
+            p =>
+              p.portion &&
+              item.portion &&
+              p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
+          )
+        );
+        // Fallback: any food with portions array
+        if (!matchedFood) {
+          matchedFood = foods.find(f => Array.isArray(f.portions) && f.portions.length > 0);
+        }
+      } else {
+        // Prefer food with no portions or empty portions array
+        matchedFood = foods.find(f => !Array.isArray(f.portions) || f.portions.length === 0);
+      }
+      // If still not found, just use the first
+      if (!matchedFood) matchedFood = foods[0];
+    }
+
+    if (matchedFood) {
+      if (
+        item.portion &&
+        Array.isArray(matchedFood.portions) &&
+        matchedFood.portions.length > 0
+      ) {
+        // Case-insensitive, trimmed match for portion
+        const portionObj = matchedFood.portions.find(
+          p =>
+            p.portion &&
+            item.portion &&
+            p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
+        );
+        if (portionObj) {
+          price = portionObj.price;
+        }
+      } else if (typeof matchedFood.price === "number") {
+        price = matchedFood.price;
+      }
+    }
+
+    total += price * (item.quantity || 1);
+  });
+  return total;
+}
+
 // Place Order (Authenticated)
 const placeOrder = async (req, res) => {
   const { items, name, phone, orderType, address, people, date, time, source, paymentMethod, paymentProof } = req.body;
@@ -24,7 +86,17 @@ const placeOrder = async (req, res) => {
   }
 
   try {
-    const foodItems = await Food.find({ 'name': { $in: items.map(item => item.name) } });
+    const foodNames = items.map(item => item.name);
+    const foodItems = await Food.find({ name: { $in: foodNames } });
+
+    // Check for missing foods
+    const missingFoods = foodNames.filter(name => !foodItems.some(f => f.name === name));
+    if (missingFoods.length > 0) {
+      return res.status(400).json({
+        error: `The following items do not exist in the menu: ${missingFoods.join(', ')}`
+      });
+    }
+
     const unavailableItems = foodItems.filter(food => !food.isAvailable);
     if (unavailableItems.length > 0) {
       return res.status(400).json({
@@ -32,12 +104,7 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    const foodPriceMap = foodItems.reduce((acc, food) => {
-      acc[food.name] = food.price;
-      return acc;
-    }, {});
-
-    const totalAmount = calculateTotalAmount(items, foodPriceMap);
+    const totalAmount = calculateTotalAmount(items, foodItems);
 
     // Generate unique 5-digit orderNumber FIRST
     let orderNumber;
@@ -65,7 +132,7 @@ const placeOrder = async (req, res) => {
       paymentMethod,
       paymentProof,
       orderPlaced: new Date(),
-      orderNumber // <-- Add here
+      orderNumber 
     };
 
     const order = new Order(newOrder);
@@ -91,7 +158,7 @@ const placeOrder = async (req, res) => {
 
 // POS Order (For Walk-in Orders)
 const placePosOrder = async (req, res) => {
-  const { items, name, source, paymentMethod, paymentProof } = req.body;
+  const { items, name, source, paymentMethod, paymentProof } = req.body; 
   const userId = req.user._id;  
 
   if (!Array.isArray(items)) {
@@ -104,7 +171,16 @@ const placePosOrder = async (req, res) => {
   }
 
   try {
-    const foodItems = await Food.find({ 'name': { $in: items.map(item => item.name) } });
+    const foodNames = items.map(item => item.name);
+    const foodItems = await Food.find({ name: { $in: foodNames } });
+
+    // Check for missing foods
+    const missingFoods = foodNames.filter(name => !foodItems.some(f => f.name === name));
+    if (missingFoods.length > 0) {
+      return res.status(400).json({
+        error: `The following items do not exist in the menu: ${missingFoods.join(', ')}`
+      });
+    }
 
     const unavailableItems = foodItems.filter(food => !food.isAvailable);
     if (unavailableItems.length > 0) {
@@ -113,12 +189,7 @@ const placePosOrder = async (req, res) => {
       });
     }
 
-    const foodPriceMap = foodItems.reduce((acc, food) => {
-      acc[food.name] = food.price;
-      return acc;
-    }, {});
-
-    const totalAmount = calculateTotalAmount(items, foodPriceMap);
+    const totalAmount = calculateTotalAmount(items, foodItems);
 
     // Generate unique 5-digit orderNumber
     let orderNumber;
@@ -137,7 +208,8 @@ const placePosOrder = async (req, res) => {
       totalAmount,
       source: source || 'walk-in',
       paymentMethod,
-      orderPlaced: new Date(),
+      orderPlaced: new Date(), 
+      // Do NOT include time or date from input
     };
 
     newOrder.orderNumber = orderNumber;
@@ -206,7 +278,7 @@ const getAllOrders = async (req, res) => {
 };
 
 
-// Get All Completed Orders (from CompletedOrder collection)
+
 const getCompletedOrders = async (req, res) => {
   try {
     const completedOrders = await CompletedOrder.find({ status: 'completed' });
@@ -320,17 +392,19 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Helper function to calculate total amount for an order
-function calculateTotalAmount(items, foodPriceMap) {
-  let total = 0;
-  items.forEach(item => {
-    const price = foodPriceMap[item.name];
-    if (price) {
-      total += price * item.quantity;
-    }
-  });
-  return total;
-}
+// Get Completed Online Orders
+// const getCompletedOnlineOrders = async (req, res) => {
+//   try {
+//     // This regex matches "online", "Online", "online order", "ONLINE-DELIVERY", etc.
+//     const completedOnlineOrders = await CompletedOrder.find({
+//       status: 'completed',
+//       orderType: { $regex: /online/i }
+//     });
+//     res.json(completedOnlineOrders);
+//   } catch (err) {
+//     res.status(500).json({ message: 'Error fetching completed online orders', error: err.message });
+//   }
+// };
 
 module.exports = {
   placeOrder,
@@ -339,4 +413,5 @@ module.exports = {
   getAllOrders,
   getCompletedOrders,
   updateOrderStatus,
+  // getCompletedOnlineOrders,
 };

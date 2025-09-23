@@ -26,15 +26,16 @@ async function fetchOrders() {
     if (!response.ok) throw new Error('Not authorized or server error');
     orders = await response.json();
     onlineOrders = orders.filter(order =>
-      order.orderType === "online" ||
+      (order.orderType === "online" ||
       order.orderType === "reservation" ||
       order.orderType === "delivery" ||
-      order.orderType === "pickup"
+      order.orderType === "pickup")
     );
+    // Only keep walk-in orders with status "pending" out of main and walkin tabs
     walkinOrders = orders.filter(order =>
-      order.orderType === "walk-in" ||
+      (order.orderType === "walk-in" ||
       order.source === "walk-in" ||
-      order.method === "Walk-in"
+      order.method === "Walk-in")
     );
     renderMainTable();
     renderWalkinOrders();
@@ -48,7 +49,8 @@ async function fetchFoodPrices() {
     const response = await fetch('http://localhost:5000/api/foods');
     const foods = await response.json();
     foods.forEach(food => {
-      foodPriceMap[food.name] = food.price;
+      if (!foodPriceMap[food.name]) foodPriceMap[food.name] = [];
+      foodPriceMap[food.name].push(food);
     });
   } catch (err) {
     console.error('Error fetching food prices:', err);
@@ -144,11 +146,14 @@ function renderConfirmedOrders() {
   const tbody = document.getElementById("confirmed-orders-body");
   tbody.innerHTML = "";
 
-  // Show orders with status "in process", "on delivery", or "ready for pick-up" as confirmed
+  // Show orders with status "in process", "on delivery", "ready for pick-up", or ALL walk-in orders (regardless of status)
   const confirmedOrders = orders.filter(order =>
     order.status === "in process" ||
     order.status === "on delivery" ||
-    order.status === "ready for pick-up"
+    order.status === "ready for pick-up" ||
+    order.orderType === "walk-in" ||
+    order.source === "walk-in" ||
+    order.method === "Walk-in"
   );
 
   if (confirmedOrders.length === 0) {
@@ -258,34 +263,38 @@ function setupModal() {
       const modalBody = document.getElementById("modal-order-body");
 
       let leftHtml = `<div class="order-items">`;
+      let total = 0;
+
       order.items.forEach(item => {
-        const price = foodPriceMap[item.name] || 0;
-        const subtotal = price * item.quantity;
+        const price = getOrderItemPrice(item, foodPriceMap);
+        const subtotal = price * (item.quantity || 1);
+        total += subtotal;
         leftHtml += `
           <div class="item-row">
             <span>${item.quantity} × ${item.name}${item.portion ? ` <em>(${item.portion})</em>` : ''}</span>
-            <span>₱${subtotal.toFixed(2)}</span>
+            <span>${price ? `₱${subtotal.toFixed(2)}` : '<span style="color:red">N/A</span>'}</span>
           </div>
         `;
       });
 
-      leftHtml += `
-        <div class="order-total">Total ₱${order.totalAmount ? order.totalAmount.toFixed(2) : 'N/A'}</div>
-      `;
+      leftHtml += `<div class="item-row fw-bold mt-3" style="font-size:1.15em;">
+        <span>Total</span>
+        <span>₱${total.toFixed(2)}</span>
+      </div>`;
 
       if (type === "online") {
         if (order.orderType === "delivery") {
           leftHtml += `
-            <div class="order-extra">
+            <div class="order-extra mt-3">
               <p><strong>Address:</strong> ${order.address || order.deliveryAddress || 'N/A'}</p>
               <p><strong>Phone Number:</strong> ${order.phone || 'N/A'}</p>
             </div>
           `;
         } else if (order.orderType === "pickup") {
-          leftHtml += `<p class="order-extra"><strong>Pickup:</strong> Customer will pick up their order</p>`;
+          leftHtml += `<p class="order-extra mt-3"><strong>Pickup:</strong> Customer will pick up their order</p>`;
         } else if (order.orderType === "reservation") {
           leftHtml += `
-            <div class="order-extra">
+            <div class="order-extra mt-3">
               <p><strong>Date to Come:</strong> ${order.reservationDate ? new Date(order.reservationDate).toLocaleDateString() : (order.date ? new Date(order.date).toLocaleDateString() : 'N/A')}</p>
               <p><strong>Time to Come:</strong> ${order.reservationTime || order.time || 'N/A'}</p>
               <p><strong>No. of Persons:</strong> ${order.numberOfPeople || order.people || 'N/A'}</p>
@@ -313,9 +322,17 @@ function setupModal() {
       `;
 
       modalBody.innerHTML = `
-        <div class="order-details">
-          ${leftHtml}
-          ${rightHtml}
+        <div class="d-flex flex-column flex-md-row gap-4 align-items-stretch order-details">
+          <div class="flex-grow-1">
+            ${leftHtml}
+          </div>
+          ${rightHtml ? `
+          <div class="d-flex align-items-center justify-content-center" style="min-width:320px;max-width:340px;">
+            <div class="w-100 text-center bg-secondary bg-opacity-25 rounded-3 p-3">
+              <img src="${order.paymentProof}" alt="Payment Proof" style="max-width: 100%; max-height: 250px; object-fit: contain;">
+            </div>
+          </div>
+          ` : ""}
         </div>
         ${actionButtons}
       `;
@@ -424,7 +441,7 @@ async function updateOrderStatus(orderId, status) {
 function renderMainTable() {
   const tbody = document.getElementById("online-orders-body");
   tbody.innerHTML = "";
-  // Only show orders that are still "pending"
+  // Only show online orders that are still "pending"
   const filteredOrders = onlineOrders.filter(order =>
     order.status === "pending"
   );
@@ -515,3 +532,69 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById('confirmed-tab').addEventListener('shown.bs.tab', renderConfirmedOrders);
   document.getElementById('declined-tab').addEventListener('shown.bs.tab', renderDeclinedOrders);
 });
+
+function getOrderItemPrice(item, foodPriceMap) {
+  let price = 0;
+  let matchedFood = null;
+  const foods = foodPriceMap[item.name] || [];
+
+  if (foods.length === 1) {
+    matchedFood = foods[0];
+  } else if (foods.length > 1) {
+    if (item.portion) {
+      // Prefer food that has portions and a matching portion
+      matchedFood = foods.find(f =>
+        Array.isArray(f.portions) &&
+        f.portions.some(
+          p =>
+            p.portion &&
+            item.portion &&
+            p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
+        )
+      );
+      // Fallback: any food with portions array
+      if (!matchedFood) {
+        matchedFood = foods.find(f => Array.isArray(f.portions) && f.portions.length > 0);
+      }
+      // If still not found, fallback to food with base price
+      if (!matchedFood) {
+        matchedFood = foods.find(f => typeof f.price === "number");
+      }
+    } else {
+      // Prefer food with no portions or empty portions array and has a price
+      matchedFood = foods.find(f => (!Array.isArray(f.portions) || f.portions.length === 0) && typeof f.price === "number");
+      // Fallback: any food with base price
+      if (!matchedFood) {
+        matchedFood = foods.find(f => typeof f.price === "number");
+      }
+      // Fallback: any food
+      if (!matchedFood) matchedFood = foods[0];
+    }
+  }
+
+  if (matchedFood) {
+    if (
+      item.portion &&
+      Array.isArray(matchedFood.portions) &&
+      matchedFood.portions.length > 0
+    ) {
+      const portionObj = matchedFood.portions.find(
+        p =>
+          p.portion &&
+          item.portion &&
+          p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
+      );
+      if (portionObj) {
+        price = portionObj.price;
+      }
+    } else if (!item.portion && (typeof matchedFood.price === "number")) {
+      price = matchedFood.price;
+    }
+  }
+  // Final fallback: if still no price, try any food with a price
+  if ((price === 0 || price === undefined) && foods.length > 0 && !item.portion) {
+    const fallback = foods.find(f => typeof f.price === "number");
+    if (fallback) price = fallback.price;
+  }
+  return price || 0;
+}

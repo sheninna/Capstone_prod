@@ -1,4 +1,4 @@
-    body {
+body {
       background-color: #f2e7c9;
       font-family: Arial, sans-serif;
       overflow: hidden;
@@ -76,16 +76,17 @@
 
 
 .table-container {
-  max-height: calc(100vh - 220px); /* adjust based on your header height */
+  max-height: calc(90vh - 220px); 
   overflow-y: auto;
-  margin-top: 10px;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 .reports-table thead th {
   position: sticky;
   top: 0;
-  background: #cfe2ff; /* Bootstrap table-primary background */
-  z-index: 10;
+  background: #dee2e6; /* or your header color */
+  z-index: 2;
 }
 
 .reports-table {
@@ -102,5 +103,23 @@
   z-index: 2;
 }
 .reports-table td {
-  vertical-align: middle;
+  vertical-align:  middle;
+}
+
+
+.nav-tabs {
+  margin-bottom: 0.5rem !important;
+}
+
+.filters-tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
 }

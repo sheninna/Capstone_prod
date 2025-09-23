@@ -87,27 +87,48 @@ new Chart(ctxDaily, {
 });
 
 
-const bestSellingList = document.getElementById("bestSellingList");
-bestSellingList.innerHTML = "";
+async function loadBestSelling() {
+  const bestSellingList = document.getElementById("bestSellingList");
+  bestSellingList.innerHTML = `<div class="text-center w-100 py-3">Loading...</div>`;
+  try {
+    const res = await fetch('http://localhost:5000/api/reports/best-selling-dashboard', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+      }
+    });
+    const data = await res.json();
 
-dashboardData.bestSelling.slice(0, 5).forEach(item => {
-  const col = document.createElement("div");
-  col.className = "col-12 col-md-6";
+    bestSellingList.innerHTML = "";
+    if (Array.isArray(data) && data.length) {
+      data.forEach(item => {
+        const col = document.createElement("div");
+        col.className = "col-12 col-md-6";
+        col.innerHTML = `
+          <div class="d-flex align-items-center p-2 rounded-3 shadow-sm bg-light h-100">
+            <div class="me-3" style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:2px solid #ffd700; background:#fff;">
+              <i class="bi bi-star-fill text-warning fs-3"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold fs-6 mb-1">${item.name}</div>
+              <div class="text-muted small">
+                <i class="bi bi-bag-check-fill text-success me-1"></i>
+                Sold: <span class="fw-bold">${item.totalSold}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        bestSellingList.appendChild(col);
+      });
+    } else {
+      bestSellingList.innerHTML = `<div class="text-center w-100 py-3 text-muted">No data available</div>`;
+    }
+  } catch (err) {
+    bestSellingList.innerHTML = `<div class="text-danger w-100 py-3 text-center">Failed to load best selling items</div>`;
+    console.error(err);
+  }
+}
 
-  col.innerHTML = `
-    <div class="d-flex align-items-center p-2 rounded-3 shadow-sm bg-light h-100">
-      <img src="${item.img}" alt="${item.name}" class="me-3" style="width:48px; height:48px; object-fit:cover; border-radius:12px; border:2px solid #ffd700;">
-      <div class="flex-grow-1">
-        <div class="fw-semibold fs-6 mb-1">${item.name}</div>
-        <div class="text-muted small">
-          <i class="bi bi-bag-check-fill text-success me-1"></i>
-          Sold: <span class="fw-bold">${item.sold}</span>
-        </div>
-      </div>
-    </div>
-  `;
-  bestSellingList.appendChild(col);
-});
+document.addEventListener("DOMContentLoaded", loadBestSelling);
 
 
 const ordersChartCanvas = document.getElementById("ordersByTypeChart");

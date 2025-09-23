@@ -14,7 +14,8 @@ const signup = async (req, res) => {
     const newAdmin = new Admin({ username, email, password });
     await newAdmin.save();
 
-    const token = jwt.sign({ id: newAdmin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Set token to expire in 24 hours
+    const token = jwt.sign({ id: newAdmin._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.status(201).json({ token, admin: newAdmin });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -36,7 +37,8 @@ const login = async (req, res) => {
       console.log('Password mismatch');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Set token to expire in 24 hours
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, admin });
   } catch (err) {
     console.error('Server error:', err);

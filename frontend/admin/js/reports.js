@@ -1,20 +1,3 @@
-const Orders = [
-  {
-    orderId: "00112",
-    orderPlaced: "2024-08-15 10:30 AM",
-    Name: "Juan Dela Cruz",
-    orderType: "Online",
-    totalAmount: "₱340.00",
-    paymentMethod: "GCash",
-    status: "Completed",
-    items: [
-      { name: "Special Lomi", qty: 2 },
-      { name: "Iced Tea", qty: 1 }
-    ]
-  }
-];
-
-
 async function fetchCompletedOrders() {
   const token = localStorage.getItem('adminToken');
   try {
@@ -31,29 +14,68 @@ async function fetchCompletedOrders() {
   }
 }
 
+// Fetch and render completed orders in a professional table
 async function renderReportsTable() {
   const Orders = await fetchCompletedOrders();
-  const tableBody = document.querySelector(".reports-table tbody");
+  console.log(Orders); // <-- Add this
+  const tableBody = document.getElementById("REPORTS");
   tableBody.innerHTML = "";
 
   Orders.forEach(order => {
+    // Fix: Use source for online, orderType for walk-in
+    const orderType = (order.orderType || "").toLowerCase();
+    const source = (order.source || "").toLowerCase();
+
+    if (
+      (selectedOrderTypeTab === "online" && source !== "online") ||
+      (selectedOrderTypeTab === "walk-in" && orderType !== "walk-in")
+    ) {
+      return; // Skip this order
+    }
+
+    const status = (order.status || "Completed").toLowerCase();
+    let badgeClass = "bg-secondary";
+    if (status === "completed") badgeClass = "bg-success";
+    else if (status === "pending") badgeClass = "bg-warning text-dark";
+    else if (status === "cancelled") badgeClass = "bg-danger";
+    else if (status === "in process") badgeClass = "bg-info text-dark";
+
     const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${order.orderNumber || order.orderId || order._id}</td>
-      <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleString() : ""}</td>
-      <td>${order.name || order.customerName || ""}</td>
-      <td>${order.orderType || ""}</td>
-      <td>₱${order.totalAmount ? Number(order.totalAmount).toFixed(2) : "0.00"}</td>
-      <td>${order.paymentMethod || order.payment || ""}</td>
-      <td>
-        <span class="badge bg-success">${order.status || "Completed"}</span>
-      </td>
-      <td>
-        <button class="btn btn-sm btn-warning view-order-btn" data-id="${order._id}">
-          View Orders
-        </button>
-      </td>
-    `;
+    row.classList.add("align-middle");
+
+    // Render with or without Customer Name column
+    if (selectedOrderTypeTab === "online") {
+      row.innerHTML = `
+        <td class="fw-semibold">${order.orderNumber || order.orderId || order._id}</td>
+        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleDateString() : ""}</td>
+        <td>${order.name || order.customerName || ""}</td>
+        <td>${order.orderType || ""}</td>
+        <td class="text-middle">₱${order.totalAmount ? Number(order.totalAmount).toFixed(2) : "0.00"}</td>
+        <td>${order.paymentMethod || order.payment || ""}</td>
+        <td>
+          <span class="badge ${badgeClass} px-3 py-2">${order.status || "Completed"}</span>
+        </td>
+        <td>
+          <i class="bi bi-eye btn btn-warning btn-sm view-order-btn" data-id="${order._id}" title="View Order" style="cursor:pointer; width: 50px; height: 40px;font-size: 1.4rem;"></i>
+        </td>
+      `;
+    } else {
+      row.innerHTML = `
+        <td class="fw-semibold">${order.orderNumber || order.orderId || order._id}</td>
+        <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleDateString() : ""}</td>
+        <td>${order.orderType || ""}</td>
+        <td class="text-middle">₱${order.totalAmount ? Number(order.totalAmount).toFixed(2) : "0.00"}</td>
+        <td>${order.paymentMethod || order.payment || ""}</td>
+        <td>
+          <span class="badge ${badgeClass} px-3 py-2">${order.status || "Completed"}</span>
+        </td>
+        <td>
+          <i class="bi bi-eye btn btn-warning btn-sm view-order-btn" data-id="${order._id}" title="View Order" style="cursor:pointer; width: 50px; height: 40px;font-size: 1.4rem;"></i>
+        </td>
+      `;
+    }
+
+    row.dataset.order = JSON.stringify(order);
     tableBody.appendChild(row);
   });
 }
@@ -62,20 +84,30 @@ async function renderReportsTable() {
 document.addEventListener("DOMContentLoaded", renderReportsTable);
 
 
+// View Order Modal logic
 document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("view-order-btn")) {
-    const orderId = e.target.dataset.id;
-    const order = Orders.find(o => o.orderId === orderId);
+  if (e.target.classList.contains("view-order-btn") || e.target.closest(".view-order-btn")) {
+    const btn = e.target.closest(".view-order-btn");
+    const row = btn.closest("tr");
+    let order;
+    try {
+      order = JSON.parse(row.dataset.order);
+    } catch {
+      order = null;
+    }
 
     if (order) {
       const orderDetails = document.getElementById("orderDetails");
       orderDetails.innerHTML = "";
 
-      order.items.forEach(item => {
+      (order.items || []).forEach(item => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${item.name}</td>
-          <td class="text-end">x${item.qty}</td>
+          <td>
+            <span class="fw-semibold">${item.name}</span>
+            ${item.portion ? `<span class="badge bg-light text-dark border ms-2">${item.portion}</span>` : ""}
+          </td>
+          <td class="text-end">x${item.qty || item.quantity || 1}</td>
         `;
         orderDetails.appendChild(tr);
       });
@@ -87,23 +119,59 @@ document.addEventListener("click", function (e) {
 });
 
 
-
 //Monthly Sales 
-document.addEventListener("DOMContentLoaded", function () {
+let salesChart;
 
-  // Chart.js
+async function fetchMonthlySales(year, range) {
+  const token = localStorage.getItem('adminToken');
+  try {
+    const response = await fetch(`http://localhost:5000/api/reports/monthly-sales?year=${year}&range=${range}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch monthly sales');
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching monthly sales:', err);
+    return { labels: [], data: [] };
+  }
+}
+
+async function renderMonthlySalesChart() {
+  const year = document.querySelector('#MSModal select.year-select, #MSModal #yearSelect')?.value || "2024";
+  const range = document.querySelector('#MSModal select.range-select, #MSModal #rangeSelect')?.value || "jan-dec";
+  let { labels, data } = await fetchMonthlySales(year, range);
+
+  // If backend always returns all months, slice here:
+  if (labels.length === 12 && data.length === 12) {
+    if (range === "jan-june") {
+      labels = labels.slice(0, 6);
+      data = data.slice(0, 6);
+    } else if (range === "july-dec") {
+      labels = labels.slice(6, 12);
+      data = data.slice(6, 12);
+    }
+    // else jan-dec: show all
+  }
+
+  // Check if all data is zero (no sales for this year/range)
+  const allZero = data.every(val => val === 0);
+
   const ctx = document.getElementById("salesChart").getContext("2d");
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  let salesData = [90,70,50,72,95,88,92,76,55,70,96,85]; // Sample data
-
-  let salesChart = new Chart(ctx, {
-    type: "bar",
+  if (salesChart) salesChart.destroy();
+  salesChart = new Chart(ctx, {
+    type: "line",
     data: {
-      labels: months,
+      labels: allZero ? ["No Data"] : labels,
       datasets: [{
         label: "Sales",
-        data: salesData,
-        backgroundColor: "#26c6da"
+        data: allZero ? [0] : data,
+        borderColor: "#26c6da",
+        backgroundColor: "rgba(38,198,218,0.1)",
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: "#26c6da",
+        pointBorderColor: "#26c6da",
+        pointRadius: 5
       }]
     },
     options: {
@@ -112,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
         tooltip: {
           callbacks: {
             label: function (context) {
-              return "₱" + context.raw;
+              return allZero ? "No sales" : ("₱" + context.raw);
             }
           }
         },
@@ -120,91 +188,68 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       scales: {
         y: {
-          beginAtZero: true,
-          ticks: { stepSize: 50 }
+          beginAtZero: true
         }
       }
     }
   });
+}
 
-  // Handle time range selection
-  document.getElementById("rangeSelect").addEventListener("change", function () {
-    const val = this.value;
-    if (val === "jan-dec") {
-      salesChart.data.labels = months;
-      salesChart.data.datasets[0].data = salesData;
-    } else if (val === "jan-june") {
-      salesChart.data.labels = months.slice(0, 6);
-      salesChart.data.datasets[0].data = salesData.slice(0, 6);
-    } else if (val === "july-dec") {
-      salesChart.data.labels = months.slice(6, 12);
-      salesChart.data.datasets[0].data = salesData.slice(6, 12);
-    }
-    salesChart.update();
-  });
-});
+// Render chart when modal is shown
+document.getElementById("MSModal").addEventListener("shown.bs.modal", renderMonthlySalesChart);
 
 
 //Top Selling Items
-
 let topSellingChart;
-document.getElementById("BSModal").addEventListener("shown.bs.modal", function () {
-  if (!topSellingChart) { 
-    const topSellingCtx = document.getElementById("topSellingChart").getContext("2d");
-    topSellingChart = new Chart(topSellingCtx, {
-      type: "pie",
-      data: {
-        labels: [
-          "Lomi", "Sweet & Spicy", "Plain", "Bihon", "Tapsilog", "Hotsilog",
-          "Siomaisilog", "Siomai Rice", "Guisado Bilao", "Sweet & Spicy Bilao",
-          "Spaghetti Bilao", "Palabok Bilao", "Graham Bar", "Graham", 
-          "Leche Flan", "Maja Blanca"
-        ],
-        datasets: [{
-          data: [50, 30, 20, 15, 25, 10, 18, 22, 12, 14, 16, 11, 8, 13, 9, 7],
-          backgroundColor: [
-            "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40",
-            "#FFCD56", "#C9CBCF", "#36A2EB", "#4BC0C0", "#9966FF", "#FF6384",
-            "#FF9F40", "#FFCD56", "#C9CBCF", "#36A2EB"
-          ],
-        }]
-      },
-      options: {
-        responsive: true,
 
-      }
+async function fetchBestSelling() {
+  const token = localStorage.getItem('adminToken');
+  const month = document.querySelector('#BSModal select.form-select')?.value || "January";
+  const year = document.querySelector('#BSModal select.year-select, #BSModal #yearSelect, #MSModal select.year-select, #MSModal #yearSelect')?.value || "2024";
+  try {
+    const response = await fetch(`http://localhost:5000/api/reports/best-selling?month=${month}&year=${year}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
+    if (!response.ok) throw new Error('Failed to fetch best selling items');
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching best selling items:', err);
+    return { labels: [], data: [] };
   }
-});
+}
+
+async function renderBestSellingChart() {
+  const { labels, data } = await fetchBestSelling();
+  const ctx = document.getElementById("topSellingChart").getContext("2d");
+  if (topSellingChart) topSellingChart.destroy();
+  topSellingChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels.length ? labels : ["No Data"],
+      datasets: [{
+        label: "Best Selling Items",
+        data: data.length ? data : [0],
+        backgroundColor: "#ffb300",
+        borderColor: "#ff8c00",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+// Render chart when modal is shown
+document.getElementById("BSModal").addEventListener("shown.bs.modal", renderBestSellingChart);
+
+// Update chart when month is changed
+document.querySelector('#BSModal select.form-select').addEventListener("change", renderBestSellingChart);
 
 
-//Orders by Type
-
-let ordersTypeChart;
-document.getElementById("OTModal").addEventListener("shown.bs.modal", function () {
-  if (!ordersTypeChart) {
-    const ordersTypeCtx = document.getElementById("ordersTypeChart").getContext("2d");
-    ordersTypeChart = new Chart(ordersTypeCtx, {
-      type: "bar",
-      data: {
-        labels: ["Online", "Walk-in"],
-        datasets: [{
-          label: "Orders",
-          data: [200, 150], // sample data
-          backgroundColor: ["#36A2EB", "#FF6384"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-  }
-});
-
-
+//Monthly Orders by Type
 document.addEventListener("DOMContentLoaded", function () {
   const params = new URLSearchParams(window.location.search);
   const modalId = params.get("modal");
@@ -235,3 +280,137 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+document.getElementById("rangeSelect").addEventListener("change", renderMonthlySalesChart);
+
+// Listen for changes on both year and range selects
+document.querySelectorAll('#MSModal select.year-select, #MSModal #yearSelect, #MSModal select.range-select, #MSModal #rangeSelect')
+  .forEach(sel => sel.addEventListener("change", renderMonthlySalesChart));
+
+async function fetchOrdersByMonth(year, month) {
+  const token = localStorage.getItem('adminToken');
+  try {
+    const response = await fetch(`http://localhost:5000/api/reports/orders-by-month?year=${year}&month=${month}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch orders by month');
+    const data = await response.json();
+    return data.orders || [];
+  } catch (err) {
+    console.error('Error fetching orders by month:', err);
+    return [];
+  }
+}
+
+async function renderOrdersByMonthTable() {
+  // Get selected year and month from your filter dropdowns
+  const year = document.querySelector('#OTModal #yearSelect, #OTModal select.year-select')?.value || "2025";
+  const month = document.querySelector('#OTModal select.month-select, #OTModal #monthSelect')?.value || "August";
+  const orders = await fetchOrdersByMonth(year, month);
+
+  // Assuming you have a table body with id="ordersByMonthTableBody"
+  const tableBody = document.getElementById("ordersByMonthTableBody");
+  if (!tableBody) return;
+  tableBody.innerHTML = "";
+
+  orders.forEach(order => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${order.orderNumber || order._id}</td>
+      <td>${order.name || order.customerName || ""}</td>
+      <td>${order.orderType || ""}</td>
+      <td>${order.paymentMethod || ""}</td>
+      <td>₱${order.totalAmount ? Number(order.totalAmount).toFixed(2) : "0.00"}</td>
+      <td>${order.orderPlaced ? new Date(order.orderPlaced).toLocaleDateString() : ""}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+// Optionally, call on modal show
+document.getElementById("OTModal").addEventListener("shown.bs.modal", renderOrdersByMonthTable);
+
+let ordersTypeChart;
+
+async function fetchOrderTypes() {
+  const token = localStorage.getItem('adminToken');
+  // Use specific IDs for year and month
+  const year = document.querySelector('#OTModal #yearSelect')?.value || "2025";
+  const month = document.querySelector('#OTModal #rangeSelect')?.value;
+  let url = `http://localhost:5000/api/reports/order-types?year=${year}`;
+  if (month) url += `&month=${month}`;
+  try {
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch order types');
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching order types:', err);
+    return { labels: ["Online", "Walk-in"], data: [0, 0] };
+  }
+}
+
+async function renderOrderTypesChart() {
+  const { labels, data } = await fetchOrderTypes();
+  const ctx = document.getElementById("ordersTypeChart").getContext("2d");
+  if (ordersTypeChart) ordersTypeChart.destroy();
+  ordersTypeChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Orders",
+        data: data,
+        backgroundColor: ["#36A2EB", "#FF6384"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+// Listen for changes on year and month selects in the Order Channels modal
+document.querySelectorAll('#OTModal #yearSelect, #OTModal #rangeSelect')
+  .forEach(sel => sel.addEventListener("change", renderOrderTypesChart));
+
+// Render chart when Order Channels modal is shown
+document.getElementById("OTModal").addEventListener("shown.bs.modal", renderOrderTypesChart);
+
+let selectedOrderTypeTab = "online"; 
+
+document.getElementById("online-tab").addEventListener("click", function() {
+  selectedOrderTypeTab = "online";
+  renderReportsTable();
+});
+document.getElementById("walkin-tab").addEventListener("click", function() {
+  selectedOrderTypeTab = "walk-in";
+  renderReportsTable();
+});
+
+function toggleCustomerNameColumn(show) {
+  document.querySelectorAll('.customer-name-col').forEach(th => {
+    th.style.display = show ? '' : 'none';
+  });
+  // Toggle all cells in that column
+  document.querySelectorAll('#REPORTS tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 2) { 
+      cells[2].style.display = show ? '' : 'none';
+    }
+  });
+}
+
+// Example: Call this when switching tabs
+document.getElementById('online-tab').addEventListener('click', function() {
+  toggleCustomerNameColumn(true);
+});
+document.getElementById('walkin-tab').addEventListener('click', function() {
+  toggleCustomerNameColumn(false);
+});
+
+// Also call after initial render, depending on default tab
+toggleCustomerNameColumn(true); // or false if Walk-in is default

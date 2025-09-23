@@ -19,6 +19,6 @@ const completedOrderSchema = new mongoose.Schema({
   orderNumber: Number,
   status: String,
   archivedAt: { type: Date, default: Date.now }
-}, { collection: 'completedorders' }); // <-- THIS LINE IS CRUCIAL
+}, { collection: 'completedorders' }); 
 
 module.exports = mongoose.model('CompletedOrder', completedOrderSchema);

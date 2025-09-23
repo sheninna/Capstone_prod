@@ -9,7 +9,8 @@ const {
   getUserOrders,
   getAllOrders,
   updateOrderStatus,
-  getCompletedOrders
+  getCompletedOrders,
+  // getCompletedOnlineOrders
 } = require('../controllers/orderController');
 
 router.post('/', protect, placeOrder);
@@ -18,5 +19,6 @@ router.get('/:userId', getUserOrders);
 router.get('/', posAuth, getAllOrders);
 router.patch('/:orderId/status', posAuth, updateOrderStatus);
 router.get('/orders/completed', adminOnly, getCompletedOrders);
+// router.get('/orders/completed-online', adminOnly, getCompletedOnlineOrders);
 
 module.exports = router;
