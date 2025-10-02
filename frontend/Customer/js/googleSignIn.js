@@ -12,9 +12,9 @@ function showOtpModal(email) {
     const result = await response.json();
     if (response.ok) {
       otpModal.hide();
-      localStorage.setItem('authToken', result.token);
+      localStorage.setItem('customerToken', result.token); 
       localStorage.setItem('user', JSON.stringify(result.user));
-      window.location.href = "../html/customerLogout.html";
+      window.location.href = "../html/homepage.html";
     } else {
       document.getElementById('otpError').innerText = result.message;
       document.getElementById('otpError').style.display = 'block';
@@ -33,11 +33,10 @@ function handleCredentialResponse(response) {
   })
   .then(res => res.json())
   .then(data => {
-    if (data.success) {
-      // Google authentication successful
-      localStorage.setItem('authToken', data.token);
+    if (data.success && data.token) {
+      localStorage.setItem('customerToken', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      window.location.href = "../html/customerLogout.html";
+      window.location.href = "../html/homepage.html";
     } else {
       alert(data.message || 'Google Sign-In failed!');
       console.error('Authentication failed:', data.message || data.error);

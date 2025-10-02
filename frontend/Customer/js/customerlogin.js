@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Check if user is already logged in (redirect if so)
   if (localStorage.getItem('authToken')) {
-    window.location.href = '../html/customerLogout.html'; 
+    window.location.href = '../html/homepage.html'; 
   }
 
   const loginForm = document.getElementById('loginForm');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('authToken', result.token);
         localStorage.setItem('user', JSON.stringify(result.user));
         alert('Login Successful!');
-        window.location.href = '../html/customerLogout.html';
+        window.location.href = '../html/homepage.html';
       } else {
         alert(result.message || 'Login Failed!');
       }

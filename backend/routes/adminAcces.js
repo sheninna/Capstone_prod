@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const adminOnly = require('../middleware/adminOnly');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' }); // or your config
 const {
   signup,
   login,
@@ -11,6 +13,7 @@ const {
   getDashboard,
   editAdminProfile,
   changeAdminPassword,
+  logout,
 } = require('../controllers/adminController');
 
 // Admin Signup
@@ -29,7 +32,7 @@ router.put('/users/:id', adminOnly, editUser);
 router.delete('/users/:id', adminOnly, deleteUser);
 
 // Edit food (admin only)
-router.put('/foods/:id', adminOnly, editFood);
+router.put('/foods/:id', adminOnly, upload.single('image'), editFood);
 
 // Admin Dashboard
 router.get('/dashboard', adminOnly, getDashboard);
@@ -39,5 +42,8 @@ router.put('/profile', adminOnly, editAdminProfile);
 
 // Change admin password
 router.put('/change-password', adminOnly, changeAdminPassword);
+
+// Admin Logout
+router.post('/logout', logout);
 
 module.exports = router;

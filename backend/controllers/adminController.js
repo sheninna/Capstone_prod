@@ -2,6 +2,7 @@ const Admin = require('../models/admin');
 const User = require('../models/user');
 const Food = require('../models/Food');
 const Order = require('../models/Order');
+const RevokedToken = require('../models/revokedToken');
 const jwt = require('jsonwebtoken');
 
 // Admin Signup
@@ -78,27 +79,40 @@ const deleteUser = async (req, res) => {
 
 // Edit food (admin only)
 const editFood = async (req, res) => {
-  const { name, category, price } = req.body;  
-
-  
-  if (!name && !category && price === undefined) {
-    return res.status(400).json({ message: 'No data to update' });
-  }
-
+  const { name, category, portions, price, portion } = req.body;
   const updatedFields = {};
-
 
   if (name) updatedFields.name = name;
   if (category) updatedFields.category = category;
-  if (price !== undefined) updatedFields.price = price;
+
+  // Handle multiple portions
+  if (portions) {
+    try {
+      let parsedPortions = Array.isArray(portions) ? portions : JSON.parse(portions);
+      updatedFields.portions = parsedPortions.filter(p => p.portion && p.price !== undefined);
+      // Remove single price/portion if portions are present
+      updatedFields.price = undefined;
+      updatedFields.portion = undefined;
+    } catch (err) {
+      return res.status(400).json({ message: 'Invalid portions format' });
+    }
+  } else {
+    // Handle single portion/price
+    if (price !== undefined) updatedFields.price = price;
+    if (portion !== undefined) updatedFields.portion = portion;
+    updatedFields.portions = []; // Clear portions if switching to single price
+  }
+
+  // Handle image update if needed
+  if (req.file && req.file.path) {
+    updatedFields.image = req.file.path;
+  }
 
   try {
     const food = await Food.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
-
     if (!food) {
       return res.status(404).json({ message: 'Food not found' });
     }
-
     res.json(food);
   } catch (err) {
     console.error(err);
@@ -141,6 +155,35 @@ const changeAdminPassword = async (req, res) => {
   }
 };
 
+// Admin Logout (Token Revocation)
+const logout = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(400).json({ message: 'No token provided' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    // Decode token to get exp, user, and jti
+    const decoded = jwt.decode(token);
+    if (!decoded) {
+      return res.status(400).json({ message: 'Invalid token' });
+    }
+
+    // Save revoked token with required fields
+    await RevokedToken.create({
+      token,
+      expAt: new Date(decoded.exp * 1000), // JWT exp is in seconds
+      user: decoded.id || decoded._id || decoded.user, // adjust based on your payload
+      jti: decoded.jti || decoded._id || decoded.id // adjust based on your payload
+    });
+
+    res.json({ message: 'Logout successful. Token revoked.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -151,4 +194,5 @@ module.exports = {
   getDashboard,
   editAdminProfile,
   changeAdminPassword,
+  logout,
 };

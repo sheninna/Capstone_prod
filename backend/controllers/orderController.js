@@ -209,7 +209,6 @@ const placePosOrder = async (req, res) => {
       source: source || 'walk-in',
       paymentMethod,
       orderPlaced: new Date(), 
-      // Do NOT include time or date from input
     };
 
     newOrder.orderNumber = orderNumber;

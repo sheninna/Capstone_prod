@@ -25,7 +25,7 @@
     <div id="datetime" class="fw-bold"></div>
     </div>
 
- <main>
+  <main>
     <div class="tabs">
         <!-- Hidden radio buttons -->
         <input type="radio" id="tab1" name="tab" checked>
@@ -38,8 +38,7 @@
         <div class="tab-content">
             <!-- Manage Menu Panel -->
             <div class="tab-panel" id="panel1">
-                <h2 class="mb-4">Manage Menu</h2>
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <div>
                         <label>Name</label>
                         <input type="text" id="Name">
@@ -67,7 +66,7 @@
                         <label for="Image">Upload Image:</label>
                         <input type="file" id="Image" accept="image/*">
                     </div>
-                </div>
+                </div> -->
 
                 <button class="btn" id="addBtn">ADD</button>
                 
@@ -76,19 +75,28 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Price</th>
                             <th>Category</th>
-                            <th>Portion</th>
-                            <th>Image</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                        <tbody>
-                            <tr id="noDataRow">
-                                <td colspan="6">No menu items yet</td>  
-                            </tr>
-                        </tbody>
-                    </table>
+                    <tbody>
+                        <tr>
+                            <td class="menu-name-cell">
+                                <img src="..." class="menu-img" />
+                                <span>Food Name</span>
+                            </td>
+                            <td>Category</td>
+                            <td>
+                                <button class="action-btn edit-btn">Edit</button>
+                                <button class="action-btn delete-btn">Delete</button>
+                                <button class="btn btn-outline-info btn-sm viewDetailBtn" title="View Details">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- more rows -->
+                    </tbody>
+                </table>
                 </div>
             </div>
 
@@ -129,49 +137,56 @@
         </div>
     </div>
 
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span id="closeModal" style="float:right;cursor:pointer;">&times;</span>
-            <h3>Edit Menu Item</h3>
-            <div class="form-group">
-                <div>
-                    <label>Name</label>
-                    <input type="text" id="editName">
-                </div>
-                <div>
-                    <label>Price</label>
-                    <input type="text" id="editPrice">
-                </div>
-                <div>
-                    <label>Category</label>
-                    <select id="editCategory">
-                        <option>Dishes</option>
-                        <option>Bilao</option>
-                        <option>Desserts</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Portion</label>
-                    <select id="editPortion">
-                        <option>Small</option>
-                        <option>Medium</option>
-                        <option>Large</option>
-                        <option>Special</option>
-                        <option>Regular</option>
-                        <option>Jumbo</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Change Image</label>
-                    <input type="file" id="editImage" accept="image/*">
-                </div>
+    <!-- Replace your current edit modal with this improved, responsive version -->
+    <div id="editModal" class="modal" style="display:none;">
+      <div class="modal-dialog" style="max-width:400px; width:95vw; margin:auto; border-radius:16px;">
+        <div class="modal-content" style="border-radius:16px;">
+          <div class="modal-header bg-light border-0" style="border-radius:16px 16px 0 0;">
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-pencil-square me-2 text-warning"></i>Edit Menu Item
+            </h5>
+            <button type="button" id="closeModal" class="btn-close" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding:20px;">
+            <div class="form-group mb-3">
+              <label class="mb-1">Name</label>
+              <input type="text" id="editName" class="form-control form-control-sm">
             </div>
-            <div style="margin: 15px 0;">
-                <label>Current Image:</label>
-                <img id="editPreview" src="" style="width:80px;height:70px;object-fit:cover;margin-top:5px;border-radius:5px;">
+            <div class="form-group mb-3">
+              <label class="mb-1">Price</label>
+              <input type="text" id="editPrice" class="form-control form-control-sm">
             </div>
-            <button id="saveEditBtn" class="btn">Save Changes</button>
+            <div class="form-group mb-3">
+              <label class="mb-1">Category</label>
+              <select id="editCategory" class="form-select form-select-sm">
+                <option>Dishes</option>
+                <option>Bilao</option>
+                <option>Desserts</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="mb-1">Portion</label>
+              <button type="button" id="editSetPortionBtn" class="btn btn-warning w-100 mb-2">
+                <i class="bi bi-list-ul me-1"></i> Select Portions
+              </button>
+              <div id="editPortionSummary" class="small text-muted"></div>
+            </div>
+            <div class="form-group mb-3">
+              <label class="mb-1">Change Image</label>
+              <input type="file" id="editImage" accept="image/*" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3 text-center">
+              <label class="mb-1">Current Image:</label><br>
+              <img id="editPreview" src="" style="width:80px;height:70px;object-fit:cover;margin-top:5px;border-radius:5px;box-shadow:0 2px 8px #0001;">
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0" style="border-radius:0 0 16px 16px;">
+            <button id="saveEditBtn" class="btn btn-success w-100">
+              <i class="bi bi-check2-circle"></i> Save Changes
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="deleteModal" class="modal">
@@ -193,89 +208,159 @@
         </div>
     </div>
 
-    <!-- Portion Modal (add this at the end of your body in settings.html) -->
-<div id="portionModal" class="custom-modal-bg" style="display:none;">
-  <div class="custom-modal-dialog">
-    <div class="modal-header border-0 pb-2">
-      <h5 class="modal-title fw-bold text-primary">
-        <i class="bi bi-list-ul me-2 text-warning"></i>Select Portions
-      </h5>
-      <button type="button" id="closePortionModal" class="btn-close"></button>
+    <!-- Portion Modal -->
+    <div id="portionModal" class="custom-modal-bg" style="display:none;">
+      <div class="custom-modal-dialog" style="background:#fff; border-radius:16px; max-width:420px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:0;">
+        <div class="modal-header border-0 pb-2" style="border-radius:16px 16px 0 0; background:#f8f9fa;">
+          <h5 class="modal-title fw-bold text-primary">
+            <i class="bi bi-list-ul me-2 text-warning"></i>Select Portions
+          </h5>
+          <button type="button" id="closePortionModal" class="btn-close"></button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+          <div class="row g-3">
+            
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Regular" id="portionRegular">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionRegular" style="min-width:80px;">Regular</label>
+                <input type="number" class="form-control portion-price" data-portion="Regular" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Special" id="portionSpecial">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionSpecial" style="min-width:80px;">Special</label>
+                <input type="number" class="form-control portion-price" data-portion="Special" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Jumbo" id="portionJumbo">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionJumbo" style="min-width:80px;">Jumbo</label>
+                <input type="number" class="form-control portion-price" data-portion="Jumbo" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Large" id="portionLarge">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionLarge" style="min-width:80px;">Large</label>
+                <input type="number" class="form-control portion-price" data-portion="Large" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Small" id="portionSmall">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionSmall" style="min-width:80px;">Small</label>
+                <input type="number" class="form-control portion-price" data-portion="Small" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Medium" id="portionMedium">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionMedium" style="min-width:80px;">Medium</label>
+                <input type="number" class="form-control portion-price" data-portion="Medium" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input class="form-check-input portion-checkbox" type="checkbox" value="Extra Large" id="portionExtraLarge">
+                <label class="form-check-label fw-semibold flex-grow-1" for="portionExtraLarge" style="min-width:80px;">Extra Large</label>
+                <input type="number" class="form-control portion-price" data-portion="Extra Large" placeholder="Price" style="width:100px;" disabled>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-3" style="border-radius:0 0 16px 16px; background:#f8f9fa;">
+          <button type="button" id="savePortionBtn" class="btn btn-primary w-100 fw-bold">
+            <i class="bi bi-check-circle me-1"></i>Save Portions
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="modal-body">
-      <div class="row g-2">
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Regular" id="portionRegular">
-            <label class="form-check-label fw-semibold" for="portionRegular">Regular</label>
-            <input type="number" class="portion-price" data-portion="Regular" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
+
+    <div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-header bg-light border-0 rounded-top-4">
+            <h5 class="modal-title fw-bold" id="addMenuModalLabel">
+              <i class="bi bi-plus-circle me-2 text-warning"></i>Add Menu Item
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Special" id="portionSpecial">
-            <label class="form-check-label fw-semibold" for="portionSpecial">Special</label>
-            <input type="number" class="portion-price" data-portion="Special" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
+          <div class="modal-body">
+            <div class="form-group">
+              <div>
+                <label>Name</label>
+                <input type="text" id="modalName">
+              </div>
+              <div>
+                <label>Price</label>
+                <input type="text" id="modalPrice">
+              </div>
+              <div>
+                <label>Category</label>
+                <select id="modalCategory">
+                  <option selected disabled hidden>Select</option>
+                  <option>Dishes</option>
+                  <option>Bilao</option>
+                  <option>Desserts</option>
+                </select>
+              </div>
+              <div>
+                <label style="opacity:0;">Portion</label>
+                <button type="button" id="setPortionBtn" class="btn btn-warning w-100">
+                  <i class="bi bi-list-ul me-1"></i> Select Portions 
+                </button>
+                <div id="portionSummary" class="small text-muted mb-2">No portion selected</div>
+              </div>
+              <div>
+                <label for="modalImage">Upload Image:</label>
+                <input type="file" id="modalImage" accept="image/*">
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Jumbo" id="portionJumbo">
-            <label class="form-check-label fw-semibold" for="portionJumbo">Jumbo</label>
-            <input type="number" class="portion-price" data-portion="Jumbo" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
-          </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Large" id="portionLarge">
-            <label class="form-check-label fw-semibold" for="portionLarge">Large</label>
-            <input type="number" class="portion-price" data-portion="Large" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
-          </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Small" id="portionSmall">
-            <label class="form-check-label fw-semibold" for="portionSmall">Small</label>
-            <input type="number" class="portion-price" data-portion="Small" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
-          </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Medium" id="portionMedium">
-            <label class="form-check-label fw-semibold" for="portionMedium">Medium</label>
-            <input type="number" class="portion-price" data-portion="Medium" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
-          </div>
-        </div>
-        <div class="col-6 col-md-4">
-          <div class="form-check rounded-3 border p-2 shadow-sm bg-light h-100">
-            <input class="form-check-input portion-checkbox" type="checkbox" value="Extra Large" id="portionExtraLarge">
-            <label class="form-check-label fw-semibold" for="portionExtraLarge">Extra Large</label>
-            <input type="number" class="portion-price" data-portion="Extra Large" placeholder="Price" style="width:80px; margin-left:10px;" disabled>
+          <div class="modal-footer bg-light border-0 rounded-bottom-4 d-flex flex-column gap-2">
+            <button type="button" class="btn btn-success w-100" id="modalAddBtn">
+              <i class="bi bi-check2-circle"></i> Add
+            </button>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-footer border-0 pt-3">
-      <button type="button" id="savePortionBtn" class="btn btn-primary w-100 fw-bold">
-        <i class="bi bi-check-circle me-1"></i>Save Portions
-      </button>
+
+    <div class="modal fade" id="viewMenuDetailModal" tabindex="-1" aria-labelledby="viewMenuDetailLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-header bg-light border-0 rounded-top-4">
+            <h5 class="modal-title fw-bold" id="viewMenuDetailLabel">
+              <i class="bi bi-info-circle me-2 text-primary"></i>Menu Item Details
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="menuDetailBody">
+            <!-- Details will be injected by JS -->
+          </div>
+          <div class="modal-footer bg-light border-0 rounded-bottom-4 d-flex flex-column gap-2">
+            <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-</main>
+  </main>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
-    <script src="../js/script.js"></script>
-    <script src="../js/setting.js"></script>
-    <script>
-  // tooltips
-  document.addEventListener('DOMContentLoaded', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-      new bootstrap.Tooltip(tooltipTriggerEl);
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+  <script src="../js/script.js"></script>
+  <script src="../js/setting.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
     });
-  });
-</script>
+  </script>
 </body>
 </html>

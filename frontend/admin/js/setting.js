@@ -1,501 +1,527 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const addBtn = document.getElementById('addBtn');
+    const addMenuModal = document.getElementById('addMenuModal');
+    let addMenuModalInstance = null;
 
-    function checkEmptyTable() {
-        const tbody = document.querySelector('#menuTable tbody');
-        if (tbody.rows.length === 0) {
-            const newRow = tbody.insertRow();
-            newRow.id = 'noDataRow';
-            newRow.innerHTML = '<td colspan="6">No menu items yet</td>';
-        }
-    }
+    window.selectedPortions = [];
 
-    let selectedPortions = []; // Only declare ONCE
-
-    // --- Portion Modal Logic ---
-    const setPortionBtn = document.getElementById('setPortionBtn');
-    if (setPortionBtn) {
-        setPortionBtn.addEventListener('click', function() {
-            document.getElementById('portionModal').style.display = 'flex';
+    // Ensure Bootstrap JS is loaded and modal instance is created
+    if (addBtn && addMenuModal && typeof bootstrap !== "undefined" && bootstrap.Modal) {
+        addMenuModalInstance = new bootstrap.Modal(addMenuModal);
+        addBtn.addEventListener('click', function () {
+            // Defensive: check if all modal elements exist before accessing
+            const modalName = document.getElementById('modalName');
+            const modalPrice = document.getElementById('modalPrice');
+            const modalCategory = document.getElementById('modalCategory');
+            const modalImage = document.getElementById('modalImage');
+            const portionSummary = document.getElementById('portionSummary');
+            if (modalName) modalName.value = '';
+            if (modalPrice) modalPrice.value = '';
+            if (modalCategory) modalCategory.selectedIndex = 0;
+            if (modalImage) modalImage.value = '';
+            window.selectedPortions = [];
+            if (portionSummary) portionSummary.innerText = 'No portion selected';
+            updateAddMenuPriceInputVisibility();
+            addMenuModalInstance.show();
         });
+    } else {
+        // If modal or button not found, log for debugging
+        console.warn('Add button or Add Menu Modal not found, or Bootstrap JS not loaded.');
     }
 
-    const portionModal = document.getElementById('portionModal');
-    if (portionModal) {
-        portionModal.addEventListener('click', function(event) {
-            if (event.target === this) {
-                this.style.display = 'none';
+    // --- Add Menu Logic ---
+    const modalAddBtn = document.getElementById('modalAddBtn');
+    if (modalAddBtn) {
+        modalAddBtn.addEventListener('click', async function () {
+            const name = document.getElementById('modalName').value.trim();
+            const price = document.getElementById('modalPrice').value.trim();
+            const category = document.getElementById('modalCategory').value;
+            const imageInput = document.getElementById('modalImage');
+            const file = imageInput.files[0];
+
+            if (!name || category === "Select" || !file) {
+                alert('Please fill out all required fields including the image.');
+                return;
             }
-        });
-    }
 
-    const portionModalDialog = document.querySelector('#portionModal .modal-dialog, #portionModal .custom-modal-dialog');
-    if (portionModalDialog) {
-        portionModalDialog.addEventListener('click', function(event) {
-            event.stopPropagation();
-        });
-    }
-
-    const closePortionModal = document.getElementById('closePortionModal');
-    if (closePortionModal) {
-        closePortionModal.addEventListener('click', function() {
-            document.getElementById('portionModal').style.display = 'none';
-        });
-    }
-
-    document.querySelectorAll('.portion-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
-            if (priceInput) {
-                priceInput.disabled = !cb.checked;
-                if (!cb.checked) priceInput.value = '';
-            }
-            // Disable main price input if any portion is checked
-            const anyChecked = Array.from(document.querySelectorAll('.portion-checkbox')).some(box => box.checked);
-            const mainPriceInput = document.getElementById('Price');
-            if (mainPriceInput) {
-                mainPriceInput.disabled = anyChecked;
-            }
-        });
-    });
-
-    const savePortionBtn = document.getElementById('savePortionBtn');
-    if (savePortionBtn) {
-        savePortionBtn.addEventListener('click', function() {
-            selectedPortions = [];
-            let valid = true;
-            document.querySelectorAll('.portion-checkbox').forEach(cb => {
-                if (cb.checked) {
-                    const priceInput = document.querySelector(`.portion-price[data-portion="${cb.value}"]`);
-                    if (!priceInput || !priceInput.value.trim() || isNaN(parseFloat(priceInput.value.trim()))) {
-                        alert(`Please enter a valid price for ${cb.value} portion.`);
-                        valid = false;
-                    } else {
-                        selectedPortions.push({ portion: cb.value, price: parseFloat(priceInput.value.trim()) });
-                    }
+            // Only require price if no portions are selected
+            if (window.selectedPortions.length === 0) {
+                if (!price || isNaN(parseFloat(price))) {
+                    alert('Please enter a valid price.');
+                    return;
                 }
-            });
-            if (valid) {
-                document.getElementById('portionModal').style.display = 'none';
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('category', category);
+            formData.append('image', file);
+
+            if (window.selectedPortions.length > 0) {
+                formData.append('portions', JSON.stringify(window.selectedPortions));
+            } else {
+                formData.append('portion', 'N/A');
+                formData.append('price', price);
+            }
+
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch('http://localhost:5000/api/foods', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                if (!response.ok) throw new Error('Failed to add food');
+                await loadMenu();
+                // Hide modal after adding
+                if (addMenuModalInstance) addMenuModalInstance.hide();
+            } catch (err) {
+                alert('Error adding food.');
+                console.error(err);
             }
         });
     }
 
-    // --- Add Product Logic ---
-    document.getElementById('addBtn').addEventListener('click', async function() {
-        const name = document.getElementById('Name').value.trim();
-        const price = document.getElementById('Price').value.trim();
-        const category = document.getElementById('Category').value;
-        const imageInput = document.getElementById('Image');
-        const file = imageInput.files[0];
-
-        // Validation
-        if (!name || category === "Select" || !file) {
-            alert('Please fill out all required fields including the image.');
-            return;
+    // --- Utility: Hide price input in Add Menu modal if portions are selected ---
+    window.updateAddMenuPriceInputVisibility = function () {
+        const priceInputDiv = document.getElementById('modalPrice').closest('div');
+        if (window.selectedPortions.length > 0) {
+            priceInputDiv.style.display = 'none';
+        } else {
+            priceInputDiv.style.display = '';
         }
+    };
+
+    // --- Load Menu and Attach Edit/Delete/View Events ---
+    async function loadMenu() {
+        try {
+            const response = await fetch('http://localhost:5000/api/foods');
+            const foods = await response.json();
+            const tbody = document.querySelector('#menuTable tbody');
+            tbody.innerHTML = '';
+            if (foods.length === 0) {
+                tbody.innerHTML = `<tr id="noDataRow"><td colspan="4">No menu items yet</td></tr>`;
+            } else {
+                foods.forEach(food => {
+                    let portionDisplay = 'N/A';
+                    let priceDisplay = '';
+                    if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
+                        portionDisplay = food.portions.map(p => p.portion).join(', ');
+                        priceDisplay = food.portions.map(p => `${p.portion}: ₱${parseFloat(p.price).toFixed(2)}`).join('<br>');
+                    } else {
+                        portionDisplay = food.portion || 'N/A';
+                        priceDisplay = `₱${parseFloat(food.price).toFixed(2)}`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr data-id="${food._id}" 
+                            data-name="${food.name}" 
+                            data-category="${food.category}" 
+                            data-portion="${portionDisplay}" 
+                            data-price="${priceDisplay}">
+                            <td class="menu-name-cell">
+                                ${food.image ? `<img src="http://localhost:5000/${food.image}" class="menu-img">` : ''}
+                                <span><strong>${food.name}</strong></span>
+                            </td>
+                            <td><strong>${food.category}</strong></td>
+                            <td>
+                                <button class="action-btn edit-btn">Edit</button>
+                                <button class="action-btn delete-btn">Delete</button>
+                                <button class="btn btn-outline-info btn-sm viewDetailBtn" title="View Details">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            attachRowEvents();
+        } catch (err) {
+            console.error('Error loading menu:', err);
+        }
+    }
+
+    // --- Attach Edit/Delete/View Events to Table Rows ---
+    function attachRowEvents() {
+        document.querySelectorAll('#menuTable .edit-btn').forEach(btn => {
+            btn.onclick = function () {
+                const row = btn.closest('tr');
+                openEditModal(row);
+            };
+        });
+        document.querySelectorAll('#menuTable .delete-btn').forEach(btn => {
+            btn.onclick = function () {
+                const row = btn.closest('tr');
+                openDeleteModal(row);
+            };
+        });
+        document.querySelectorAll('#menuTable .viewDetailBtn').forEach(btn => {
+            btn.onclick = function () {
+                const row = btn.closest('tr');
+                if (!row) return;
+                const name = row.getAttribute('data-name');
+                const category = row.getAttribute('data-category');
+                const portion = row.getAttribute('data-portion');
+                const price = row.getAttribute('data-price');
+                let html = `
+                    <div class="menu-detail-simple">
+                        <div class="menu-detail-simple-title">${name}</div>
+                        <hr class="menu-detail-simple-divider">
+                        <div class="menu-detail-simple-row">
+                            <span class="menu-detail-simple-label">Category:</span>
+                            <span class="menu-detail-simple-value">${category}</span>
+                        </div>
+                        <div class="menu-detail-simple-row">
+                            <span class="menu-detail-simple-label">Portion:</span>
+                            <span class="menu-detail-simple-value">${portion}</span>
+                        </div>
+                        <div class="menu-detail-simple-row">
+                            <span class="menu-detail-simple-label">Price:</span>
+                            <span class="menu-detail-simple-value text-success">${price}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('menuDetailBody').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('viewMenuDetailModal'));
+                modal.show();
+            };
+        });
+    }
+
+    // --- Edit Modal Logic (reuse Select Portion modal for Edit) ---
+    let currentEditingRow = null;
+    let editSelectedPortions = [];
+
+    // Open Edit Modal and populate fields
+    window.openEditModal = function(row) {
+        currentEditingRow = row;
+        // Get data from row attributes
+        const name = row.getAttribute('data-name');
+        const category = row.getAttribute('data-category');
+        const priceStr = row.getAttribute('data-price');
+        const img = row.querySelector('img') ? row.querySelector('img').src : '';
+
+        // Fill modal fields
+        document.getElementById('editName').value = name;
+        document.getElementById('editCategory').value = category;
+        document.getElementById('editPrice').value = priceStr.replace(/<br>/g, ', ').replace(/[^0-9.,₱ ]/g, '');
+        document.getElementById('editPreview').src = img;
+
+        // Parse portions from row
+        const portionStr = row.getAttribute('data-portion');
+        editSelectedPortions = [];
+        if (portionStr && priceStr && priceStr.includes(':')) {
+            const portions = portionStr.split(',').map(p => p.trim());
+            const prices = priceStr.split('<br>');
+            portions.forEach((portion, idx) => {
+                const priceMatch = prices[idx] ? prices[idx].match(/₱([\d.]+)/) : null;
+                editSelectedPortions.push({
+                    portion,
+                    price: priceMatch ? parseFloat(priceMatch[1]) : 0
+                });
+            });
+        } else if (portionStr && priceStr) {
+            const priceMatch = priceStr.match(/₱([\d.]+)/);
+            editSelectedPortions.push({
+                portion: portionStr,
+                price: priceMatch ? parseFloat(priceMatch[1]) : 0
+            });
+        }
+        document.getElementById('editPortionSummary').innerText =
+            editSelectedPortions.length
+                ? editSelectedPortions.map(p => `${p.portion}: ₱${p.price.toFixed(2)}`).join(', ')
+                : 'No portion selected';
+
+        document.getElementById('editModal').style.display = 'flex';
+    };
+
+    // Close Edit Modal
+    document.getElementById('closeModal').onclick = function () {
+        document.getElementById('editModal').style.display = 'none';
+        currentEditingRow = null;
+    };
+
+    // Image preview on file select
+    document.getElementById('editImage').onchange = function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                document.getElementById('editPreview').src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const editModalContainer = document.getElementById('editModalContainer');
+    const editModal = document.getElementById('editModal');
+    const portionModal = document.getElementById('portionModal');
+
+    // Helper to show/hide edit modal
+    function showEditModal() {
+        if (!document.body.contains(editModalContainer)) {
+            document.body.appendChild(editModalContainer);
+        }
+        editModal.style.display = 'flex';
+        document.body.style.overflow = '';
+        document.body.style.pointerEvents = '';
+    }
+    function hideEditModal() {
+        editModal.style.display = 'none';
+        document.body.style.overflow = '';
+        document.body.style.pointerEvents = '';
+    }
+
+    // --- Reuse Select Portion Modal for Edit ---
+    let isEditPortionMode = false;
+    const editSetPortionBtn = document.getElementById('editSetPortionBtn');
+    if (editSetPortionBtn && portionModal) {
+        editSetPortionBtn.addEventListener('click', function () {
+            isEditPortionMode = true;
+            // Remove edit modal from DOM
+            if (document.body.contains(editModalContainer)) {
+                document.body.removeChild(editModalContainer);
+            }
+            portionModal.style.display = 'flex';
+        });
+    }
+
+    // When saving portions, update either Add or Edit summary
+    savePortionBtn.onclick = function () {
+        let selected = [];
+        document.querySelectorAll('#portionModal .portion-checkbox').forEach(cb => {
+            if (cb.checked) {
+                // Get the price input next to this checkbox
+                const priceInput = cb.closest('.d-flex').querySelector('.portion-price');
+                selected.push({
+                    portion: priceInput.getAttribute('data-portion'),
+                    price: priceInput.value ? parseFloat(priceInput.value) : 0
+                });
+            }
+        });
+        if (isEditPortionMode) {
+            editSelectedPortions = selected;
+            document.getElementById('editPortionSummary').innerText =
+                editSelectedPortions.length
+                    ? editSelectedPortions.map(p => `${p.portion}: ₱${p.price.toFixed(2)}`).join(', ')
+                    : 'No portion selected';
+            isEditPortionMode = false;
+            portionModal.style.display = 'none';
+            hideBootstrapAddMenuModal();
+            document.getElementById('editModal').style.display = 'flex';
+        } else {
+            window.selectedPortions = selected;
+            document.getElementById('portionSummary').innerText =
+                window.selectedPortions.length
+                    ? window.selectedPortions.map(p => `${p.portion}: ₱${p.price.toFixed(2)}`).join(', ')
+                    : 'No portion selected';
+            portionModal.style.display = 'none';
+            addMenuModalInstance.show();
+            updateAddMenuPriceInputVisibility();
+        }
+    };
+
+    // When closing the portion modal, show the correct modal again
+    closePortionModal.onclick = function () {
+        portionModal.style.display = 'none';
+        if (isEditPortionMode) {
+            hideBootstrapAddMenuModal();
+            document.getElementById('editModal').style.display = 'flex';
+            isEditPortionMode = false;
+        } else {
+            addMenuModalInstance.show();
+        }
+    };
+
+    // --- Save Edit (connects to backend and sends portions & image) ---
+    document.getElementById('saveEditBtn').onclick = async function() {
+        if (!currentEditingRow) return;
+        const id = currentEditingRow.getAttribute('data-id');
+        const name = document.getElementById('editName').value.trim();
+        const category = document.getElementById('editCategory').value;
+        const price = document.getElementById('editPrice').value.trim();
+        const imageInput = document.getElementById('editImage');
+        const file = imageInput.files[0];
 
         const formData = new FormData();
         formData.append('name', name);
         formData.append('category', category);
-        formData.append('image', file);
 
-        if (selectedPortions.length > 0) {
-            formData.append('portions', JSON.stringify(selectedPortions));
+        // Send portions array if present, otherwise send single portion/price
+        if (editSelectedPortions && editSelectedPortions.length > 0) {
+            formData.append('portions', JSON.stringify(editSelectedPortions));
         } else {
-            if (!price || isNaN(parseFloat(price))) {
-                alert('Please enter a valid price.');
-                return;
-            }
             formData.append('portion', 'N/A');
             formData.append('price', price);
         }
+        if (file) formData.append('image', file);
 
         try {
             const token = localStorage.getItem('adminToken');
-            const response = await fetch('http://localhost:5000/api/foods', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-            if (!response.ok) throw new Error('Failed to add food');
-            await loadMenu();
-            // Clear form
-            document.getElementById('Name').value = '';
-            document.getElementById('Price').value = '';
-            document.getElementById('Category').selectedIndex = 0;
-            document.getElementById('Image').value = '';
-            selectedPortions = [];
-            document.querySelectorAll('.portion-checkbox').forEach(cb => cb.checked = false);
-            document.querySelectorAll('.portion-price').forEach(pi => { pi.value = ''; pi.disabled = true; });
-        } catch (err) {
-            alert('Error adding food.');
-            console.error(err);
-        }
-    });
-
-    let currentEditingRow = null;
-    
-    function openEditModal(row) {
-        currentEditingRow = row;
-        const cells = row.cells;
-        
-        document.getElementById('editName').value = cells[0].textContent;
-        document.getElementById('editPrice').value = cells[1].textContent.replace('₱', '');
-        document.getElementById('editCategory').value = cells[2].textContent;
-        document.getElementById('editPortion').value = cells[3].textContent;
-        document.getElementById('editPreview').src = cells[4].querySelector('img').src;
-        
-        document.getElementById('editModal').style.display = 'flex';
-    }
-    
-    document.getElementById('saveEditBtn').addEventListener('click', async function() {
-        if (!currentEditingRow) return;
-        
-        const name = document.getElementById('editName').value.trim();
-        const price = document.getElementById('editPrice').value.trim();
-        const category = document.getElementById('editCategory').value;
-        const portion = document.getElementById('editPortion').value;
-        
-        if (!name || !price) {
-            alert('Please fill out all required fields.');
-            return;
-        }
-        
-        if (isNaN(parseFloat(price)) || !isFinite(price)) {
-            alert('Please enter a valid price.');
-            return;
-        }
-        
-        const id = currentEditingRow.getAttribute('data-id');
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('price', price);
-        formData.append('category', category);
-        formData.append('portion', portion);
-        const newFile = document.getElementById('editImage').files[0];
-        if (newFile) formData.append('image', newFile);
-
-        try {
-            const token = localStorage.getItem('adminToken');
-            const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+            const response = await fetch(`http://localhost:5000/api/admin/foods/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
             if (!response.ok) throw new Error('Failed to update food');
+            document.getElementById('editModal').style.display = 'none';
+            currentEditingRow = null;
             await loadMenu();
         } catch (err) {
             alert('Error updating food.');
             console.error(err);
         }
-        
-        document.getElementById('editModal').style.display = 'none';
-        currentEditingRow = null;
-        document.getElementById('editImage').value = '';
-    });
-    
+    };
+
+    // --- Delete Modal Logic (custom modal, not Bootstrap) ---
     let rowToDelete = null;
-    
-    function openDeleteModal(row) {
-        rowToDelete = row;
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
-    
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        if (rowToDelete) {
-            rowToDelete.remove();
-            checkEmptyTable(); // ✅ check after deletion
-            document.getElementById('deleteModal').style.display = 'none';
-            rowToDelete = null;
-        }
-    });
-    
-    document.getElementById('businessLogoUpload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('businessLogoPreview').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    document.getElementById('closeModal').addEventListener('click', function() {
-        document.getElementById('editModal').style.display = 'none';
-        document.getElementById('editImage').value = '';
-    });
-    
-    document.getElementById('closeDeleteModal').addEventListener('click', function() {
-        document.getElementById('deleteModal').style.display = 'none';
-    });
-    
-    document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
-        document.getElementById('deleteModal').style.display = 'none';
-    });
-    
-    document.getElementById('closePreview').addEventListener('click', function() {
-        document.getElementById('imagePreviewModal').style.display = 'none';
-    });
 
-    window.addEventListener('click', function(event) {
-        if (event.target === document.getElementById('editModal')) {
-            document.getElementById('editModal').style.display = 'none';
-            document.getElementById('editImage').value = '';
-        }
-        if (event.target === document.getElementById('deleteModal')) {
-            document.getElementById('deleteModal').style.display = 'none';
-        }
-        if (event.target === document.getElementById('imagePreviewModal')) {
-            document.getElementById('imagePreviewModal').style.display = 'none';
+    // Open Delete Modal when delete button is clicked
+    document.querySelector('#menuTable').addEventListener('click', function (e) {
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (deleteBtn) {
+            rowToDelete = deleteBtn.closest('tr');
+            document.getElementById('deleteModal').style.display = 'flex';
         }
     });
 
-    initializeSampleData();
-    
-    function initializeSampleData() {
-        const tbody = document.querySelector('#menuTable tbody');
-        if (tbody.rows.length === 1 && tbody.rows[0].id === 'noDataRow') {
-            tbody.deleteRow(0);
-
-        }
-        checkEmptyTable(); 
-    }
-});
-
-
-document.getElementById('saveBusinessInfo').addEventListener('click', async function () {
-    const contact = document.getElementById('businessContact').value.trim();
-    const email = document.getElementById('businessEmail').value.trim();
-    const address = document.getElementById('businessAddress').value.trim();
-    const website = document.getElementById('businessWebsite').value.trim();
-    const gcashName = document.getElementById('businessGcashName').value.trim();
-    const gcashQRInput = document.getElementById('businessQR');
-    let gcashQR = '';
-    if (gcashQRInput && gcashQRInput.files.length > 0) {
-        gcashQR = gcashQRInput.files[0].name;
-    }
-
-    try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch('http://localhost:5000/api/business-info', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ contact, email, address, website, gcashName, gcashQR })
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || result.message || 'Failed to update business info');
-        alert('✅ Business information saved successfully!');
-        loadBusinessInfo();
-    } catch (err) {
-        alert('Error updating business info: ' + err.message);
-        console.error(err);
-    }
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Redirect to login if not authenticated
-  if (!localStorage.getItem('adminToken')) {
-    window.location.replace('../html/adminlogin.html');
-  }
-
-  // Logout functionality
-  const logoutBtn = document.getElementById('logoutButton');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      localStorage.removeItem('adminToken');
-      window.location.replace('../html/adminlogin.html');
-    });
-  }
-});
-
-
-async function loadBusinessInfo() {
-    try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch('http://localhost:5000/api/business-info', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Failed to fetch business info');
-        const info = await response.json();
-        if (info) {
-            document.getElementById('businessContact').value = info.contact || '';
-            document.getElementById('businessEmail').value = info.email || '';
-            document.getElementById('businessAddress').value = info.address || '';
-            document.getElementById('businessWebsite').value = info.website || '';
-            document.getElementById('businessGcashName').value = info.gcashName || '';
-        }
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', loadBusinessInfo);
-
-async function loadMenu() {
-    try {
-        const response = await fetch('http://localhost:5000/api/foods');
-        const foods = await response.json();
-        const tbody = document.querySelector('#menuTable tbody');
-        tbody.innerHTML = '';
-        if (foods.length === 0) {
-            tbody.innerHTML = `<tr id="noDataRow"><td colspan="6">No menu items yet</td></tr>`;
-        } else {
-            foods.forEach(food => {
-                // Handle portions/prices display
-                let portionDisplay = 'N/A';
-                let priceDisplay = '';
-                if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-                    portionDisplay = food.portions.map(p => p.portion).join(', ');
-                    priceDisplay = food.portions.map(p => `${p.portion}: ₱${parseFloat(p.price).toFixed(2)}`).join('<br>');
-                } else {
-                    portionDisplay = food.portion || 'N/A';
-                    priceDisplay = `₱${parseFloat(food.price).toFixed(2)}`;
-                }
-
-                tbody.innerHTML += `
-                    <tr data-id="${food._id}">
-                        <td>${food.name}</td>
-                        <td>${priceDisplay}</td>
-                        <td>${food.category}</td>
-                        <td>${portionDisplay}</td>
-                        <td>
-                            ${food.image ? `<img src="http://localhost:5000/${food.image}" class="menu-img" style="width:60px;height:50px;object-fit:cover;border-radius:5px;">` : ''}
-                        </td>
-                        <td>
-                            <button class="action-btn edit-btn">Edit</button>
-                            <button class="action-btn delete-btn">Delete</button>
-                        </td>
-                    </tr>
-                `;
+    // Confirm Delete
+    document.getElementById('confirmDeleteBtn').onclick = async function () {
+        if (!rowToDelete) return;
+        const id = rowToDelete.getAttribute('data-id');
+        try {
+            const token = localStorage.getItem('adminToken');
+            const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (!response.ok) throw new Error('Failed to delete food');
+            rowToDelete.remove();
+            rowToDelete = null;
+            document.getElementById('deleteModal').style.display = 'none';
+            await loadMenu();
+        } catch (err) {
+            alert('Error deleting food.');
+            console.error(err);
         }
-    } catch (err) {
-        console.error('Error loading menu:', err);
-    }
-}
+    };
 
-document.addEventListener('DOMContentLoaded', loadMenu);
+    // Cancel or Close Delete Modal
+    document.getElementById('cancelDeleteBtn').onclick =
+    document.getElementById('closeDeleteModal').onclick = function () {
+        document.getElementById('deleteModal').style.display = 'none';
+        rowToDelete = null;
+    };
 
-document.querySelector('#menuTable').addEventListener('click', async function (e) {
-    const row = e.target.closest('tr');
-    if (!row || !row.hasAttribute('data-id')) return;
-    const id = row.getAttribute('data-id');
+    // --- Initial Load ---
+    loadMenu();
 
-    // Edit button logic
-    if (e.target.classList.contains('edit-btn')) {
-        // Fill modal fields with row data
-        document.getElementById('editName').value = row.cells[0].textContent;
-        document.getElementById('editPrice').value = row.cells[1].textContent.replace('₱', '');
-        document.getElementById('editCategory').value = row.cells[2].textContent;
-        document.getElementById('editPortion').value = row.cells[3].textContent;
-        document.getElementById('editPreview').src = row.cells[4].querySelector('img') ? row.cells[4].querySelector('img').src : '';
-        document.getElementById('editModal').setAttribute('data-id', id);
-        document.getElementById('editModal').style.display = 'flex';
-    }
+    // --- Add Menu: Portion Modal Logic ---
+    const setPortionBtn = document.getElementById('setPortionBtn');
+    // portionModal, savePortionBtn, closePortionModal are already defined above
 
-    // Delete button logic
-    if (e.target.classList.contains('delete-btn')) {
-        document.getElementById('deleteModal').setAttribute('data-id', id);
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
-});
+    if (setPortionBtn && portionModal) {
+        setPortionBtn.addEventListener('click', function () {
+            // Hide the Add Menu modal (Bootstrap)
+            if (addMenuModalInstance) addMenuModalInstance.hide();
+            // Show the custom Portion modal
+            portionModal.style.display = 'flex';
 
-// Save Edit Modal changes
-document.getElementById('saveEditBtn').addEventListener('click', async function() {
-    const modal = document.getElementById('editModal');
-    const id = modal.getAttribute('data-id');
-    const name = document.getElementById('editName').value.trim();
-    const price = document.getElementById('editPrice').value.trim();
-    const category = document.getElementById('editCategory').value;
-    const portion = document.getElementById('editPortion').value;
-    const newFile = document.getElementById('editImage').files[0];
+            // Reset all checkboxes and price inputs
+            document.querySelectorAll('#portionModal .portion-checkbox').forEach(cb => {
+                cb.checked = false;
+                const priceInput = cb.closest('.d-flex').querySelector('.portion-price');
+                priceInput.value = '';
+                priceInput.disabled = true;
+            });
 
-    if (!name || !price) {
-        alert('Please fill out all required fields.');
-        return;
-    }
-    if (isNaN(parseFloat(price)) || !isFinite(price)) {
-        alert('Please enter a valid price.');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('price', price);
-    formData.append('category', category);
-    formData.append('portion', portion);
-    if (newFile) formData.append('image', newFile);
-
-    try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formData
-        });
-        if (!response.ok) throw new Error('Failed to update food');
-        await loadMenu();
-    } catch (err) {
-        alert('Error updating food.');
-        console.error(err);
-    }
-
-    modal.style.display = 'none';
-    document.getElementById('editImage').value = '';
-});
-
-// Delete Modal confirm
-document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
-    const modal = document.getElementById('deleteModal');
-    const id = modal.getAttribute('data-id');
-    try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`http://localhost:5000/api/foods/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
+            // Restore previous selections if any
+            if (window.selectedPortions && window.selectedPortions.length > 0) {
+                window.selectedPortions.forEach(sel => {
+                    const cb = document.querySelector(`#portionModal .portion-checkbox[value="${sel.portion}"]`);
+                    if (cb) {
+                        cb.checked = true;
+                        const priceInput = cb.closest('.d-flex').querySelector('.portion-price');
+                        priceInput.value = sel.price;
+                        priceInput.disabled = false;
+                    }
+                });
             }
         });
-        if (!response.ok) throw new Error('Failed to delete food');
-        await loadMenu();
-    } catch (err) {
-        alert('Error deleting food.');
-        console.error(err);
     }
-    modal.style.display = 'none';
-});
 
-// Close modals
-document.getElementById('closeModal').addEventListener('click', function() {
-    document.getElementById('editModal').style.display = 'none';
-    document.getElementById('editImage').value = '';
-});
-document.getElementById('closeDeleteModal').addEventListener('click', function() {
-    document.getElementById('deleteModal').style.display = 'none';
-});
-document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
-    document.getElementById('deleteModal').style.display = 'none';
-});
+    // Enable/disable price input based on checkbox
+    document.querySelectorAll('#portionModal .portion-checkbox').forEach(cb => {
+        cb.addEventListener('change', function () {
+            const priceInput = cb.closest('.d-flex').querySelector('.portion-price');
+            priceInput.disabled = !cb.checked;
+            if (!cb.checked) priceInput.value = '';
+        });
+    });
 
-// Optional: Close modals when clicking outside
-window.addEventListener('click', function(event) {
-    if (event.target === document.getElementById('editModal')) {
-        document.getElementById('editModal').style.display = 'none';
-        document.getElementById('editImage').value = '';
+    // Save Portions button in Portion Modal (for Add Menu)
+    if (savePortionBtn) {
+        savePortionBtn.addEventListener('click', function () {
+            let selected = [];
+            document.querySelectorAll('#portionModal .portion-checkbox').forEach(cb => {
+                if (cb.checked) {
+                    const priceInput = cb.closest('.d-flex').querySelector('.portion-price');
+                    selected.push({
+                        portion: priceInput.getAttribute('data-portion'),
+                        price: priceInput.value ? parseFloat(priceInput.value) : 0
+                    });
+                }
+            });
+            window.selectedPortions = selected;
+            const portionSummary = document.getElementById('portionSummary');
+            if (portionSummary) {
+                portionSummary.innerText =
+                    window.selectedPortions.length
+                        ? window.selectedPortions.map(p => `${p.portion}: ₱${p.price.toFixed(2)}`).join(', ')
+                        : 'No portion selected';
+            }
+            portionModal.style.display = 'none';
+            if (addMenuModalInstance) addMenuModalInstance.show();
+            updateAddMenuPriceInputVisibility();
+        });
     }
-    if (event.target === document.getElementById('deleteModal')) {
-        document.getElementById('deleteModal').style.display = 'none';
+
+    // Close Portion Modal (X button)
+    if (closePortionModal) {
+        closePortionModal.addEventListener('click', function () {
+            portionModal.style.display = 'none';
+            if (addMenuModalInstance) addMenuModalInstance.show();
+        });
+    }
+
+    // --- Logout Logic ---
+    const logoutBtn = document.getElementById('logoutButton');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const token = localStorage.getItem('adminToken');
+            try {
+                // Call backend to revoke token (adjust endpoint as needed)
+                await fetch('http://localhost:5000/api/admin/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } catch (err) {
+                // Optionally log error, but proceed to logout anyway
+                console.error('Error revoking token:', err);
+            }
+            localStorage.removeItem('adminToken');
+            // Prevent back navigation to protected pages
+            window.location.replace('adminlogin.html'); // Use replace so back won't return here
+        });
+    }
+
+    // --- Block access if not logged in ---
+    if (!localStorage.getItem('adminToken')) {
+        window.location.replace('adminlogin.html');
     }
 });

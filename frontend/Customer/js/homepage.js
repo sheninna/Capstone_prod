@@ -288,9 +288,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ======================================================
-// Review System
-// ======================================================
 let selectedRating = 0;
 let reviewsData = [];
 

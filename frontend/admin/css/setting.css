@@ -78,7 +78,7 @@ color: #333;
 /* Tab labels */
 .tab-content {
     background: #fff;
-    padding: 50px;
+    padding: 20px;
     margin-right: 20px;
     border-radius: 0 0 8px 8px;
     border-radius: 10px;
@@ -88,7 +88,7 @@ color: #333;
     background: white;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    height: 83vh;
+    height: 81vh;
     overflow: hidden;
     margin-left: 130px;
     margin-top: 30px;
@@ -122,6 +122,11 @@ color: #333;
 #tab1:checked ~ .tab-content #panel1,
 #tab2:checked ~ .tab-content #panel2 {
     display: block;
+}
+
+.tab-content, .tab-panel {
+    overflow-y: visible !important;
+    max-height: none !important;
 }
 
 /* Form Styles */
@@ -162,65 +167,165 @@ input:focus, select:focus {
     background: linear-gradient(135deg, #d5bb3a, #ffdd00);
     color: white;
     border: none;
-    padding: 12px 25px;
+    padding: 10px 23px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s;
-    margin-bottom: 25px;
+    margin-bottom: 0px;
 }
 
 .table-container {
 border: 1px solid #e0e0e0;
 border-radius: 8px;
-margin-top: 15px;
-max-height: 500px; /* taas ng buong table */
+margin-top: 5px;
+max-height: 448px; /* taas ng buong table */
 overflow-y: auto;  /* para hindi magdoble scrollbar */ 
 }
 
 #menuTable {
-  width: 100%;
-}
-#menuTable th, #menuTable td {
-  height: 50px;        
-  vertical-align: middle;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    background: #fff;
 }
 
-table {
+#menuTable th, #menuTable td {
+    padding: 18px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1rem;
+    text-align: left;
+}
+
+#menuTable th {
+    background: #f9d923;
+    color: #222;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-top: 2px solid #f6c700;
+}
+
+.menu-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-weight: 500;
+}
+
+.menu-img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid #eee;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.menu-name-cell span {
+    display: block;
+    font-size: 1.08rem;
+    color: #222;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+#menuTable td:last-child, #menuTable th:last-child {
+    text-align: center;
+}
+
+.action-btn, .btn-outline-info {
+    margin-right: 6px;
+    min-width: 38px;
+    min-height: 38px;
+    font-size: 1.1rem;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    transition: background 0.2s;
+    vertical-align: middle;
+}
+
+.action-btn.edit-btn {
+    background: #3498db;
+    color: #fff;
+    border: none;
+}
+.action-btn.delete-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+}
+.btn-outline-info {
+    background: #f9d923;
+    color: #222;
+    border: none;
+}
+.btn-outline-info:hover {
+    background: #ffe066;
+    color: #222;
+}
+
+.action-btn.edit-btn:hover {
+    background: #217dbb;
+}
+.action-btn.delete-btn:hover {
+    background: #c0392b;
+}
+
+@media (max-width: 900px) {
+    #menuTable th, #menuTable td {
+        padding: 10px 6px;
+        font-size: 0.95rem;
+    }
+    .menu-img {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+    .menu-name-cell {
+        gap: 8px;
+    }
+}
+/* --- End Improved Menu Table Design --- */
+
+/* table {
 border-collapse: collapse;
 width: 100%;
-table-layout: fixed; /* para aligned columns */
-}
-
-thead {
-display: table;
-width: 100%;
 table-layout: fixed;
-position: sticky;
-top: 0;
-z-index: 2;
-background: #fff;
+} */
+
+/* thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fff;
 }
 
 tbody {
-display: table-row-group;
- max-height: none;
-  overflow-y: visible;
-  overflow-x: visible;
-width: 100%;
+    display: table-row-group;
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: visible;
+    width: 100%;
 }
 
 tbody tr {
-display: table;
-width: 100%;
-table-layout: fixed;
-}
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+} */
 
-th, td {
+/* th, td {
 padding: 12px;
 text-align: center;
 border-bottom: 1px solid #eee;
-}
+} */
 
 .action-btn {
     padding: 8px 12px;
@@ -254,10 +359,9 @@ border-bottom: 1px solid #eee;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    /* z-index: 1055; */
 }
 
 .modal-content {
@@ -329,145 +433,44 @@ border-bottom: 1px solid #eee;
 
 /* Portion Modal Styles */
 #portionModal {
-    display: none;
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.3);
+    top: 0; left: 0px; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
     justify-content: center;
     align-items: center;
-    z-index: 1100;
+    z-index: 20000; /* Make sure this is higher than Bootstrap's 1055 */
+    display: none;  /* default hidden */
 }
 #portionModal[style*="display: flex"] {
     display: flex !important;
 }
-#portionModal .modal-dialog,
-#portionModal .custom-modal-dialog {
-    background: #fff;
-    border-radius: 10px;
-    padding: 24px 24px 16px 29px;
-    min-width: 320px;
-    max-width: 40vw;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+#portionModal * {
+    pointer-events: auto !important;
+}
+.modal-backdrop {
+    display: none !important;
 }
 
-#portionModal .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 0;
-    padding-bottom: 0.5rem;
+/* Add to your CSS file */
+#menuDetailBody .card {
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
 }
 
-#portionModal .modal-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #2c3e50;
-    display: flex;
-    align-items: center;
+/* Move the edit modal to the right */
+#editModal {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  position: fixed;
+  top: 0;
+  left: 0px;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1050;
+  background: rgba(0,0,0,0.1); 
 }
-
-#portionModal .btn-close {
-    background: none;
-    border: none;
-    font-size: 1.3rem;
-    color: #888;
-    cursor: pointer;
-    padding: 0 8px;
-    transition: color 0.2s;
-}
-#portionModal .btn-close:hover {
-    color: #e74c3c;
-}
-
-#portionModal .modal-body {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-}
-
-#portionModal .row.g-2 {
-    gap: 3px 0; /* vertical gap, horizontal gap */
-}
-
-#portionModal .form-check {
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 0.75rem;
-    transition: box-shadow 0.2s, border 0.2s;
-    cursor: pointer;
-    padding: 12px 16px;
-    margin-bottom: 0; /* Remove old margin-bottom so gap handles spacing */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    display: flex;
-    align-items: center;
-    min-height: 48px;
-}
-
-#portionModal .form-check-input {
-    width: 1.2em;
-    height: 1.2em;
-    margin-right: 10px;
-    accent-color: #ffd700;
-}
-
-#portionModal .form-check-label {
-    margin-left: 0.25rem;
-    font-size: 1.08rem;
-    font-weight: 600;
-    color: #2c3e50;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    user-select: none;
-}
-
-#portionModal .form-check-input:checked ~ .form-check-label {
-    color: #ffc311;
-}
-
-#portionModal .form-check-input:focus {
-    box-shadow: 0 0 0 2px #ffd70055;
-}
-
-#portionModal .modal-footer {
-    border-top: none;
-    padding-top: 0.5rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-#savePortionBtn {
-    background: #e1bf03;
-    color: #222;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-#savePortionBtn:hover {
-    background: #b49903;
-    color: #111;
-}
-
-/* Responsive for modal */
-@media (max-width: 600px) {
-    #portionModal .modal-dialog,
-    #portionModal .custom-modal-dialog {
-        min-width: 90vw;
-        padding: 12px 6px 8px 6px;
-    }
-    #portionModal .modal-title {
-        font-size: 1rem;
-    }
-    #portionModal .form-check-label {
-        font-size: 0.95rem;
-    }
+#editModal .modal-dialog {
+  margin: 32px 32px 0 0;
 }
