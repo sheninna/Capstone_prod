@@ -348,12 +348,8 @@ async function viewOrder(orderId) {
     totalDiv.style.fontSize = "1.25rem";
   }
 
-  // Center the Download Receipt button under the total
+  // Download Receipt button 
   const downloadBtn = document.getElementById("downloadReceiptBtn");
-  if (downloadBtn) {
-    downloadBtn.className = "btn btn-warning px-4 mt-3 d-block mx-auto";
-    downloadBtn.style.fontWeight = "500";
-  }
 
   // Download Receipt logic (unchanged)
   downloadBtn.onclick = () => {

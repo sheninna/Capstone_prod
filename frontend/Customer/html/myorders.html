@@ -109,137 +109,130 @@
 
 <!--MAIN-->
 <main>
-    <div class="container py-4">
-        <h2 class="-order-title mb-4">My Orders</h2>
+  <div class="container py-4">
+    <h2 class="-order-title mb-4">My Orders</h2>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-link active" data-tab="orders"><i class="fa fa-shopping-cart"></i> Orders</button>
-            <button class="tab-link" data-tab="reservation"><i class="fa fa-book"></i> Reservation</button>
-            <button class="tab-link" data-tab="orderHistory"><i class="fa fa-history"></i> History</button>
-        </div>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-link active" data-tab="orders"><i class="fa fa-shopping-cart"></i> Orders</button>
+        <button class="tab-link" data-tab="reservation"><i class="fa fa-book"></i> Reservation</button>
+        <button class="tab-link" data-tab="orderHistory"><i class="fa fa-history"></i> History</button>
+    </div>
 
-<!-- Orders -->
-<div id="orders" class="tab-content active mt-4">
-  <div class="tables">
-    <table id="ordersTable">
-      <thead>
-        <tr>
-          <th>Order ID</th>
-          <th>Order Method</th>
-          <th>Order Status</th>
-          <th>Track Order</th>
-          <th>View Order</th>
-        </tr>
-      </thead>
-      <tbody id="ordersTableBody">
-        <tr>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Reservation -->
-<div id="reservation" class="tab-content mt-4">
-  <div class="tables">
-    <table id="reservationTable">
-      <thead>
-        <tr>
-          <th>Reservation ID</th>
-          <th>Order Method</th>
-          <th>Order Placed</th>
-          <th>Amount</th>
-          <th>Schedule Date</th>
-          <th>Schedule Time</th>
-        </tr>
-      </thead>
-      <tbody id="reservationTableBody">
-        <tr>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Order History -->
-<div id="orderHistory" class="tab-content mt-4">
-  <div class="tables">
-    <table id="orderHistoryTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Order Method</th>
-          <th>Order Date</th>
-          <th>Amount</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="HistoryTableBody">
-        <tr>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-<!-- Track Order Modal -->
-<div class="modal fade" id="trackOrderModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content order-modal">
-      <div class="modal-header">
-        <h5 class="modal-title">Track Order</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <ul id="tracking-steps" class="tracking-steps"></ul>
-        <div id="tracking-message" class="tracking-message"></div>
-      </div>
+  <!-- Orders -->
+  <div id="orders" class="tab-content active mt-4">
+    <div class="tables">
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Order Method</th>
+            <th>Order Status</th>
+            <th>Track Order</th>
+            <th>View Order</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <tr>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-</div>
 
-<!-- View Order Modal -->
-<div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog ">
-    <div class="modal-content " style="background: #fff;">
-      <div class="modal-header border-0 pb-0 ">
-        <h5 class="modal-title fw-bold" style="color: #222;">Order Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <hr class="mt-0 mb-3" style="border-top: 2px solid #180303;">
-      <div class="modal-body pt-0">
-        <table class="table mb-0">
-          <thead>
-            <tr>
-              <th style="width: 20%;">Qty</th>
-              <th style="width: 60%;">Product</th>
-              <th style="width: 20%;" class="text-end">Price</th>
-            </tr>
-          </thead>
-          <tbody id="viewOrderItems"></tbody>
-        </table>
-        <div class="d-flex justify-content-end align-items-center mt-3">
-          <span class="fw-bold fs-5">Total:&nbsp;</span>
-          <span class="fw-bold fs-5" id="viewOrderTotal"></span>
+  <!-- Reservation -->
+  <div id="reservation" class="tab-content mt-4">
+    <div class="tables">
+      <table id="reservationTable">
+        <thead>
+          <tr>
+            <th>Reservation ID</th>
+            <th>Order Method</th>
+            <th>Order Placed</th>
+            <th>Amount</th>
+            <th>Schedule Date</th>
+            <th>Schedule Time</th>
+          </tr>
+        </thead>
+        <tbody id="reservationTableBody">
+          <tr>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Order History -->
+  <div id="orderHistory" class="tab-content mt-4">
+    <div class="tables">
+      <table id="orderHistoryTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Order Method</th>
+            <th>Order Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="HistoryTableBody">
+          <tr>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Track Order Modal -->
+  <div class="modal fade" id="trackOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content order-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">Track Order</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="d-flex justify-content-center mt-4">
-          <button id="downloadReceiptBtn" class="btn btn-warning px-4">Download Receipt</button>
+        <div class="modal-body">
+          <ul id="tracking-steps" class="tracking-steps"></ul>
+          <div id="tracking-message" class="tracking-message"></div>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- View Order Modal -->
+  <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog mt-3">
+      <div class="modal-content " style="background: #eee;">
+        <div class="modal-header border-0 pb-0 ">
+          <h5 class="modal-title fw-bold" style="color: #222;">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <hr class="mt-0 mb-3" style="border-top: 2px solid #180303;">
+        <div class="modal-body pt-0">
+          <div id="viewOrderItemsContainer">
+            <table>
+              <tbody id="viewOrderItems"></tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-end align-items-center mt-3">
+            <span class="fw-bold fs-5">Total:&nbsp;</span>
+            <span class="fw-bold fs-5" id="viewOrderTotal"></span>
+          </div>
+          <div class="mt-4">
+            <button id="downloadReceiptBtn" class="btn btn-warning px-4">Download Receipt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   </main>
 
 
-
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="../js/myorders.js"></script>
