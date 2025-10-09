@@ -190,7 +190,7 @@ body {
       background: #EFCA6C; /* changed from #efca6cd1 to solid */
       border-radius: 2rem;
       padding: 2rem;
-      max-width: 380px;
+      max-width: 100vh;
       width: 100%;
       text-align: center;
     }

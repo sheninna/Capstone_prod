@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const bodyParser = require('body-parser');
 
 const foodRoutes = require('./routes/foods');
 const adminAuthRoutes = require('./routes/adminAcces');
@@ -19,6 +20,10 @@ const protect = require('./middleware/auth');
 dotenv.config();
 
 const app = express();
+
+// Increase the limit to 10mb (or higher if needed)
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

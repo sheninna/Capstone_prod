@@ -391,19 +391,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Get Completed Online Orders
-// const getCompletedOnlineOrders = async (req, res) => {
-//   try {
-//     // This regex matches "online", "Online", "online order", "ONLINE-DELIVERY", etc.
-//     const completedOnlineOrders = await CompletedOrder.find({
-//       status: 'completed',
-//       orderType: { $regex: /online/i }
-//     });
-//     res.json(completedOnlineOrders);
-//   } catch (err) {
-//     res.status(500).json({ message: 'Error fetching completed online orders', error: err.message });
-//   }
-// };
 
 module.exports = {
   placeOrder,
@@ -412,5 +399,4 @@ module.exports = {
   getAllOrders,
   getCompletedOrders,
   updateOrderStatus,
-  // getCompletedOnlineOrders,
 };

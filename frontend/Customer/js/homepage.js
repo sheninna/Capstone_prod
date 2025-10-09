@@ -289,7 +289,7 @@ function updateDesktopNavbar() {
       </li>
       ${isLoggedIn ? `
       <li class="nav-item">
-        <a class="nav-link" href="myorders.html">My Orders</a>
+        <a class="nav-link" href="myOrders.html">My Orders</a>
       </li>
       ` : ''}
     `;
@@ -388,7 +388,7 @@ function updateMobileNavSidebar() {
     if (isLoggedIn) {
         navHtml += `
             <li class="nav-item">
-                <a class="nav-link" href="myorders.html">My Orders</a>
+                <a class="nav-link" href="myOrders.html">My Orders</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="notifications.html">Notifications</a>

@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
   <html lang="en">
   <head>
       <meta charset="UTF-8">
@@ -31,7 +31,7 @@
                           <a class="nav-link" href="ordernow.html">Order Now</a>
                       </li>
                       <li class="nav-item">
-                          <a class="nav-link active" href="myorders.html">My Orders</a>
+                          <a class="nav-link active" href="myOrders.html">My Orders</a>
                       </li>
                   </ul>
                   <ul class="navbar-nav">
@@ -68,7 +68,7 @@
           <a class="nav-link" href="ordernow.html">Order Now</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link active" href="myorders.html">My Orders</a>
+          <a class="nav-link active" href="myOrders.html">My Orders</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="notifications.html">Notifications
@@ -205,26 +205,31 @@
 
 <!-- View Order Modal -->
 <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content order-modal">
-      <div class="modal-header">
-        <h5 class="modal-title">View Order</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog ">
+    <div class="modal-content " style="background: #fff;">
+      <div class="modal-header border-0 pb-0 ">
+        <h5 class="modal-title fw-bold" style="color: #222;">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <table class="table">
+      <hr class="mt-0 mb-3" style="border-top: 2px solid #180303;">
+      <div class="modal-body pt-0">
+        <table class="table mb-0">
           <thead>
-            <tr></tr>
+            <tr>
+              <th style="width: 20%;">Qty</th>
+              <th style="width: 60%;">Product</th>
+              <th style="width: 20%;" class="text-end">Price</th>
+            </tr>
           </thead>
           <tbody id="viewOrderItems"></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2"><strong>Total</strong></td>
-              <td id="viewOrderTotal"></td>
-            </tr>
-          </tfoot>
         </table>
-        <button class="btn btn-warning" id="downloadReceiptBtn">Download Receipt</button>
+        <div class="d-flex justify-content-end align-items-center mt-3">
+          <span class="fw-bold fs-5">Total:&nbsp;</span>
+          <span class="fw-bold fs-5" id="viewOrderTotal"></span>
+        </div>
+        <div class="d-flex justify-content-center mt-4">
+          <button id="downloadReceiptBtn" class="btn btn-warning px-4">Download Receipt</button>
+        </div>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Order = require('../models/Order');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
@@ -43,7 +44,7 @@ const googleSignIn = async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return res.json({
@@ -209,7 +210,7 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
     const resetLink = `http://127.0.0.1:5501/frontend/Customer/html/resetpassword.html?token=${token}`;
 
     console.log('Reset link:', resetLink);
@@ -268,6 +269,17 @@ const getFavorites = async (req, res) => {
   }
 };
 
+// get recent orders (Customer side)
+const getOrders = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id || req.user;
+    const onlineOrders = await Order.find({ user: userId }).sort({ orderPlaced: -1 });
+    res.json(onlineOrders);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching your orders', error: err.message });
+  }
+};
+
 module.exports = {
   googleSignIn,
   signup,
@@ -280,4 +292,5 @@ module.exports = {
   resetPassword,
   addToFavorites,
   getFavorites,
+  getOrders
 };

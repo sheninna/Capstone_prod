@@ -583,12 +583,14 @@ function addToCart(productId, size = "Regular") {
   if (product.portions && Array.isArray(product.portions) && product.portions.length > 0) {
     const sizeObj = product.portions.find((p) => p.portion === size);
     if (sizeObj) {
-      price = sizeObj.price;
+      price = Number(sizeObj.price); // Ensure price is a number
       selectedSize = sizeObj.portion;
     } else {
-      price = product.portions[0].price;
+      price = Number(product.portions[0].price); // Ensure price is a number
       selectedSize = product.portions[0].portion;
     }
+  } else if (typeof price !== "number") {
+    price = Number(price); // Fallback: ensure price is a number
   }
 
   // Unique cart item ID
@@ -604,7 +606,7 @@ function addToCart(productId, size = "Regular") {
       id: cartItemId,
       baseId: productId,
       name: product.name,
-      price: price,
+      price: price, // Always a number
       size: selectedSize,
       quantity: 1,
       category: category,
@@ -613,38 +615,6 @@ function addToCart(productId, size = "Regular") {
 
   updateQuantityDisplay(productId, selectedSize);
   updateCartUI();
-}
-
-function removeFromCart(productId, size = "Regular") {
-  let product = foodData.find(f =>
-    `dishes-${f._id}` === productId ||
-    `bilao-${f._id}` === productId ||
-    `desserts-${f._id}` === productId
-  );
-  if (!product) return;
-
-  let selectedSize = size;
-  if (
-    product.portions &&
-    Array.isArray(product.portions) &&
-    product.portions.length > 0 &&
-    !product.portions.find((p) => p.portion === size)
-  ) {
-    selectedSize = product.portions[0].portion;
-  }
-
-  const cartItemId = `${productId}-${selectedSize.toLowerCase()}`;
-  const existingItemIndex = cart.findIndex((item) => item.id === cartItemId);
-
-  if (existingItemIndex !== -1) {
-    if (cart[existingItemIndex].quantity > 1) {
-      cart[existingItemIndex].quantity -= 1;
-    } else {
-      cart.splice(existingItemIndex, 1);
-    }
-    updateQuantityDisplay(productId, selectedSize);
-    updateCartUI();
-  }
 }
 
 // Get product quantity from cart
@@ -1186,16 +1156,17 @@ function handleDeliverySubmit(e) {
     return;
   }
 
-  // Convert payment proof to base64
   const reader = new FileReader();
   reader.onload = async function (event) {
-    const paymentProof = event.target.result; // base64 string
+    const paymentProof = event.target.result;
 
+    // --- FIX: Always include price as a number in each order item ---
     const orderData = {
       items: cart.map((item) => ({
         name: item.name,
         portion: item.size,
         quantity: item.quantity,
+        price: Number(item.price) // Force price to be a number
       })),
       name,
       phone,
@@ -1205,7 +1176,6 @@ function handleDeliverySubmit(e) {
       paymentProof,
     };
 
-    // Place the order and log the backend response for debugging
     const token = localStorage.getItem('customerToken');
     if (!token) {
       showLoginRequiredModal();
@@ -1223,8 +1193,6 @@ function handleDeliverySubmit(e) {
       });
 
       const result = await response.json();
-      console.log("Order API response:", result); // <-- See backend error here
-
       if (response.ok) {
         successModal.show();
         cart = [];
@@ -1243,31 +1211,74 @@ function handleDeliverySubmit(e) {
   reader.readAsDataURL(paymentProofFile);
 }
 
-// Handle pickup form submission
+// Pickup
 function handlePickupSubmit(e) {
   e.preventDefault();
 
   const name = document.getElementById("pickup-name").value;
   const phone = document.getElementById("pickup-phone").value;
+  const paymentProofInput = document.getElementById("pickup-payment-upload");
+  const paymentProofFile = paymentProofInput.files[0];
 
-  if (!name || !phone) {
-    alert("Please fill in all required fields");
+  if (!name || !phone || !paymentProofFile) {
+    alert("Please fill in all required fields and upload payment proof.");
     return;
   }
 
-  if (!document.getElementById("pickup-payment-upload").files[0]) {
-    alert("Please upload payment proof");
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = async function (event) {
+    const paymentProof = event.target.result;
 
-  // Save user data
-  saveUserData(name, phone);
+    const orderData = {
+      items: cart.map((item) => ({
+        name: item.name,
+        portion: item.size,
+        quantity: item.quantity,
+        price: Number(item.price)
+      })),
+      name,
+      phone,
+      orderType: "pickup",
+      paymentMethod: "gcash",
+      paymentProof,
+    };
 
-  // Process order
-  processOrder("pickup", { name, phone });
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      showLoginRequiredModal();
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        successModal.show();
+        cart = [];
+        updateCartUI();
+        alert('Order placed successfully!');
+      } else {
+        alert(result.error || result.message || 'Order failed!');
+      }
+    } catch (err) {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    }
+
+    pickupModal.hide();
+  };
+  reader.readAsDataURL(paymentProofFile);
 }
 
-// Handle reservation form submission
+// Reservation
 function handleReservationSubmit(e) {
   e.preventDefault();
 
@@ -1276,22 +1287,68 @@ function handleReservationSubmit(e) {
   const people = document.getElementById("reservation-people").value;
   const date = document.getElementById("reservation-date").value;
   const time = document.getElementById("reservation-time").value;
+  const paymentProofInput = document.getElementById("reservation-payment-upload");
+  const paymentProofFile = paymentProofInput.files[0];
 
-  if (!name || !phone || !people || !date || !time) {
-    alert("Please fill in all required fields");
+  if (!name || !phone || !people || !date || !time || !paymentProofFile) {
+    alert("Please fill in all required fields and upload payment proof.");
     return;
   }
 
-  if (!document.getElementById("reservation-payment-upload").files[0]) {
-    alert("Please upload payment proof");
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = async function (event) {
+    const paymentProof = event.target.result;
 
-  // Save user data
-  saveUserData(name, phone);
+    const orderData = {
+      items: cart.map((item) => ({
+        name: item.name,
+        portion: item.size,
+        quantity: item.quantity,
+        price: Number(item.price)
+      })),
+      name,
+      phone,
+      people,
+      date,
+      time,
+      orderType: "reservation",
+      paymentMethod: "gcash",
+      paymentProof,
+    };
 
-  // Process order
-  processOrder("reservation", { name, phone, people, date, time });
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      showLoginRequiredModal();
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        successModal.show();
+        cart = [];
+        updateCartUI();
+        alert('Order placed successfully!');
+      } else {
+        alert(result.error || result.message || 'Order failed!');
+      }
+    } catch (err) {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    }
+
+    reservationModal.hide();
+  };
+  reader.readAsDataURL(paymentProofFile);
 }
 
 // Process order
@@ -1483,7 +1540,7 @@ function updateDesktopNavbar() {
     if (isLoggedIn) {
       navActions.innerHTML = `
         <li class="nav-item">
-            <a class="nav-link" href="myorders.html">My Orders</a>
+            <a class="nav-link" href="myOrders.html">My Orders</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="notifications.html">
@@ -1796,7 +1853,9 @@ function renderFetchedFoods(foods) {
     let sizeOptionsHtml = "";
 
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
       sizeOptionsHtml = `<div class="size-options">
         ${food.portions.map((p, idx) => `
           <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
@@ -1805,7 +1864,7 @@ function renderFetchedFoods(foods) {
         `).join("")}
       </div>`;
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
       sizeOptionsHtml = "";
     }
 
@@ -1833,7 +1892,9 @@ function renderFetchedFoods(foods) {
     let sizeOptionsHtml = "";
 
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
       sizeOptionsHtml = `<div class="size-options">
         ${food.portions.map((p, idx) => `
           <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
@@ -1842,7 +1903,7 @@ function renderFetchedFoods(foods) {
         `).join("")}
       </div>`;
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
       sizeOptionsHtml = "";
     }
 
@@ -1868,9 +1929,11 @@ function renderFetchedFoods(foods) {
   desserts.forEach(food => {
     let priceHtml = "";
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
     }
     const imgSrc = food.image ? `http://localhost:5000/${food.image}` : "../assets/default-food.png";
     dessertsContainer.innerHTML += `
