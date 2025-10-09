@@ -252,8 +252,179 @@ function loadRecommendations() {
 }
 
 // ======================================================
-// Initialization
+// Desktop Navbar Rendering (with My Orders only if logged in)
 // ======================================================
+function updateDesktopNavbar() {
+  const navbar = document.querySelector('.navbar');
+  if (!navbar) return;
+
+  // Remove all children first
+  navbar.innerHTML = `
+    <div class="container">
+      <a class="navbar-brand" href="homepage.html">
+        <img class="logo" src="../assets/logo.jpg" alt="LomiHub" style="height:60px;">
+      </a>
+      <!-- Hamburger button for mobile -->
+      <button class="navbar-toggler d-lg-none" type="button" aria-label="Toggle navigation" onclick="openNavSidebar()" style="border:none;background:none;">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Desktop Navbar -->
+      <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="desktopNavLinks"></ul>
+        <ul class="navbar-nav" id="customerNavActions"></ul>
+      </div>
+    </div>
+  `;
+
+  // Fill desktop nav links
+  const desktopNavLinks = document.getElementById('desktopNavLinks');
+  const isLoggedIn = !!localStorage.getItem('customerToken');
+  if (desktopNavLinks) {
+    desktopNavLinks.innerHTML = `
+      <li class="nav-item">
+        <a class="nav-link active" href="homepage.html">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="ordernow.html">Order Now</a>
+      </li>
+      ${isLoggedIn ? `
+      <li class="nav-item">
+        <a class="nav-link" href="myorders.html">My Orders</a>
+      </li>
+      ` : ''}
+    `;
+  }
+  updateCustomerNavActions();
+}
+
+// ======================================================
+// Dynamic Desktop Navbar for Auth State
+// ======================================================
+function updateCustomerNavActions() {
+  const navActions = document.getElementById('customerNavActions');
+  const isLoggedIn = !!localStorage.getItem('customerToken');
+
+  if (navActions) {
+    if (isLoggedIn) {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="notifications.html">
+                <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="account.html">
+                <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="customerLogoutBtn">
+                <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+            </a>
+        </li>
+      `;
+      // Attach logout event
+      const logoutBtn = document.getElementById('customerLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          localStorage.removeItem('customerToken');
+          updateDesktopNavbar();
+          updateMobileNavSidebar();
+        });
+      }
+    } else {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignInBtn">Sign In</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignUpBtn">Sign Up</a>
+        </li>
+      `;
+      // Attach modal trigger for desktop sign in
+      const desktopSignInBtn = document.getElementById('desktopSignInBtn');
+      if (desktopSignInBtn) {
+        desktopSignInBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+          loginModal.show();
+        });
+      }
+      // Attach modal trigger for desktop sign up
+      const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
+      if (desktopSignUpBtn) {
+        desktopSignUpBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const signupModalEl = document.getElementById('signupModal');
+          if (signupModalEl) {
+            const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+            signupModal.show();
+          }
+        });
+      }
+    }
+  }
+}
+
+function updateMobileNavSidebar() {
+    const mobileNavSidebar = document.getElementById('mobileNavSidebar');
+    const isLoggedIn = !!localStorage.getItem('customerToken');
+    if (!mobileNavSidebar) return;
+
+    let navHtml = `
+        <div class="mobile-nav-header">
+            <button class="close-btn" onclick="closeNavSidebar()" aria-label="Close">&times;</button>
+        </div>
+        <ul class="navbar-nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="homepage.html">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="ordernow.html">Order Now</a>
+            </li>
+    `;
+
+    if (isLoggedIn) {
+        navHtml += `
+            <li class="nav-item">
+                <a class="nav-link" href="myorders.html">My Orders</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="notifications.html">Notifications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="account.html">Account</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
+            </li>
+        `;
+    } else {
+        navHtml += `
+            <li class="nav-item">
+                <a class="nav-link" href="customerlogin.html" id="mobileSignInBtn">Sign In</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="customersignup.html">Sign Up</a>
+            </li>
+        `;
+    }
+
+    navHtml += `</ul>`;
+    mobileNavSidebar.innerHTML = navHtml;
+}
+
+// Sidebar open/close functions
+function openNavSidebar() {
+  document.getElementById('mobileNavSidebar').style.display = 'block';
+  document.getElementById('mobileNavSidebarBackdrop').style.display = 'block';
+}
+function closeNavSidebar() {
+  document.getElementById('mobileNavSidebar').style.display = 'none';
+  document.getElementById('mobileNavSidebarBackdrop').style.display = 'none';
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   document
     .querySelectorAll(".feedback-modal")
@@ -265,6 +436,13 @@ document.addEventListener("DOMContentLoaded", function () {
   initOrderNowButton();
   initStarRating();
   initModalClose();
+
+  // First update auth state, then navbar
+  updateCustomerNavActions();
+  updateMobileNavSidebar();
+  updateDesktopNavbar(); // <-- Move this AFTER updateCustomerNavActions
+
+  initHamburgerIcon();
 
   const savedInfo = localStorage.getItem("lomihub_business_info");
   if (savedInfo) {
@@ -487,3 +665,310 @@ function loadFooterContactInfo() {
   `;
 }
 document.addEventListener("DOMContentLoaded", loadFooterContactInfo);
+
+// --- Password Eye Toggle for Sign In Modal ---
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.toggle-password').forEach(function(btn) {
+    btn.addEventListener('click', function () {
+      // Find the input by data-target attribute
+      const targetId = btn.getAttribute('data-target');
+      const passwordInput = document.getElementById(targetId);
+      if (passwordInput) {
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          btn.querySelector('i').classList.remove('fa-eye');
+          btn.querySelector('i').classList.add('fa-eye-slash');
+        } else {
+          passwordInput.type = 'password';
+          btn.querySelector('i').classList.remove('fa-eye-slash');
+          btn.querySelector('i').classList.add('fa-eye');
+        }
+      }
+    });
+  });
+});
+
+// Example login handler for saving token after successful login
+function handleCustomerLogin(token) {
+  // Save token to localStorage
+  localStorage.setItem('customerToken', token);
+
+  // Update navbar and sidebar to reflect logged-in state
+  updateDesktopNavbar();
+  updateCustomerNavActions();
+  updateMobileNavSidebar();
+}
+
+function handleCustomerLogout() {
+  localStorage.removeItem('customerToken');
+  updateDesktopNavbar();
+  updateCustomerNavActions();
+  updateMobileNavSidebar();
+}
+
+// --- Manual login form handler ---
+document.addEventListener('DOMContentLoaded', function () {
+  const loginForm = document.getElementById('loginForm');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const email = emailInput.value;
+      const password = passwordInput.value;
+
+      const data = { email, password };
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.token) {
+          handleCustomerLogin(result.token); // Save token and update navbar/actions/sidebar
+          localStorage.setItem('user', JSON.stringify(result.user));
+          // Close the modal
+          const loginModalEl = document.getElementById('loginModal');
+          if (loginModalEl && typeof bootstrap !== "undefined") {
+            const modalInstance = bootstrap.Modal.getInstance(loginModalEl) || new bootstrap.Modal(loginModalEl);
+            modalInstance.hide();
+          }
+        } else {
+          alert(result.message || 'Login Failed!');
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  }
+
+  // Toggle password visibility
+  document.querySelectorAll('.toggle-password').forEach(function(btn) {
+    btn.addEventListener('click', function () {
+      const passwordInput = btn.closest('.mb-3').querySelector('input[type="password"], input[type="text"]');
+      if (passwordInput) {
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          btn.querySelector('i').classList.remove('fa-eye');
+          btn.querySelector('i').classList.add('fa-eye-slash');
+        } else {
+          passwordInput.type = 'password';
+          btn.querySelector('i').classList.remove('fa-eye-slash');
+          btn.querySelector('i').classList.add('fa-eye');
+        }
+      }
+    });
+  });
+});
+
+// --- Sign Up Modal Trigger ---
+document.addEventListener('DOMContentLoaded', function () {
+  // Attach only once and outside updateCustomerNavActions
+  const signupModalEl = document.getElementById('signupModal');
+  const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
+  if (desktopSignUpBtn && signupModalEl) {
+    desktopSignUpBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+      signupModal.show();
+    });
+  }
+});
+
+// --- Professional OTP Input UI for Modal ---
+document.addEventListener('DOMContentLoaded', function () {
+  const otpInputs = document.querySelectorAll('#otpInputs .otp-input');
+  if (otpInputs.length === 6) {
+    otpInputs.forEach((input, idx) => {
+      input.addEventListener('input', function () {
+        // Only allow digits
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value.length === 1 && idx < otpInputs.length - 1) {
+          otpInputs[idx + 1].focus();
+        }
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !this.value && idx > 0) {
+          otpInputs[idx - 1].focus();
+        }
+      });
+      input.addEventListener('paste', function (e) {
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        if (/^\d{6}$/.test(paste)) {
+          otpInputs.forEach((el, i) => el.value = paste[i] || '');
+          otpInputs[5].focus();
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
+  // Update OTP modal submit button to collect all 6 digits
+  const submitOtpBtn = document.getElementById('submitOtpBtn');
+  if (submitOtpBtn) {
+    submitOtpBtn.onclick = async function() {
+      const otp = Array.from(otpInputs).map(input => input.value).join('');
+      const otpError = document.getElementById('otpError');
+      if (otp.length !== 6) {
+        otpError.innerText = "Please enter the 6-digit code.";
+        otpError.style.display = 'block';
+        return;
+      }
+      // Retrieve signup info stored in window for OTP verification
+      const signupInfo = window._pendingSignupInfo;
+      if (!signupInfo) {
+        otpError.innerText = "Session expired. Please sign up again.";
+        otpError.style.display = 'block';
+        return;
+      }
+      // Verify OTP and create account
+      const response = await fetch('http://localhost:5000/api/otp/verify-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...signupInfo, otp })
+      });
+      const result = await response.json();
+      if (response.ok) {
+        const otpModalEl = document.getElementById('otpModal');
+        if (otpModalEl && typeof bootstrap !== "undefined") {
+          const otpModal = bootstrap.Modal.getOrCreateInstance(otpModalEl);
+          otpModal.hide();
+        }
+        alert('Sign Up Successful! Please log in.');
+        // Show the sign in modal after successful verification
+        const loginModalEl = document.getElementById('loginModal');
+        if (loginModalEl && typeof bootstrap !== "undefined") {
+          const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+          loginModal.show();
+        }
+      } else {
+        otpError.innerText = result.message;
+        otpError.style.display = 'block';
+      }
+    };
+  }
+});
+
+// --- Manual Sign Up Form Handler with OTP Modal (fix show OTP modal) ---
+document.addEventListener('DOMContentLoaded', function () {
+  const signupForm = document.getElementById('signupForm');
+  const usernameInput = document.getElementById('username');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm-password');
+
+  function showOtpModal({ username, email, password }) {
+    // Hide the sign-up modal first
+    const signupModalEl = document.getElementById('signupModal');
+    if (signupModalEl && typeof bootstrap !== "undefined") {
+      const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+      signupModal.hide();
+    }
+
+    // Store signup info globally for OTP verification
+    window._pendingSignupInfo = { username, email, password };
+
+    // Reset OTP inputs and error
+    const otpInputs = document.querySelectorAll('#otpInputs .otp-input');
+    otpInputs.forEach(input => input.value = '');
+    document.getElementById('otpError').style.display = 'none';
+
+    // Show OTP modal
+    const otpModalEl = document.getElementById('otpModal');
+    if (otpModalEl && typeof bootstrap !== "undefined") {
+      const otpModal = bootstrap.Modal.getOrCreateInstance(otpModalEl);
+      otpModal.show();
+      setTimeout(() => otpInputs[0].focus(), 300);
+    }
+  }
+
+  if (signupForm) {
+    signupForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const username = usernameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+
+      // Validate passwords
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+      if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+      }
+
+      // Step 1: Send OTP for signup
+      try {
+        const response = await fetch('http://localhost:5000/api/otp/send-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showOtpModal({ username, email, password });
+        } else {
+          alert(result.message || 'Failed to send OTP!');
+        }
+      } catch (error) {
+        console.error('Error during sign up:', error);
+        alert('An error occurred. Please try again later.');
+      }
+    });
+  }
+});
+
+window.addEventListener('pageshow', function () {
+  updateCustomerNavActions();
+  updateMobileNavSidebar();
+  updateDesktopNavbar();
+});
+
+const signInBtn = document.getElementById('mobileSignInBtn');
+if (signInBtn) {
+    signInBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        closeNavSidebar();
+        if (window.innerWidth <= 992) {
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+            window.location.href = "customerlogin.html";
+        } else {
+            const loginModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal'));
+            loginModal.show();
+        }
+    });
+}
+
+// Logout Modal
+document.addEventListener('DOMContentLoaded', function () {
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', function () {
+      // Remove token
+      localStorage.removeItem('customerToken');
+      // Update navbars and sidebar
+      updateDesktopNavbar();
+      updateCustomerNavActions();
+      updateMobileNavSidebar();
+      // Close the modal
+      const logoutModalEl = document.getElementById('logoutModal');
+      if (logoutModalEl && typeof bootstrap !== "undefined") {
+        const modalInstance = bootstrap.Modal.getInstance(logoutModalEl) || new bootstrap.Modal(logoutModalEl);
+        modalInstance.hide();
+      }
+    });
+  }
+});

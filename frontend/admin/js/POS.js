@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
 
 
-
   // Fetch products from backend
   let products = {};
   async function fetchProducts() {
@@ -608,7 +607,7 @@ document.getElementById("logoutBtn").addEventListener("click", async function ()
     localStorage.removeItem('token');
     localStorage.removeItem('posToken');
     localStorage.removeItem('adminToken');
-    window.location.href = "poslogin.html";
+    window.location.replace("poslogin.html"); // Use replace to prevent back navigation
     return;
   }
 
@@ -648,5 +647,10 @@ document.getElementById("logoutBtn").addEventListener("click", async function ()
   localStorage.removeItem('token');
   localStorage.removeItem('posToken');
   localStorage.removeItem('adminToken');
-  window.location.href = "poslogin.html";
+  window.location.replace("poslogin.html"); // Use replace to prevent back navigation
 });
+
+// --- Block access if not logged in ---
+if (!getAuthToken()) {
+  window.location.replace("poslogin.html");
+}

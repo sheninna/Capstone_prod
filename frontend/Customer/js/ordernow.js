@@ -499,31 +499,77 @@ function decreaseQuantity(e) {
   // For items with sizes, get the selected option
   let size = "Regular";
   const sizeOptions = productCard.querySelector(".size-options");
-
   if (sizeOptions) {
     const activeSize = sizeOptions.querySelector(".size-btn.active");
-    size = activeSize
-      ? activeSize.getAttribute("data-size")
-      : productCard.classList.contains("bilao-product-card")
-      ? "Small"
-      : "Regular";
+    if (activeSize) {
+      size = activeSize.getAttribute("data-size");
+    } else {
+      // fallback to first portion if no active
+      let product = foodData.find(f =>
+        `dishes-${f._id}` === productId ||
+        `bilao-${f._id}` === productId ||
+        `desserts-${f._id}` === productId
+      );
+      if (
+        product &&
+        product.portions &&
+        Array.isArray(product.portions) &&
+        product.portions.length > 0
+      ) {
+        size = product.portions[0].portion;
+      }
+    }
+  }
+  removeFromCart(productId, size);
+}
+
+function removeFromCart(productId, size = "Regular") {
+  let product = foodData.find(f =>
+    `dishes-${f._id}` === productId ||
+    `bilao-${f._id}` === productId ||
+    `desserts-${f._id}` === productId
+  );
+  if (!product) return;
+
+  let selectedSize = size;
+  if (
+    product.portions &&
+    Array.isArray(product.portions) &&
+    product.portions.length > 0 &&
+    !product.portions.find((p) => p.portion === size)
+  ) {
+    selectedSize = product.portions[0].portion;
   }
 
-  removeFromCart(productId, size);
+  const cartItemId = `${productId}-${selectedSize.toLowerCase()}`;
+  const existingItemIndex = cart.findIndex((item) => item.id === cartItemId);
+
+  if (existingItemIndex !== -1) {
+    if (cart[existingItemIndex].quantity > 1) {
+      cart[existingItemIndex].quantity -= 1;
+    } else {
+      cart.splice(existingItemIndex, 1);
+    }
+    updateQuantityDisplay(productId, selectedSize);
+    updateCartUI();
+  }
 }
 
 // Add item to cart
 function addToCart(productId, size = "Regular") {
-  // Find the product in our data structure
+  // Find the product in foodData
   let product = null;
   let category = null;
 
-  // Search through all categories
-  for (const [cat, items] of Object.entries(products)) {
-    const found = items.find((item) => item.id === productId);
-    if (found) {
-      product = found;
-      category = cat;
+  // Find category and product by ID
+  for (const food of foodData) {
+    if (
+      `dishes-${food._id}` === productId ||
+      `bilao-${food._id}` === productId ||
+      `desserts-${food._id}` === productId
+    ) {
+      product = food;
+      category = food.category;
       break;
     }
   }
@@ -534,30 +580,26 @@ function addToCart(productId, size = "Regular") {
   let price = product.price;
   let selectedSize = size;
 
-  // If product has sizes, find the price for the selected size
-  if (product.sizes) {
-    const sizeObj = product.sizes.find((s) => s.portion === size);
+  if (product.portions && Array.isArray(product.portions) && product.portions.length > 0) {
+    const sizeObj = product.portions.find((p) => p.portion === size);
     if (sizeObj) {
       price = sizeObj.price;
       selectedSize = sizeObj.portion;
     } else {
-      // Default to first size if specified size not found
-      price = product.sizes[0].price;
-      selectedSize = product.sizes[0].portion;
+      price = product.portions[0].price;
+      selectedSize = product.portions[0].portion;
     }
   }
 
-  // Create a unique ID for this product + size combination
+  // Unique cart item ID
   const cartItemId = `${productId}-${selectedSize.toLowerCase()}`;
 
   // Check if item already exists in cart with same size
   const existingItemIndex = cart.findIndex((item) => item.id === cartItemId);
 
   if (existingItemIndex !== -1) {
-    // Increment quantity
     cart[existingItemIndex].quantity += 1;
   } else {
-    // Add new item
     cart.push({
       id: cartItemId,
       baseId: productId,
@@ -573,40 +615,33 @@ function addToCart(productId, size = "Regular") {
   updateCartUI();
 }
 
-// Remove item from cart
 function removeFromCart(productId, size = "Regular") {
-  // Find the product to get the correct size if needed
-  let product = null;
-  for (const [cat, items] of Object.entries(products)) {
-    const found = items.find((item) => item.id === productId);
-    if (found) {
-      product = found;
-      break;
-    }
-  }
-
+  let product = foodData.find(f =>
+    `dishes-${f._id}` === productId ||
+    `bilao-${f._id}` === productId ||
+    `desserts-${f._id}` === productId
+  );
   if (!product) return;
 
-  // Determine the actual size to use
   let selectedSize = size;
-  if (product.sizes && !product.sizes.find((s) => s.portion === size)) {
-    selectedSize = product.sizes[0].portion;
+  if (
+    product.portions &&
+    Array.isArray(product.portions) &&
+    product.portions.length > 0 &&
+    !product.portions.find((p) => p.portion === size)
+  ) {
+    selectedSize = product.portions[0].portion;
   }
 
-  // Create a unique ID for this product + size combination
   const cartItemId = `${productId}-${selectedSize.toLowerCase()}`;
-
   const existingItemIndex = cart.findIndex((item) => item.id === cartItemId);
 
   if (existingItemIndex !== -1) {
     if (cart[existingItemIndex].quantity > 1) {
-      // Decrement quantity
       cart[existingItemIndex].quantity -= 1;
     } else {
-      // Remove item
       cart.splice(existingItemIndex, 1);
     }
-
     updateQuantityDisplay(productId, selectedSize);
     updateCartUI();
   }
@@ -1138,25 +1173,74 @@ function updateLocationUI() {
 function handleDeliverySubmit(e) {
   e.preventDefault();
 
+  // Gather order data from form and cart
   const name = document.getElementById("delivery-name").value;
   const phone = document.getElementById("delivery-phone").value;
   const address = document.getElementById("delivery-address").value;
+  const paymentMethod = "gcash";
+  const paymentProofInput = document.getElementById("delivery-payment-upload");
+  const paymentProofFile = paymentProofInput.files[0];
 
-  if (!name || !phone || !address) {
-    alert("Please fill in all required fields");
+  if (!name || !phone || !address || !paymentProofFile) {
+    alert("Please fill in all required fields and upload payment proof.");
     return;
   }
 
-  if (!document.getElementById("delivery-payment-upload").files[0]) {
-    alert("Please upload payment proof");
-    return;
-  }
+  // Convert payment proof to base64
+  const reader = new FileReader();
+  reader.onload = async function (event) {
+    const paymentProof = event.target.result; // base64 string
 
-  // Save user data
-  saveUserData(name, phone, address);
+    const orderData = {
+      items: cart.map((item) => ({
+        name: item.name,
+        portion: item.size,
+        quantity: item.quantity,
+      })),
+      name,
+      phone,
+      orderType: "delivery",
+      address,
+      paymentMethod,
+      paymentProof,
+    };
 
-  // Process order
-  processOrder("delivery", { name, phone, address });
+    // Place the order and log the backend response for debugging
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      showLoginRequiredModal();
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      console.log("Order API response:", result); // <-- See backend error here
+
+      if (response.ok) {
+        successModal.show();
+        cart = [];
+        updateCartUI();
+        alert('Order placed successfully!');
+      } else {
+        alert(result.error || result.message || 'Order failed!');
+      }
+    } catch (err) {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    }
+
+    deliveryModal.hide();
+  };
+  reader.readAsDataURL(paymentProofFile);
 }
 
 // Handle pickup form submission
@@ -1292,13 +1376,184 @@ function preserveFormData() {
     });
 }
 
-// Initialize the page
-document.addEventListener("DOMContentLoaded", function () {
+// Update mobile navigation sidebar
+function updateMobileNavSidebar() {
+  const mobileNavSidebar = document.getElementById('mobileNavSidebar');
+  const isLoggedIn = !!localStorage.getItem('customerToken');
+  if (!mobileNavSidebar) return;
+
+  let navHtml = `
+      <div class="mobile-nav-header">
+          <button class="close-btn" onclick="closeNavSidebar()" aria-label="Close">&times;</button>
+      </div>
+      <ul class="navbar-nav flex-column">
+          <li class="nav-item">
+              <a class="nav-link active" href="homepage.html">Home</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link active" href="ordernow.html">Order Now</a>
+          </li>
+  `;
+
+  if (isLoggedIn) {
+      navHtml += `
+          <li class="nav-item">
+              <a class="nav-link" href="myorders.html">My Orders</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="notifications.html">Notifications</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="account.html">Account</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
+          </li>
+      `;
+  } else {
+      navHtml += `
+          <li class="nav-item">
+              <a class="nav-link" href="#" id="mobileSignInBtn">Sign In</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="#" id="mobileSignUpBtn">Sign Up</a>
+          </li>
+      `;
+  }
+
+  navHtml += `</ul>`;
+  mobileNavSidebar.innerHTML = navHtml;
+
+  // Attach modal triggers or redirects for mobile sign in/sign up
+  if (!isLoggedIn) {
+      const signInBtn = document.getElementById('mobileSignInBtn');
+      if (signInBtn) {
+          signInBtn.addEventListener('click', function(e) {
+              e.preventDefault();
+              closeNavSidebar();
+              if (window.innerWidth <= 992) {
+                  localStorage.setItem('redirectAfterLogin', window.location.pathname);
+                  window.location.href = "customerlogin.html";
+              } else {
+                  const loginModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal'));
+                  loginModal.show();
+              }
+          });
+      }
+      const signUpBtn = document.getElementById('mobileSignUpBtn');
+      if (signUpBtn) {
+          signUpBtn.addEventListener('click', function(e) {
+              e.preventDefault();
+              closeNavSidebar();
+              if (window.innerWidth <= 992) {
+                  window.location.href = "customersignup.html";
+              } else {
+                  const signupModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal'));
+                  signupModal.show();
+              }
+          });
+      }
+  }
+
+  // Attach logout modal confirm button handler (always re-attach after sidebar update)
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  if (confirmLogoutBtn) {
+      confirmLogoutBtn.onclick = function () {
+          localStorage.removeItem('customerToken');
+          updateMobileNavSidebar();
+          // If you have a desktop nav, update it here too:
+          // updateDesktopNavbar();
+          // Close the modal
+          const logoutModalEl = document.getElementById('logoutModal');
+          if (logoutModalEl && typeof bootstrap !== "undefined") {
+              const modalInstance = bootstrap.Modal.getInstance(logoutModalEl) || new bootstrap.Modal(logoutModalEl);
+              modalInstance.hide();
+          }
+      };
+  }
+}
+
+// Update desktop navbar
+function updateDesktopNavbar() {
+  const navActions = document.getElementById('customerNavActions');
+  const isLoggedIn = !!localStorage.getItem('customerToken');
+  console.log('Updating desktop navbar, logged in:', isLoggedIn);
+
+  if (navActions) {
+    if (isLoggedIn) {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="myorders.html">My Orders</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="notifications.html">
+                <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="account.html">
+                <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="customerLogoutBtn">
+                <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+            </a>
+        </li>
+      `;
+      // Attach logout event
+      const logoutBtn = document.getElementById('customerLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          localStorage.removeItem('customerToken');
+          updateDesktopNavbar();
+          updateMobileNavSidebar();
+        });
+      }
+    } else {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignInBtn">Sign In</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignUpBtn">Sign Up</a>
+        </li>
+      `;
+      // Attach modal trigger for desktop sign in
+      const desktopSignInBtn = document.getElementById('desktopSignInBtn');
+      if (desktopSignInBtn) {
+        desktopSignInBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+          loginModal.show();
+        });
+      }
+      // Attach modal trigger for desktop sign up
+      const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
+      if (desktopSignUpBtn) {
+        desktopSignUpBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const signupModalEl = document.getElementById('signupModal');
+          if (signupModalEl) {
+            const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+            signupModal.show();
+          }
+        });
+      }
+    }
+  }
+}
+
+// Call this on DOMContentLoaded and after login/logout
+document.addEventListener('DOMContentLoaded', function () {
   console.log("DOM loaded, initializing");
   renderProducts();
   initializeEventListeners();
   loadUserData();
   updateCartUI();
+  updateDesktopNavbar();
+  updateMobileNavSidebar();
 
   // Show floating cart button on mobile
   if (window.innerWidth <= 992) {
@@ -1313,4 +1568,331 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('input[type="date"]').forEach((input) => {
     input.min = today;
   });
+
+  // Sign In modal trigger
+  const desktopSignInBtn = document.getElementById('desktopSignInBtn');
+  if (desktopSignInBtn) {
+    desktopSignInBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const loginModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal'));
+      loginModal.show();
+    });
+  }
+  // Sign Up modal trigger
+  const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
+  if (desktopSignUpBtn) {
+    desktopSignUpBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const signupModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal'));
+      signupModal.show();
+    });
+  }
+  // Switch between modals
+  document.getElementById('openSignUpFromSignIn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).hide();
+    setTimeout(() => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal')).show();
+    }, 300);
+  });
+  document.getElementById('openSignInFromSignUp')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal')).hide();
+    setTimeout(() => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).show();
+    }, 300);
+  });
+  document.getElementById('openSignInFromRequired').addEventListener('click', function() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loginRequiredModal')).hide();
+    setTimeout(() => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).show();
+    }, 300);
+  });
+  document.getElementById('openSignUpFromRequired').addEventListener('click', function() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loginRequiredModal')).hide();
+    setTimeout(() => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal')).show();
+    }, 300);
+  });
+
+  // Use your real login API for login form submit
+  const loginForm = document.getElementById('loginForm');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const email = emailInput.value;
+      const password = passwordInput.value;
+
+      const data = { email, password };
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.token) {
+          localStorage.setItem('customerToken', result.token);
+          localStorage.setItem('user', JSON.stringify(result.user));
+          updateDesktopNavbar();
+          updateMobileNavSidebar();
+          // Close the modal
+          const loginModalEl = document.getElementById('loginModal');
+          if (loginModalEl && typeof bootstrap !== "undefined") {
+            const modalInstance = bootstrap.Modal.getInstance(loginModalEl) || new bootstrap.Modal(loginModalEl);
+            modalInstance.hide();
+          }
+        } else {
+          alert(result.message || 'Login Failed!');
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  }
+});
+
+
+function openNavSidebar() {
+  // DO NOT call updateMobileNavSidebar() if you want to keep your static HTML!
+  document.getElementById('mobileNavSidebar').classList.add('show');
+  document.getElementById('mobileNavSidebarBackdrop').classList.add('show');
+}
+function closeNavSidebar() {
+  document.getElementById('mobileNavSidebar').classList.remove('show');
+  document.getElementById('mobileNavSidebarBackdrop').classList.remove('show');
+}
+
+// After successful login, set the token and update navbars
+function onLoginSuccess(tokenValue) {
+  localStorage.setItem('customerToken', tokenValue); // after login
+  updateDesktopNavbar();
+  updateMobileNavSidebar();
+}
+
+// Example: after login API returns success
+function handleLoginResponse(response) {
+  if (response.success && response.token) {
+    localStorage.setItem('customerToken', response.token);
+    updateDesktopNavbar();
+    updateMobileNavSidebar();
+    // Hide login modal
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).hide();
+  } else {
+    // Show error
+  }
+}
+
+function requireLoginBeforeOrder() {
+  const token = localStorage.getItem('customerToken');
+  if (!token) {
+    // Show modal: must log in or sign up
+    showLoginRequiredModal();
+    return false;
+  }
+  return true;
+}
+
+// Example: If you have a "Place Order" button
+document.getElementById('checkout-btn').addEventListener('click', function(e) {
+  if (!requireLoginBeforeOrder()) {
+    e.preventDefault();
+    return;
+  }
+  // ...proceed to order logic...
+});
+
+// Same for mobile
+document.getElementById('mobile-checkout-btn').addEventListener('click', function(e) {
+  if (!requireLoginBeforeOrder()) {
+    e.preventDefault();
+    return;
+  }
+  // ...proceed to order logic...
+});
+
+// Modal function
+function showLoginRequiredModal() {
+  // If you have a modal in your HTML:
+  // <div class="modal fade" id="loginRequiredModal" ...>
+  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginRequiredModal'));
+  modal.show();
+}
+
+async function placeCustomerOrder(orderData) {
+  const token = localStorage.getItem('customerToken');
+  if (!token) {
+    showLoginRequiredModal();
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5000/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // <-- JWT token for authentication
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // Show success modal, clear cart, etc.
+      successModal.show();
+      cart = [];
+      updateCartUI();
+      alert('Order placed successfully!');
+    } else {
+      alert(result.error || result.message || 'Order failed!');
+    }
+  } catch (err) {
+    alert('Error placing order. Please try again.');
+    console.error(err);
+  }
+}
+
+// New code starts here
+let foodData = [];
+
+async function fetchFoodData() {
+  try {
+    const response = await fetch('http://localhost:5000/api/foods');
+    const result = await response.json();
+    if (response.ok) {
+      foodData = result; // result is an array of foods from your DB
+      renderFetchedFoods(foodData); // Render products from DB
+    } else {
+      console.error('Failed to fetch food data:', result.error || result.message);
+    }
+  } catch (err) {
+    console.error('Error fetching food data:', err);
+  }
+}
+
+// Render foods from DB (replace your static renderProducts)
+function renderFetchedFoods(foods) {
+  // Group foods by category
+  const dishes = foods.filter(f => f.category === 'Dishes');
+  const bilao = foods.filter(f => f.category === 'Bilao');
+  const desserts = foods.filter(f => f.category === 'Desserts');
+
+  // Render Dishes
+  const dishesContainer = document.getElementById("dishes-items");
+  dishesContainer.innerHTML = "";
+  dishes.forEach(food => {
+    let priceHtml = "";
+    let sizeOptionsHtml = "";
+
+    if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
+      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      sizeOptionsHtml = `<div class="size-options">
+        ${food.portions.map((p, idx) => `
+          <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
+            ${p.portion}
+          </button>
+        `).join("")}
+      </div>`;
+    } else {
+      priceHtml = `₱${food.price}`;
+      sizeOptionsHtml = "";
+    }
+
+    const imgSrc = food.image ? `http://localhost:5000/${food.image}` : "../assets/default-food.png";
+    dishesContainer.innerHTML += `
+      <div class="card product-card" id="dishes-${food._id}">
+        <img src="${imgSrc}" alt="${food.name}">
+        <h4>${food.name}</h4>
+        <p class="price">${priceHtml}</p>
+        ${sizeOptionsHtml}
+        <div class="qty-controls">
+          <button class="decrease-btn" data-product="dishes-${food._id}">-</button>
+          <span id="qty-dishes-${food._id}" class="quantity-value">0</span>
+          <button class="increase-btn" data-product="dishes-${food._id}">+</button>
+        </div>
+      </div>
+    `;
+  });
+
+  // Render Bilao
+  const bilaoContainer = document.getElementById("bilao-items");
+  bilaoContainer.innerHTML = "";
+  bilao.forEach(food => {
+    let priceHtml = "";
+    let sizeOptionsHtml = "";
+
+    if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
+      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      sizeOptionsHtml = `<div class="size-options">
+        ${food.portions.map((p, idx) => `
+          <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
+            ${p.portion}
+          </button>
+        `).join("")}
+      </div>`;
+    } else {
+      priceHtml = `₱${food.price}`;
+      sizeOptionsHtml = "";
+    }
+
+    const imgSrc = food.image ? `http://localhost:5000/${food.image}` : "../assets/default-food.png";
+    bilaoContainer.innerHTML += `
+      <div class="card product-card" id="bilao-${food._id}">
+        <img src="${imgSrc}" alt="${food.name}">
+        <h4>${food.name}</h4>
+        <p class="price">${priceHtml}</p>
+        ${sizeOptionsHtml}
+        <div class="qty-controls">
+          <button class="decrease-btn" data-product="bilao-${food._id}">-</button>
+          <span id="qty-bilao-${food._id}" class="quantity-value">0</span>
+          <button class="increase-btn" data-product="bilao-${food._id}">+</button>
+        </div>
+      </div>
+    `;
+  });
+
+  // Render Desserts
+  const dessertsContainer = document.getElementById("desserts-items");
+  dessertsContainer.innerHTML = "";
+  desserts.forEach(food => {
+    let priceHtml = "";
+    if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
+      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+    } else {
+      priceHtml = `₱${food.price}`;
+    }
+    const imgSrc = food.image ? `http://localhost:5000/${food.image}` : "../assets/default-food.png";
+    dessertsContainer.innerHTML += `
+      <div class="card product-card" id="desserts-${food._id}">
+        <img src="${imgSrc}" alt="${food.name}">
+        <h4>${food.name}</h4>
+        <p class="price">${priceHtml}</p>
+        <div class="qty-controls">
+          <button class="decrease-btn" data-product="desserts-${food._id}">-</button>
+          <span id="qty-desserts-${food._id}" class="quantity-value">0</span>
+          <button class="increase-btn" data-product="desserts-${food._id}">+</button>
+        </div>
+      </div>
+    `;
+  });
+
+  // After rendering, re-attach event listeners
+  attachProductEventListeners();
+}
+
+// Replace static renderProducts with fetchFoodData on page load
+document.addEventListener('DOMContentLoaded', async function () {
+  await fetchFoodData();
+  // ...rest of your code...
 });

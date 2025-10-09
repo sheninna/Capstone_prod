@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../css/ordernow.css">
+    <script src="https://accounts.google.com/gsi/client?hl=en" async defer></script>
     <style>
         @media (max-width: 992px) {
             .category-alert {
@@ -52,35 +53,16 @@
 
               <!-- Desktop Navbar -->
               <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
-                  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                      <li class="nav-item">
-                          <a class="nav-link" href="homepage.html">Home</a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link active" href="ordernow.html">Order Now</a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="myorders.html">My Orders</a>
-                      </li>
-                  </ul>
-                  <ul class="navbar-nav">
-                      <li class="nav-item">
-                          <a class="nav-link" href="notifications.html">
-                              <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
-                          </a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="account.html">
-                              <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
-                          </a>
-                      </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                              <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
-                          </a>
-                      </li>
-                  </ul>
-              </div>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="homepage.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="ordernow.html">Order Now</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="customerNavActions"></ul>
+            </div>
           </div>
       </nav>  
 
@@ -127,7 +109,7 @@
       <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutModalLabel">
         <div class="modal-body">Are you sure you want to log out?</div>
         <div class="modal-footer">
-          <a href="customerlogin.html" class="btn-logout">Logout</a>
+          <button type="button" class="btn-logout" id="confirmLogoutBtn">Logout</button>
           <button type="button" class="btn-cancel" data-bs-dismiss="modal">
             Cancel
           </button>
@@ -497,9 +479,163 @@
         </div>
     </div>
 
+<!-- Sign In Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-0" style="border-radius: 1rem; max-width:400px; margin:auto;">
+      <div class="modal-body p-4 bg-white rounded-4 text-center" id="loginBox">
+        <div class="logo-container text-center" id="logoContainer">
+          <img src="../assets/logo.jpg" alt="Logo" class="logo-top" id="logoTop" />
+        </div>
+        <h1 class="title mb-4" id="loginTitle">Sign In</h1>
+        <!-- Login Form -->
+        <form id="loginForm">
+          <div class="mb-3">
+            <input type="email" id="emailInput" class="form-control rounded-3" placeholder="Email" required />
+          </div>
+          <div class="mb-3 position-relative">
+            <input type="password" id="passwordInput" class="form-control rounded-3" placeholder="Password" required>
+            <button type="button" class="btn btn-sm translate-middle-y me-2 toggle-password" data-target="password" tabindex="-1" style="background:transparent;border:none;">
+              <i class="fa fa-eye"></i>
+            </button>
+            <div class="text-end mb-3">
+              <a href="./forgot-password.html" class="text-decoration-none small text-warning" id="forgotPasswordLink">Forgot Password?</a>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-warning w-100 fw-bold py-2 rounded-3" id="loginButton">Log In</button>
+        </form>
+        <!-- Divider -->
+        <div class="my-3 d-flex align-items-center" id="divider">
+          <hr class="flex-grow-1">
+          <span class="px-2 small">or</span>
+          <hr class="flex-grow-1">
+        </div>
+        <div class="d-flex flex-column align-items-center w-100 mb-2">
+          <div id="g_id_onload"
+              data-client_id="351985100821-iuvnfvbfr5j217klolpnhmcefmoih27m.apps.googleusercontent.com"
+              data-callback="handleCredentialResponse"
+              data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin"
+              id="googleSignInBtn"
+              data-type="standard"
+              data-size="large"
+              data-theme="outline"
+              data-text="continue_with"
+              data-shape="pill"
+              data-logo_alignment="left"
+              data-locale="en">
+          </div>
+        </div>
+        <!-- Register Prompt -->
+        <p class="mt-3 small" id="registerPrompt">
+          Don't have an account? <a href="customersignup.html" class="text-warning text-decoration-none" id="registerLink">Register</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+<!-- Sign Up Modal -->
+<div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-0" style="border-radius: 1rem; max-width:400px; margin:auto;">
+      <div class="modal-body p-4 bg-white rounded-4 text-center">
+        <div class="logo-container text-center">
+          <img src="/frontend/Customer/assets/logo.jpg" alt="Logo" class="logo-top" />
+        </div>
+        <h1 class="title mb-4" style="font-size: 1.7rem;">Create an Account</h1>
+        <!-- Manual Sign-Up Form -->
+        <form id="signupForm">
+          <div class="mb-3">
+            <input type="text" class="form-control rounded-3" id="username" placeholder="Username" required />
+          </div>
+          <div class="mb-3">
+            <input type="email" class="form-control rounded-3" id="email" placeholder="Email" required />
+          </div>
+          <div class="mb-3 position-relative">
+            <input type="password" class="form-control rounded-3" id="password" placeholder="Password" required />
+          </div>
+          <div class="mb-3 position-relative">
+            <input type="password" class="form-control rounded-3" id="confirm-password" placeholder="Confirm Password" required />
+          </div>
+          <button type="submit" class="btn btn-warning w-100 fw-bold py-2 rounded-3">Sign Up</button>
+        </form>
+        <!-- Divider -->
+        <div class="my-3 d-flex align-items-center">
+          <hr class="flex-grow-1">
+          <span class="px-2 small">or</span>
+          <hr class="flex-grow-1">
+        </div>
+        <!-- Google Sign Up -->
+        <div id="g_id_onload"
+             data-client_id="780475386949-u6sqqgqt83he17eskl0qad013id4kakr.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="signup_with"
+             data-shape="pill"
+             data-logo_alignment="left"
+             data-locale="en">
+        </div>
+        <!-- Login Prompt -->
+        <p class="mt-3 small" style="font-size: 1rem;">
+          Already have an account? <a href="customerlogin.html" class="text-warning text-decoration-none">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OTP Modal -->
+<div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title w-100 text-center fw-bold" id="otpModalLabel">Verify Your Email</h5>
+        <button type="button" class="btn-close position-absolute end-0 me-3 mt-3" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="text-center mb-4 text-muted">Enter the 6-digit code sent to your email address.</p>
+        <div class="d-flex justify-content-center gap-2 mb-3" id="otpInputs">
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+        </div>
+        <div id="otpError" class="text-danger text-center mb-2" style="display:none;"></div>
+        <div class="text-center mb-2">
+          <button type="button" class="btn btn-link p-0 text-warning" id="resendOtpBtn">Resend Code</button>
+        </div>
+        <button type="button" class="btn btn-warning w-100 fw-bold py-2 rounded-3" id="submitOtpBtn">Verify</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Login Required Modal -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-0" style="border-radius: 1rem; max-width:400px; margin:auto;">
+      <div class="modal-body p-4 bg-white rounded-4 text-center">
+        <h5 class="mb-3">Sign In Required</h5>
+        <p class="mb-4">You must create an account or sign in to place an order.</p>
+        <button type="button" class="btn btn-warning w-100 mb-2" id="openSignInFromRequired">Sign In</button>
+        <button type="button" class="btn btn-outline-secondary w-100" id="openSignUpFromRequired">Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 <script src="../js/script.js"></script>
 <script src="../js/ordernow.js"></script>
+
 </body>
 </html>

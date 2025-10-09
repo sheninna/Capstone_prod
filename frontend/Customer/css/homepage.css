@@ -24,7 +24,10 @@ body {
   margin-left: -90px;
 }
 
-.navbar-nav.ms-auto {
+.navbar-nav.ms-auto,
+#customerNavActions .nav-link,
+#desktopSignInBtn,
+#customerNavActions a.nav-link[href="customersignup.html"]  {
   margin-left: auto !important;
   padding-right: 10px;
   font-family: "Times New Roman", Times, serif;
@@ -291,6 +294,394 @@ body {
     margin-left: 0;
   }
 }
+
+/* --- Sign In Modal Styles --- */
+#loginModal .logo-container {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+#loginModal .modal-dialog{
+  margin-top: 6px; 
+  display: flex; 
+  align-items: flex-start; 
+  justify-content: center;
+}
+#loginModal .logo-top {
+  max-width: 110px;
+  max-height: 110px;
+  width: clamp(80px, 20vw, 120px);
+  height: clamp(80px, 20vw, 120px);
+  margin-top: -60px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+#loginModal .modal-content {
+  border-radius: 1rem;
+  background: #fff;
+  max-width: 400px;
+  margin: auto;
+  padding: 0;
+}
+#loginModal .modal-body {
+  padding-top: 2.5rem;
+  padding-bottom: 2rem;
+  background: #fff;
+  border-radius: 1rem;
+}
+#loginModal .title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+#loginModal input[type="email"],
+#loginModal input[type="password"] {
+  background: #fafafa;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+}
+#loginModal input[type="password"],
+#loginModal input[type="text"] {
+  background: #fafafa;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 44px; 
+}
+#loginModal .btn-warning {
+  background-color: #FFC107;
+  color: #222;
+  font-weight: 600;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  border: none;
+}
+#loginModal .btn-warning:hover {
+  background-color: #e0ac06;
+}
+#loginModal .text-warning,
+#loginModal .text-warning:visited {
+  color: #FFC107 !important;
+}
+#loginModal .g_id_signin {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+#loginModal .g_id_signin > div {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+#loginModal .my-3 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+#loginModal #registerPrompt {
+  color: #222;
+  font-size: 1.1rem;
+}
+#loginModal #registerPrompt a {
+  color: #FFC107 !important;
+  font-weight: 500;
+}
+#loginModal .toggle-password {
+  position: absolute;
+  background: transparent;
+  border: none;
+  color: #222;
+  font-size: 1.2rem;
+  right: 0;
+  top: 30%;
+  transform: translateY(-50%);
+}
+#loginModal .form-control:focus {
+  border-color: #FFC107;
+  box-shadow: 0 0 0 0.2rem rgba(255,193,7,.15);
+}
+#loginModal .divider {
+  margin: 1.5rem 0;
+}
+#loginModal .divider span {
+  color: #888;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Responsive for modal */
+@media (max-width: 480px) {
+  #loginModal .modal-content {
+    max-width: 95vw;
+    padding: 0.5rem;
+  }
+  #loginModal .logo-top {
+    max-width: 80px;
+    max-height: 80px;
+  }
+  #loginModal .modal-body {
+    padding: 1.5rem 0.5rem;
+  }
+  #loginModal .title {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* Sign up css */
+/* --- Sign Up Modal Styles --- */
+#signupModal .logo-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0rem;
+  position: relative;
+  padding: 0;
+}
+#signupModal .logo-top {
+  max-width: 110px;
+  max-height: 110px;
+  width: clamp(80px, 20vw, 120px);
+  height: clamp(80px, 20vw, 120px);
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto;
+  margin-top: -35px;
+  position: relative;
+  top: -15px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
+#signupModal .modal-content {
+  border-radius: 1rem;
+  background: #fff;
+  max-width: 400px;
+  margin: auto;
+  padding: 0;
+}
+#signupModal .modal-body {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+  background: #fff;
+  border-radius: 1rem;
+}
+#signupModal .title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+#signupModal input[type="text"],
+#signupModal input[type="email"],
+#signupModal input[type="password"] {
+  background: #fafafa;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 44px; /* If you add an eye icon for password */
+}
+#signupModal .btn-warning {
+  background-color: #FFC107;
+  color: #222;
+  font-weight: 600;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  border: none;
+}
+#signupModal .btn-warning:hover {
+  background-color: #e0ac06;
+}
+#signupModal .my-3 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+#signupModal .g_id_signin {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+#signupModal .g_id_signin > div {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+#signupModal .toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #222;
+  font-size: 1.2rem;
+  z-index: 2;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  height: 24px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#signupModal .form-control:focus {
+  border-color: #FFC107;
+  box-shadow: 0 0 0 0.2rem rgba(255,193,7,.15);
+}
+#signupModal .divider span {
+  color: #888;
+  font-size: 1rem;
+  font-weight: 500;
+}
+#signupModal p.small a {
+  color: #FFC107 !important;
+  font-weight: 500;
+}
+
+/* Responsive for modal */
+@media (max-width: 480px) {
+  #signupModal .modal-content {
+    max-width: 95vw;
+    padding: 0.5rem;
+  }
+  #signupModal .logo-top {
+    max-width: 80px;
+    max-height: 80px;
+  }
+  #signupModal .modal-body {
+    padding: 1.5rem 0.5rem;
+  }
+  #signupModal .title {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* OTP MODAL */
+#otpModal .modal-content {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 0 1.5rem 2rem 1.5rem;
+  border: none;
+}
+
+#otpModal .modal-header {
+  border-bottom: none;
+  padding-bottom: 0.5rem;
+  background: transparent;
+}
+
+#otpModal .modal-title {
+  font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: 0.5px;
+}
+
+#otpModal p,
+#otpModal .text-muted {
+  font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.05rem;
+  color: #555;
+}
+
+#otpModal .otp-input {
+  width: 48px;
+  height: 56px;
+  font-size: 2rem;
+  border-radius: 10px;
+  border: 1.5px solid #e0e0e0;
+  margin: 0 2px;
+  background: #fafbfc;
+  color: #222;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+#otpModal .otp-input:focus {
+  border-color: #6c63ff;
+  box-shadow: 0 0 0 2px #6c63ff33;
+  outline: none;
+  background: #fff;
+}
+
+#otpModal .btn-warning,
+#otpModal .btn-warning:active {
+  background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%);
+  color: #222;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(255, 204, 51, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+#otpModal .btn-warning:hover {
+  background: linear-gradient(90deg, #ffcc33 0%, #ffb347 100%);
+  color: #111;
+  box-shadow: 0 4px 16px rgba(255, 204, 51, 0.13);
+}
+
+#otpModal .btn-link {
+  color: #6c63ff;
+  font-weight: 500;
+  text-decoration: underline;
+  font-size: 1rem;
+  transition: color 0.2s;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+#otpModal .btn-link:hover {
+  color: #4834d4;
+  text-decoration: underline;
+}
+
+#otpModal .btn-close {
+  filter: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+#otpModal .btn-close:hover {
+  opacity: 1;
+}
+
+#otpModal .text-danger {
+  font-size: 1rem;
+  font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+
+@media (max-width: 480px) {
+  #otpModal .modal-content {
+    max-width: 98vw;
+    padding: 0.5rem;
+  }
+  #otpModal .otp-input {
+    width: 38px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+}
+
+
 
 /* MAIN*/
 
