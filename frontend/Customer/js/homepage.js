@@ -957,18 +957,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
   if (confirmLogoutBtn) {
     confirmLogoutBtn.addEventListener('click', function () {
-      // Remove token
+      // Remove customer token and customerId
       localStorage.removeItem('customerToken');
-      // Update navbars and sidebar
-      updateDesktopNavbar();
-      updateCustomerNavActions();
-      updateMobileNavSidebar();
-      // Close the modal
-      const logoutModalEl = document.getElementById('logoutModal');
-      if (logoutModalEl && typeof bootstrap !== "undefined") {
-        const modalInstance = bootstrap.Modal.getInstance(logoutModalEl) || new bootstrap.Modal(logoutModalEl);
-        modalInstance.hide();
-      }
+      localStorage.removeItem('customerId');
+      // Redirect to homepage
+      window.location.href = "../index.html";
     });
   }
 });

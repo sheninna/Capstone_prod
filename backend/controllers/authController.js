@@ -87,7 +87,7 @@ const signup = async (req, res) => {
 
   // Generate JWT token with unique jti
   const jti = require('crypto').randomBytes(16).toString('hex');
-  const token = jwt.sign({ id: newUser._id, jti }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ id: newUser._id, jti }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
   res.status(201).json({ token, user: newUser });
   } catch (err) {
@@ -210,7 +210,7 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '12h' });
     const resetLink = `http://127.0.0.1:5501/frontend/Customer/html/resetpassword.html?token=${token}`;
 
     console.log('Reset link:', resetLink);

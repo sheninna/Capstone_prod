@@ -68,6 +68,8 @@ async function fetchCustomerOrders() {
   }
 }
 
+
+
 // --- LOAD ORDERS from backend ---
 async function loadOrders() {
   syncHistory();
@@ -305,16 +307,13 @@ function trackOrder(orderId) {
 
 // --- VIEW ORDER (fetch from backend, show modal, no hr in JS) ---
 async function viewOrder(orderId) {
-  // Fetch orders from backend
   const orders = await fetchCustomerOrders();
-  // Find the order by orderNumber, orderId, or _id
   const order = orders.find(
     (o) =>
       o.orderNumber == orderId ||
       o.orderId == orderId ||
       o._id == orderId
   );
-
   if (!order) return;
 
   // Set modal title
@@ -330,16 +329,17 @@ async function viewOrder(orderId) {
   tbody.innerHTML = "";
 
   (order.items || []).forEach((item) => {
+    const price = typeof item.price === "number" ? item.price : 0;
     const row = document.createElement("tr");
     row.innerHTML = `
       <td style="width:20%; font-size:1.1rem;">${item.quantity}</td>
       <td style="width:60%; font-size:1.1rem;">${item.name}${item.portion ? " - " + item.portion : ""}</td>
-      <td style="width:20%; text-align:right; font-size:1.1rem;">₱${(item.price || 0).toLocaleString()}</td>
+      <td style="width:20%; text-align:right; font-size:1.1rem;">₱${price.toLocaleString()}</td>
     `;
     tbody.appendChild(row);
   });
 
-  // Show total, styled and right-aligned, bold, just below the table
+  // Show total
   const totalDiv = document.getElementById("viewOrderTotal");
   if (totalDiv) {
     totalDiv.textContent = `₱${(order.totalAmount || order.amount || 0).toLocaleString()}`;
@@ -348,71 +348,128 @@ async function viewOrder(orderId) {
     totalDiv.style.fontSize = "1.25rem";
   }
 
-  // Download Receipt button 
-  const downloadBtn = document.getElementById("downloadReceiptBtn");
-
-  // Download Receipt logic (unchanged)
-  downloadBtn.onclick = () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    // Logo
-    const logoImg = new Image();
-    logoImg.src = "../assets/logo.jpg";
-
-    logoImg.onload = function () {
-      doc.addImage(logoImg, "JPEG", 90, 10, 30, 30);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("LomiHub", 105, 50, { align: "center" });
-      doc.setFontSize(20);
-      doc.text("Your Receipt", 105, 70, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-
-      let y = 90;
-      doc.text("Order ID", 30, y);
-      doc.text(order.orderNumber || order.orderId || order._id, 160, y);
-      doc.text("Method", 30, y + 8);
-      doc.text(order.method || order.orderType, 160, y + 8);
-      doc.text("Order Placed", 30, y + 16);
-      doc.text(
-        order.placed ||
-          (order.orderPlaced
-            ? new Date(order.orderPlaced).toLocaleString()
-            : ""),
-        160,
-        y + 16
-      );
-
-      y += 32;
-      (order.items || []).forEach((item) => {
-        const portionText = item.portion ? ` (${item.portion})` : "";
-        const lineText = `${item.quantity} ${item.name}${portionText}`;
-        const linePrice = `${(item.price * item.quantity).toFixed(2)}`;
-        doc.text(lineText, 30, y);
-        doc.text(linePrice, 160, y);
-        y += 8;
-      });
-
-      y += 8;
-      doc.setFont("helvetica", "bold");
-      doc.text("Total", 30, y);
-      doc.text(`${(order.totalAmount || order.amount || 0).toFixed(2)}`, 160, y);
-
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "normal");
-      doc.text("Thank you for your purchase!", 105, y + 80, {
-        align: "center",
-      });
-
-      doc.save(`Receipt_${order.orderNumber || order.orderId || order._id}.pdf`);
-    };
-  };
-
   // Show the modal (Bootstrap 5)
   const modal = new bootstrap.Modal(document.getElementById("viewOrderModal"));
   modal.show();
+
+  // Download Receipt button logic
+  setTimeout(() => {
+    const downloadBtn = document.getElementById("downloadReceiptBtn");
+    if (downloadBtn) {
+      // Remove previous listeners
+      downloadBtn.replaceWith(downloadBtn.cloneNode(true));
+      const newDownloadBtn = document.getElementById("downloadReceiptBtn");
+      newDownloadBtn.onclick = () => {
+        // Use jsPDF from window.jspdf
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Logo
+        const logoImg = new Image();
+        logoImg.src = "../assets/logo.jpg";
+
+        logoImg.onload = function () {
+          doc.addImage(logoImg, "JPEG", 90, 10, 30, 30);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text("LomiHub", 105, 50, { align: "center" });
+          doc.setFontSize(20);
+          doc.text("Your Receipt", 105, 70, { align: "center" });
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(12);
+
+          let y = 90;
+          doc.text("Order ID", 30, y);
+          doc.text(String(order.orderNumber || order.orderId || order._id), 160, y);
+          doc.text("Method", 30, y + 8);
+          doc.text(String(order.method || order.orderType), 160, y + 8);
+          doc.text("Order Placed", 30, y + 16);
+          doc.text(
+            order.placed ||
+              (order.orderPlaced
+                ? new Date(order.orderPlaced).toLocaleString()
+                : ""),
+            160,
+            y + 16
+          );
+
+          y += 32;
+          (order.items || []).forEach((item) => {
+            const portionText = item.portion ? ` (${item.portion})` : "";
+            const price = typeof item.price === "number" ? item.price : 0;
+            const lineText = `${item.quantity} ${item.name}${portionText}`;
+            const linePrice = `${(price * item.quantity).toFixed(2)}`;
+            doc.text(lineText, 30, y);
+            doc.text(String(order.totalAmount || order.amount || 0), 160, y);
+            y += 8;
+          });
+
+          y += 8;
+          doc.setFont("helvetica", "bold");
+          doc.text("Total", 30, y);
+          doc.text(String(order.totalAmount || order.amount || 0), 160, y);
+
+          doc.setFontSize(13);
+          doc.setFont("helvetica", "normal");
+          doc.text("Thank you for your purchase!", 105, y + 80, {
+            align: "center",
+          });
+
+          doc.save(`Receipt_${order.orderNumber || order.orderId || order._id}.pdf`);
+        };
+
+        // If logo fails to load, fallback to no logo
+        logoImg.onerror = function () {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text("LomiHub", 105, 50, { align: "center" });
+          doc.setFontSize(20);
+          doc.text("Your Receipt", 105, 70, { align: "center" });
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(12);
+
+          let y = 90;
+          doc.text("Order ID", 30, y);
+          doc.text(String(order.orderNumber || order.orderId || order._id), 160, y);
+          doc.text("Method", 30, y + 8);
+          doc.text(String(order.method || order.orderType), 160, y + 8);
+          doc.text("Order Placed", 30, y + 16);
+          doc.text(
+            order.placed ||
+              (order.orderPlaced
+                ? new Date(order.orderPlaced).toLocaleString()
+                : ""),
+            160,
+            y + 16
+          );
+
+          y += 32;
+          (order.items || []).forEach((item) => {
+            const portionText = item.portion ? ` (${item.portion})` : "";
+            const price = typeof item.price === "number" ? item.price : 0;
+            const lineText = `${item.quantity} ${item.name}${portionText}`;
+            const linePrice = `${(price * item.quantity).toFixed(2)}`;
+            doc.text(lineText, 30, y);
+            doc.text(String(order.totalAmount || order.amount || 0), 160, y);
+            y += 8;
+          });
+
+          y += 8;
+          doc.setFont("helvetica", "bold");
+          doc.text("Total", 30, y);
+          doc.text(String(order.totalAmount || order.amount || 0), 160, y);
+
+          doc.setFontSize(13);
+          doc.setFont("helvetica", "normal");
+          doc.text("Thank you for your purchase!", 105, y + 80, {
+            align: "center",
+          });
+
+          doc.save(`Receipt_${order.orderNumber || order.orderId || order._id}.pdf`);
+        };
+      };
+    }
+  }, 300); // Wait for modal and button to render
 }
 
 // --- TRACK ORDER: update to use backend data ---
@@ -512,4 +569,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadOrders();
   // You can update loadReservation and loadHistory similarly if you add backend endpoints for them
+});
+
+// Logout logic: revoke token and redirect to homepage
+document.addEventListener("DOMContentLoaded", () => {
+  const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
+  if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener("click", () => {
+      localStorage.removeItem('customerToken');
+      window.location.href = "homepage.html";
+    });
+  }
 });
