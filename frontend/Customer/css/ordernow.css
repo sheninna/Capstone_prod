@@ -49,6 +49,11 @@ body {
   color: #ff0505;
 }
 
+.nav-link[href*="myOrders.html"] {
+  margin-top: 3px; 
+  display: inline-block;
+}
+
 /* Extra right margin for logout icon */
 .navbar-nav .nav-link:last-child {
   margin-right: 0;

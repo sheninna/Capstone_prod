@@ -79,7 +79,7 @@
           <a class="nav-link active" href="ordernow.html">Order Now</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="myorders.html">My Orders</a>
+          <a class="nav-link" href="myOrders.html">My Orders</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="notifications.html">Notifications
@@ -628,6 +628,27 @@
         <p class="mb-4">You must create an account or sign in to place an order.</p>
         <button type="button" class="btn btn-warning w-100 mb-2" id="openSignInFromRequired">Sign In</button>
         <button type="button" class="btn btn-outline-secondary w-100" id="openSignUpFromRequired">Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Business Closed Modal -->
+<div class="modal fade" id="businessClosedModal" tabindex="-1" aria-labelledby="businessClosedModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+      <div class="modal-header" style="border-bottom: none; background: #fff;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 2rem; color: #ffc107;"><i class="bi bi-exclamation-triangle-fill"></i></span>
+          <h5 class="modal-title" id="businessClosedModalLabel" style="font-weight: 600; color: #222;">Notice</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" id="businessClosedModalMsg" style="font-size: 1.15rem; color: #444;">
+        <!-- Message will be set by JS -->
+      </div>
+      <div class="modal-footer" style="border-top: none; background: #fff;">
+        <button type="button" class="btn btn-warning px-4" data-bs-dismiss="modal" style="border-radius: 8px;">OK</button>
       </div>
     </div>
   </div>

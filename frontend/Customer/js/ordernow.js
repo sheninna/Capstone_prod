@@ -583,12 +583,14 @@ function addToCart(productId, size = "Regular") {
   if (product.portions && Array.isArray(product.portions) && product.portions.length > 0) {
     const sizeObj = product.portions.find((p) => p.portion === size);
     if (sizeObj) {
-      price = sizeObj.price;
+      price = Number(sizeObj.price); // Ensure price is a number
       selectedSize = sizeObj.portion;
     } else {
-      price = product.portions[0].price;
+      price = Number(product.portions[0].price); // Ensure price is a number
       selectedSize = product.portions[0].portion;
     }
+  } else if (typeof price !== "number") {
+    price = Number(price); // Fallback: ensure price is a number
   }
 
   // Unique cart item ID
@@ -604,7 +606,7 @@ function addToCart(productId, size = "Regular") {
       id: cartItemId,
       baseId: productId,
       name: product.name,
-      price: price,
+      price: price, // Always a number
       size: selectedSize,
       quantity: 1,
       category: category,
@@ -613,38 +615,6 @@ function addToCart(productId, size = "Regular") {
 
   updateQuantityDisplay(productId, selectedSize);
   updateCartUI();
-}
-
-function removeFromCart(productId, size = "Regular") {
-  let product = foodData.find(f =>
-    `dishes-${f._id}` === productId ||
-    `bilao-${f._id}` === productId ||
-    `desserts-${f._id}` === productId
-  );
-  if (!product) return;
-
-  let selectedSize = size;
-  if (
-    product.portions &&
-    Array.isArray(product.portions) &&
-    product.portions.length > 0 &&
-    !product.portions.find((p) => p.portion === size)
-  ) {
-    selectedSize = product.portions[0].portion;
-  }
-
-  const cartItemId = `${productId}-${selectedSize.toLowerCase()}`;
-  const existingItemIndex = cart.findIndex((item) => item.id === cartItemId);
-
-  if (existingItemIndex !== -1) {
-    if (cart[existingItemIndex].quantity > 1) {
-      cart[existingItemIndex].quantity -= 1;
-    } else {
-      cart.splice(existingItemIndex, 1);
-    }
-    updateQuantityDisplay(productId, selectedSize);
-    updateCartUI();
-  }
 }
 
 // Get product quantity from cart
@@ -1186,16 +1156,17 @@ function handleDeliverySubmit(e) {
     return;
   }
 
-  // Convert payment proof to base64
   const reader = new FileReader();
   reader.onload = async function (event) {
-    const paymentProof = event.target.result; // base64 string
+    const paymentProof = event.target.result;
 
+    // --- FIX: Always include price as a number in each order item ---
     const orderData = {
       items: cart.map((item) => ({
         name: item.name,
         portion: item.size,
         quantity: item.quantity,
+        price: Number(item.price) // Force price to be a number
       })),
       name,
       phone,
@@ -1205,7 +1176,6 @@ function handleDeliverySubmit(e) {
       paymentProof,
     };
 
-    // Place the order and log the backend response for debugging
     const token = localStorage.getItem('customerToken');
     if (!token) {
       showLoginRequiredModal();
@@ -1223,15 +1193,21 @@ function handleDeliverySubmit(e) {
       });
 
       const result = await response.json();
-      console.log("Order API response:", result); // <-- See backend error here
-
       if (response.ok) {
         successModal.show();
         cart = [];
         updateCartUI();
         alert('Order placed successfully!');
       } else {
-        alert(result.error || result.message || 'Order failed!');
+        if (
+          result.message === "Business is closed today." ||
+          result.message === "Business is currently closed." ||
+          result.message === "Business is closed for a holiday."
+        ) {
+          showBusinessClosedModal(result.message);
+        } else {
+          alert(result.error || result.message || 'Order failed!');
+        }
       }
     } catch (err) {
       alert('Error placing order. Please try again.');
@@ -1243,31 +1219,82 @@ function handleDeliverySubmit(e) {
   reader.readAsDataURL(paymentProofFile);
 }
 
-// Handle pickup form submission
+// Pickup
 function handlePickupSubmit(e) {
   e.preventDefault();
 
   const name = document.getElementById("pickup-name").value;
   const phone = document.getElementById("pickup-phone").value;
+  const paymentProofInput = document.getElementById("pickup-payment-upload");
+  const paymentProofFile = paymentProofInput.files[0];
 
-  if (!name || !phone) {
-    alert("Please fill in all required fields");
+  if (!name || !phone || !paymentProofFile) {
+    alert("Please fill in all required fields and upload payment proof.");
     return;
   }
 
-  if (!document.getElementById("pickup-payment-upload").files[0]) {
-    alert("Please upload payment proof");
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = async function (event) {
+    const paymentProof = event.target.result;
 
-  // Save user data
-  saveUserData(name, phone);
+    const orderData = {
+      items: cart.map((item) => ({
+        name: item.name,
+        portion: item.size,
+        quantity: item.quantity,
+        price: Number(item.price)
+      })),
+      name,
+      phone,
+      orderType: "pickup",
+      paymentMethod: "gcash",
+      paymentProof,
+    };
 
-  // Process order
-  processOrder("pickup", { name, phone });
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      showLoginRequiredModal();
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        successModal.show();
+        cart = [];
+        updateCartUI();
+        alert('Order placed successfully!');
+      } else {
+        if (
+          result.message === "Business is closed today." ||
+          result.message === "Business is currently closed." ||
+          result.message === "Business is closed for a holiday."
+        ) {
+          showBusinessClosedModal(result.message);
+        } else {
+          alert(result.error || result.message || 'Order failed!');
+        }
+      }
+    } catch (err) {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    }
+
+    pickupModal.hide();
+  };
+  reader.readAsDataURL(paymentProofFile);
 }
 
-// Handle reservation form submission
+// Reservation
 function handleReservationSubmit(e) {
   e.preventDefault();
 
@@ -1276,22 +1303,76 @@ function handleReservationSubmit(e) {
   const people = document.getElementById("reservation-people").value;
   const date = document.getElementById("reservation-date").value;
   const time = document.getElementById("reservation-time").value;
+  const paymentProofInput = document.getElementById("reservation-payment-upload");
+  const paymentProofFile = paymentProofInput.files[0];
 
-  if (!name || !phone || !people || !date || !time) {
-    alert("Please fill in all required fields");
+  if (!name || !phone || !people || !date || !time || !paymentProofFile) {
+    alert("Please fill in all required fields and upload payment proof.");
     return;
   }
 
-  if (!document.getElementById("reservation-payment-upload").files[0]) {
-    alert("Please upload payment proof");
-    return;
-  }
+  const reader = new FileReader();
+  reader.onload = async function (event) {
+    const paymentProof = event.target.result;
 
-  // Save user data
-  saveUserData(name, phone);
+    const orderData = {
+      items: cart.map((item) => ({
+        name: item.name,
+        portion: item.size,
+        quantity: item.quantity,
+        price: Number(item.price)
+      })),
+      name,
+      phone,
+      people,
+      date,
+      time,
+      orderType: "reservation",
+      paymentMethod: "gcash",
+      paymentProof,
+    };
 
-  // Process order
-  processOrder("reservation", { name, phone, people, date, time });
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      showLoginRequiredModal();
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        successModal.show();
+        cart = [];
+        updateCartUI();
+        alert('Order placed successfully!');
+      } else {
+        if (
+          result.message === "Business is closed today." ||
+          result.message === "Business is currently closed." ||
+          result.message === "Business is closed for a holiday."
+        ) {
+          showBusinessClosedModal(result.message);
+        } else {
+          alert(result.error || result.message || 'Order failed!');
+        }
+      }
+    } catch (err) {
+      alert('Error placing order. Please try again.');
+      console.error(err);
+    }
+
+    reservationModal.hide();
+  };
+  reader.readAsDataURL(paymentProofFile);
 }
 
 // Process order
@@ -1376,7 +1457,76 @@ function preserveFormData() {
     });
 }
 
-// Update mobile navigation sidebar
+// Update desktop navbar actions to show logout modal
+function updateDesktopNavbar() {
+  const navActions = document.getElementById('customerNavActions');
+  const isLoggedIn = !!localStorage.getItem('customerToken');
+  if (navActions) {
+    if (isLoggedIn) {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="myOrders.html">My Orders</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="notifications.html">
+                <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="account.html">
+                <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="customerLogoutBtn" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
+            </a>
+        </li>
+      `;
+      // Attach logout modal logic
+      const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+      if (confirmLogoutBtn) {
+        confirmLogoutBtn.onclick = function () {
+          localStorage.removeItem('customerToken');
+          localStorage.removeItem('customerId');
+          window.location.href = window.location.pathname.split('/').pop();
+        };
+      }
+    } else {
+      navActions.innerHTML = `
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignInBtn">Sign In</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" id="desktopSignUpBtn">Sign Up</a>
+        </li>
+      `;
+      // Attach modal trigger for desktop sign in
+      const desktopSignInBtn = document.getElementById('desktopSignInBtn');
+      if (desktopSignInBtn) {
+        desktopSignInBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+          loginModal.show();
+        });
+      }
+      // Attach modal trigger for desktop sign up
+      const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
+      if (desktopSignUpBtn) {
+        desktopSignUpBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const signupModalEl = document.getElementById('signupModal');
+          if (signupModalEl) {
+            const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+            signupModal.show();
+          }
+        });
+      }
+    }
+  }
+}
+
+// For mobile sidebar logout
 function updateMobileNavSidebar() {
   const mobileNavSidebar = document.getElementById('mobileNavSidebar');
   const isLoggedIn = !!localStorage.getItem('customerToken');
@@ -1458,92 +1608,31 @@ function updateMobileNavSidebar() {
   // Attach logout modal confirm button handler (always re-attach after sidebar update)
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
   if (confirmLogoutBtn) {
-      confirmLogoutBtn.onclick = function () {
-          localStorage.removeItem('customerToken');
-          updateMobileNavSidebar();
-          // If you have a desktop nav, update it here too:
-          // updateDesktopNavbar();
-          // Close the modal
-          const logoutModalEl = document.getElementById('logoutModal');
-          if (logoutModalEl && typeof bootstrap !== "undefined") {
-              const modalInstance = bootstrap.Modal.getInstance(logoutModalEl) || new bootstrap.Modal(logoutModalEl);
-              modalInstance.hide();
-          }
-      };
+    confirmLogoutBtn.onclick = function () {
+      localStorage.removeItem('customerToken');
+      localStorage.removeItem('customerId');
+      window.location.href = window.location.pathname.split('/').pop();
+    };
   }
 }
 
-// Update desktop navbar
-function updateDesktopNavbar() {
-  const navActions = document.getElementById('customerNavActions');
-  const isLoggedIn = !!localStorage.getItem('customerToken');
-  console.log('Updating desktop navbar, logged in:', isLoggedIn);
+// Ensure modal triggers work after nav updates
+document.addEventListener('DOMContentLoaded', function () {
+  updateDesktopNavbar();
+  updateMobileNavSidebar();
 
-  if (navActions) {
-    if (isLoggedIn) {
-      navActions.innerHTML = `
-        <li class="nav-item">
-            <a class="nav-link" href="myorders.html">My Orders</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="notifications.html">
-                <span class="icon-circle"><i class="fas fa-bell fa-lg"></i></span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="account.html">
-                <span class="icon-circle"><i class="fas fa-user fa-lg"></i></span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#" id="customerLogoutBtn">
-                <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
-            </a>
-        </li>
-      `;
-      // Attach logout event
-      const logoutBtn = document.getElementById('customerLogoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function (e) {
-          e.preventDefault();
-          localStorage.removeItem('customerToken');
-          updateDesktopNavbar();
-          updateMobileNavSidebar();
-        });
-      }
-    } else {
-      navActions.innerHTML = `
-        <li class="nav-item">
-            <a class="nav-link" href="#" id="desktopSignInBtn">Sign In</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#" id="desktopSignUpBtn">Sign Up</a>
-        </li>
-      `;
-      // Attach modal trigger for desktop sign in
-      const desktopSignInBtn = document.getElementById('desktopSignInBtn');
-      if (desktopSignInBtn) {
-        desktopSignInBtn.addEventListener('click', function (e) {
-          e.preventDefault();
-          const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-          loginModal.show();
-        });
-      }
-      // Attach modal trigger for desktop sign up
-      const desktopSignUpBtn = document.getElementById('desktopSignUpBtn');
-      if (desktopSignUpBtn) {
-        desktopSignUpBtn.addEventListener('click', function (e) {
-          e.preventDefault();
-          const signupModalEl = document.getElementById('signupModal');
-          if (signupModalEl) {
-            const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
-            signupModal.show();
-          }
-        });
+  // Attach modal show for desktop logout button (if not using data-bs-toggle)
+  document.body.addEventListener('click', function (e) {
+    if (e.target.closest('#customerLogoutBtn')) {
+      e.preventDefault();
+      const logoutModalEl = document.getElementById('logoutModal');
+      if (logoutModalEl && typeof bootstrap !== "undefined") {
+        const logoutModal = bootstrap.Modal.getOrCreateInstance(logoutModalEl);
+        logoutModal.show();
       }
     }
-  }
-}
+  });
+});
 
 // Call this on DOMContentLoaded and after login/logout
 document.addEventListener('DOMContentLoaded', function () {
@@ -1651,6 +1740,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const modalInstance = bootstrap.Modal.getInstance(loginModalEl) || new bootstrap.Modal(loginModalEl);
             modalInstance.hide();
           }
+
+          // Show loading overlay before redirect
+          showLoadingOverlay("Signing you in...");
+          setTimeout(() => {
+            hideLoadingOverlay();
+            window.location.href = 'ordernow.html';
+          }, 1500);
         } else {
           alert(result.message || 'Login Failed!');
         }
@@ -1662,105 +1758,42 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-
-function openNavSidebar() {
-  // DO NOT call updateMobileNavSidebar() if you want to keep your static HTML!
-  document.getElementById('mobileNavSidebar').classList.add('show');
-  document.getElementById('mobileNavSidebarBackdrop').classList.add('show');
-}
-function closeNavSidebar() {
-  document.getElementById('mobileNavSidebar').classList.remove('show');
-  document.getElementById('mobileNavSidebarBackdrop').classList.remove('show');
-}
-
-// After successful login, set the token and update navbars
-function onLoginSuccess(tokenValue) {
-  localStorage.setItem('customerToken', tokenValue); // after login
-  updateDesktopNavbar();
-  updateMobileNavSidebar();
-}
-
-// Example: after login API returns success
-function handleLoginResponse(response) {
-  if (response.success && response.token) {
-    localStorage.setItem('customerToken', response.token);
-    updateDesktopNavbar();
-    updateMobileNavSidebar();
-    // Hide login modal
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).hide();
-  } else {
-    // Show error
-  }
-}
-
-function requireLoginBeforeOrder() {
-  const token = localStorage.getItem('customerToken');
-  if (!token) {
-    // Show modal: must log in or sign up
-    showLoginRequiredModal();
-    return false;
-  }
-  return true;
-}
-
-// Example: If you have a "Place Order" button
-document.getElementById('checkout-btn').addEventListener('click', function(e) {
-  if (!requireLoginBeforeOrder()) {
-    e.preventDefault();
-    return;
-  }
-  // ...proceed to order logic...
-});
-
-// Same for mobile
-document.getElementById('mobile-checkout-btn').addEventListener('click', function(e) {
-  if (!requireLoginBeforeOrder()) {
-    e.preventDefault();
-    return;
-  }
-  // ...proceed to order logic...
-});
-
-// Modal function
-function showLoginRequiredModal() {
-  // If you have a modal in your HTML:
-  // <div class="modal fade" id="loginRequiredModal" ...>
-  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('loginRequiredModal'));
+// Show Bootstrap modal for business closed messages
+function showBusinessClosedModal(message) {
+  const modalMsg = document.getElementById('businessClosedModalMsg');
+  modalMsg.textContent = message;
+  const modal = new bootstrap.Modal(document.getElementById('businessClosedModal'));
   modal.show();
 }
 
-async function placeCustomerOrder(orderData) {
-  const token = localStorage.getItem('customerToken');
-  if (!token) {
-    showLoginRequiredModal();
-    return;
-  }
+// Show loading overlay
+function showLoadingOverlay(message = "Processing...") {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = "loadingOverlay";
+  loadingDiv.style.position = 'fixed';
+  loadingDiv.style.top = 0;
+  loadingDiv.style.left = 0;
+  loadingDiv.style.width = '100vw';
+  loadingDiv.style.height = '100vh';
+  loadingDiv.style.background = 'rgba(255,255,255,0.85)';
+  loadingDiv.style.display = 'flex';
+  loadingDiv.style.flexDirection = 'column';
+  loadingDiv.style.justifyContent = 'center';
+  loadingDiv.style.alignItems = 'center';
+  loadingDiv.style.zIndex = 9999;
+  loadingDiv.innerHTML = `
+    <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div style="margin-top: 1rem; font-weight: bold; color: #b8860b;">${message}</div>
+  `;
+  document.body.appendChild(loadingDiv);
+}
 
-  try {
-    const response = await fetch('http://localhost:5000/api/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // <-- JWT token for authentication
-      },
-      body: JSON.stringify(orderData)
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      // Show success modal, clear cart, etc.
-      successModal.show();
-      cart = [];
-      updateCartUI();
-      alert('Order placed successfully!');
-    } else {
-      alert(result.error || result.message || 'Order failed!');
-    }
-  } catch (err) {
-    alert('Error placing order. Please try again.');
-    console.error(err);
-  }
+// Hide loading overlay
+function hideLoadingOverlay() {
+  const loadingDiv = document.getElementById("loadingOverlay");
+  if (loadingDiv) loadingDiv.remove();
 }
 
 // New code starts here
@@ -1796,7 +1829,9 @@ function renderFetchedFoods(foods) {
     let sizeOptionsHtml = "";
 
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
       sizeOptionsHtml = `<div class="size-options">
         ${food.portions.map((p, idx) => `
           <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
@@ -1805,7 +1840,7 @@ function renderFetchedFoods(foods) {
         `).join("")}
       </div>`;
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
       sizeOptionsHtml = "";
     }
 
@@ -1833,7 +1868,9 @@ function renderFetchedFoods(foods) {
     let sizeOptionsHtml = "";
 
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
       sizeOptionsHtml = `<div class="size-options">
         ${food.portions.map((p, idx) => `
           <button type="button" class="size-btn ${idx === 0 ? "active" : ""}" data-size="${p.portion}" data-price="${p.price}">
@@ -1842,7 +1879,7 @@ function renderFetchedFoods(foods) {
         `).join("")}
       </div>`;
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
       sizeOptionsHtml = "";
     }
 
@@ -1868,9 +1905,11 @@ function renderFetchedFoods(foods) {
   desserts.forEach(food => {
     let priceHtml = "";
     if (food.portions && Array.isArray(food.portions) && food.portions.length > 0) {
-      priceHtml = food.portions.map(p => `${p.portion}: ₱${p.price}`).join(" | ");
+      priceHtml = food.portions.map(p =>
+        `${p.portion}: ₱${p.price !== undefined && p.price !== null ? p.price : "N/A"}`
+      ).join(" | ");
     } else {
-      priceHtml = `₱${food.price}`;
+      priceHtml = food.price !== undefined && food.price !== null ? `₱${food.price}` : "N/A";
     }
     const imgSrc = food.image ? `http://localhost:5000/${food.image}` : "../assets/default-food.png";
     dessertsContainer.innerHTML += `
@@ -1895,4 +1934,131 @@ function renderFetchedFoods(foods) {
 document.addEventListener('DOMContentLoaded', async function () {
   await fetchFoodData();
   // ...rest of your code...
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Sign Up Form Submission (send OTP)
+  const signupForm = document.getElementById('signupForm');
+  if (signupForm) {
+    signupForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/otp/send-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          // Hide signup modal, show OTP modal
+          bootstrap.Modal.getOrCreateInstance(document.getElementById('signupModal')).hide();
+          setTimeout(() => {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('otpModal')).show();
+          }, 300);
+          // Store username/email/password for OTP verification
+          localStorage.setItem('pendingUsername', username);
+          localStorage.setItem('pendingUserEmail', email);
+          localStorage.setItem('pendingUserPassword', password);
+        } else {
+          alert(result.message || 'Sign up failed.');
+        }
+      } catch (err) {
+        alert('Sign up error. Please try again.');
+      }
+    });
+  }
+
+  // OTP Input Handling (auto-focus next)
+  document.querySelectorAll('.otp-input').forEach((input, idx, arr) => {
+    input.addEventListener('input', function () {
+      if (this.value.length === 1 && idx < arr.length - 1) {
+        arr[idx + 1].focus();
+      }
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !this.value && idx > 0) {
+        arr[idx - 1].focus();
+      }
+    });
+  });
+
+  // OTP Submit Button (verify OTP and create account)
+  const submitOtpBtn = document.getElementById('submitOtpBtn');
+  if (submitOtpBtn) {
+    submitOtpBtn.addEventListener('click', async function () {
+      const otpInputs = Array.from(document.querySelectorAll('.otp-input'));
+      const otp = otpInputs.map(input => input.value).join('');
+      const username = localStorage.getItem('pendingUsername');
+      const email = localStorage.getItem('pendingUserEmail');
+      const password = localStorage.getItem('pendingUserPassword');
+      const otpError = document.getElementById('otpError');
+      otpError.style.display = 'none';
+
+      if (otp.length !== 6) {
+        otpError.textContent = 'Please enter the 6-digit code.';
+        otpError.style.display = 'block';
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/otp/verify-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password, otp })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          // Hide OTP modal
+          bootstrap.Modal.getOrCreateInstance(document.getElementById('otpModal')).hide();
+          // Remove pending data
+          localStorage.removeItem('pendingUsername');
+          localStorage.removeItem('pendingUserEmail');
+          localStorage.removeItem('pendingUserPassword');
+          alert('Account created successfully! Please log in.');
+        } else {
+          otpError.textContent = result.message || 'Invalid OTP.';
+          otpError.style.display = 'block';
+        }
+      } catch (err) {
+        otpError.textContent = 'OTP verification error. Please try again.';
+        otpError.style.display = 'block';
+      }
+    });
+  }
+
+  // Resend OTP Button
+  const resendOtpBtn = document.getElementById('resendOtpBtn');
+  if (resendOtpBtn) {
+    resendOtpBtn.addEventListener('click', async function () {
+      const username = localStorage.getItem('pendingUsername');
+      const email = localStorage.getItem('pendingUserEmail');
+      const password = localStorage.getItem('pendingUserPassword');
+      if (!email || !username || !password) return;
+      try {
+        const response = await fetch('http://localhost:5000/api/otp/send-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert('OTP code resent to your email.');
+        } else {
+          alert(result.message || 'Failed to resend OTP.');
+        }
+      } catch (err) {
+        alert('Error resending OTP. Please try again.');
+      }
+    });
+  }
 });

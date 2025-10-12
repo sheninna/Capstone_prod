@@ -1,12 +1,14 @@
 const User = require('../models/user');
+const Order = require('../models/Order');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const RevokedToken = require('../models/revokedToken');
-const { sendPasswordResetEmail } = require('../utils/mailer');
+const { sendPasswordResetEmail, sendOtpEmail } = require('../utils/mailer');
 const { OAuth2Client } = require('google-auth-library');
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;  
 console.log('Backend expects GOOGLE_CLIENT_ID:', CLIENT_ID);
 const client = new OAuth2Client(CLIENT_ID);
+const Otp = require('../models/otp');
 
 
 
@@ -43,7 +45,7 @@ const googleSignIn = async (req, res) => {
     const jwtToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return res.json({
@@ -76,19 +78,17 @@ const signup = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const newUser = new User({
-      username,
-      email,
-      password,
-    });
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    await newUser.save();
+    // Save OTP and registration details (do NOT create user yet)
+    await Otp.create({ email, otp, expiresAt, username, password });
 
-  // Generate JWT token with unique jti
-  const jti = require('crypto').randomBytes(16).toString('hex');
-  const token = jwt.sign({ id: newUser._id, jti }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Send OTP to email
+    await sendOtpEmail(email, otp);
 
-  res.status(201).json({ token, user: newUser });
+    res.status(200).json({ message: 'OTP sent to email' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -112,7 +112,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, jti },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '12h' }
     );
 
     res.json({ token, user });
@@ -166,14 +166,16 @@ const getProfile = async (req, res) => {
 // Update profile
 const updateProfile = async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
-    const profilePicUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const { name, address, phoneNumber } = req.body;
+    const profilePicUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
 
-    const userId = req.user;  
-    const updateData = {
-      phoneNumber: phoneNumber || undefined,
-      profilePicUrl: profilePicUrl || undefined,
-    };
+    const userId = req.user;
+    const updateData = {};
+
+    if (name) updateData.username = name;
+    if (address) updateData.address = address;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+    if (profilePicUrl) updateData.profilePicUrl = profilePicUrl;
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
 
@@ -181,7 +183,7 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);  
+    res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -209,7 +211,7 @@ const forgotPassword = async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '12h' });
     const resetLink = `http://127.0.0.1:5501/frontend/Customer/html/resetpassword.html?token=${token}`;
 
     console.log('Reset link:', resetLink);
@@ -268,6 +270,17 @@ const getFavorites = async (req, res) => {
   }
 };
 
+// get recent orders (Customer side)
+const getOrders = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id || req.user;
+    const onlineOrders = await Order.find({ user: userId }).sort({ orderPlaced: -1 });
+    res.json(onlineOrders);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching your orders', error: err.message });
+  }
+};
+
 module.exports = {
   googleSignIn,
   signup,
@@ -280,4 +293,5 @@ module.exports = {
   resetPassword,
   addToFavorites,
   getFavorites,
+  getOrders
 };

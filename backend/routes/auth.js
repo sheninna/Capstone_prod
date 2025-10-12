@@ -14,6 +14,7 @@ const {
   resetPassword,
   addToFavorites,
   getFavorites,
+  getOrders
 } = require('../controllers/authController');
 
 
@@ -28,5 +29,6 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.post('/favorites', protect, addToFavorites);
 router.get('/favorites', protect, getFavorites);
+router.get('/get-orders', protect, getOrders);
 
 module.exports = router;

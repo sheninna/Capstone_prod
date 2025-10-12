@@ -39,7 +39,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     // Set token to expire in 24 hours
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '12h' });
     res.json({ token, admin });
   } catch (err) {
     console.error('Server error:', err);

@@ -68,25 +68,33 @@
     </div>
   </div>
 
-  <!-- OTP Modal -->
-<div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="otpModalLabel">Enter OTP</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Please enter the OTP sent to your email:</p>
-        <input type="text" id="otpInput" class="form-control" maxlength="6" placeholder="Enter OTP" />
-        <div id="otpError" class="text-danger mt-2" style="display:none;"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-warning" id="submitOtpBtn">Verify OTP</button>
+ <!-- OTP Modal -->
+  <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title w-100 text-center fw-bold" id="otpModalLabel">Verify Your Email</h5>
+          <button type="button" class="btn-close position-absolute end-0 me-3 mt-3" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <p class="text-center mb-4 text-muted">Enter the 6-digit code sent to your email address.</p>
+          <div class="d-flex justify-content-center gap-2 mb-3" id="otpInputs">
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+            <input type="text" maxlength="1" class="otp-input form-control text-center fs-3" autocomplete="one-time-code" inputmode="numeric" />
+          </div>
+          <div id="otpError" class="text-danger text-center mb-2" style="display:none;"></div>
+          <div class="text-center mb-2">
+            <button type="button" class="btn btn-link p-0 text-warning" id="resendOtpBtn">Resend Code</button>
+          </div>
+          <button type="button" class="btn btn-warning w-100 fw-bold py-2 rounded-3" id="submitOtpBtn">Verify</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>

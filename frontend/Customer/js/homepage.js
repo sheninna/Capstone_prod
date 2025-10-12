@@ -289,7 +289,7 @@ function updateDesktopNavbar() {
       </li>
       ${isLoggedIn ? `
       <li class="nav-item">
-        <a class="nav-link" href="myorders.html">My Orders</a>
+        <a class="nav-link" href="myOrders.html">My Orders</a>
       </li>
       ` : ''}
     `;
@@ -299,7 +299,6 @@ function updateDesktopNavbar() {
 
 // ======================================================
 // Dynamic Desktop Navbar for Auth State
-// ======================================================
 function updateCustomerNavActions() {
   const navActions = document.getElementById('customerNavActions');
   const isLoggedIn = !!localStorage.getItem('customerToken');
@@ -318,19 +317,18 @@ function updateCustomerNavActions() {
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#" id="customerLogoutBtn">
+            <a class="nav-link" href="#" id="customerLogoutBtn" data-bs-toggle="modal" data-bs-target="#logoutModal">
                 <span class="icon-circle"><i class="fa-solid fa-right-from-bracket fa-lg"></i></span>
             </a>
         </li>
       `;
-      // Attach logout event
-      const logoutBtn = document.getElementById('customerLogoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function (e) {
-          e.preventDefault();
+      // Attach logout modal logic
+      const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+      if (confirmLogoutBtn) {
+        confirmLogoutBtn.addEventListener('click', function () {
           localStorage.removeItem('customerToken');
-          updateDesktopNavbar();
-          updateMobileNavSidebar();
+          localStorage.removeItem('customerId');
+          window.location.href = "homepage.html";
         });
       }
     } else {
@@ -388,7 +386,7 @@ function updateMobileNavSidebar() {
     if (isLoggedIn) {
         navHtml += `
             <li class="nav-item">
-                <a class="nav-link" href="myorders.html">My Orders</a>
+                <a class="nav-link" href="myOrders.html">My Orders</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="notifications.html">Notifications</a>
@@ -784,6 +782,79 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// --- Manual Sign Up Form Handler with OTP Modal ---
+document.addEventListener('DOMContentLoaded', function () {
+  const signupForm = document.getElementById('signupForm');
+  const usernameInput = document.getElementById('username');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm-password');
+
+  function showOtpModal({ username, email, password }) {
+    // Hide the sign-up modal first
+    const signupModalEl = document.getElementById('signupModal');
+    if (signupModalEl && typeof bootstrap !== "undefined") {
+      const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
+      signupModal.hide();
+    }
+
+    // Store signup info globally for OTP verification
+    window._pendingSignupInfo = { username, email, password };
+
+    // Reset OTP inputs and error
+    const otpInputs = document.querySelectorAll('#otpInputs .otp-input');
+    otpInputs.forEach(input => input.value = '');
+    document.getElementById('otpError').style.display = 'none';
+
+    // Show OTP modal
+    const otpModalEl = document.getElementById('otpModal');
+    if (otpModalEl && typeof bootstrap !== "undefined") {
+      const otpModal = bootstrap.Modal.getOrCreateInstance(otpModalEl);
+      otpModal.show();
+      setTimeout(() => otpInputs[0].focus(), 300);
+    }
+  }
+
+  if (signupForm) {
+    signupForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const username = usernameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+
+      // Validate passwords
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+      if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+      }
+
+      // Step 1: Send OTP for signup (send all fields)
+      try {
+        const response = await fetch('http://localhost:5000/api/otp/send-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          showOtpModal({ username, email, password });
+        } else {
+          alert(result.message || 'Failed to send OTP!');
+        }
+      } catch (error) {
+        console.error('Error during sign up:', error);
+        alert('An error occurred. Please try again later.');
+      }
+    });
+  }
+});
+
 // --- Professional OTP Input UI for Modal ---
 document.addEventListener('DOMContentLoaded', function () {
   const otpInputs = document.querySelectorAll('#otpInputs .otp-input');
@@ -858,78 +929,35 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// --- Manual Sign Up Form Handler with OTP Modal (fix show OTP modal) ---
-document.addEventListener('DOMContentLoaded', function () {
-  const signupForm = document.getElementById('signupForm');
-  const usernameInput = document.getElementById('username');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirm-password');
+// Show loading overlay
+function showLoadingOverlay(message = "Processing...") {
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = "loadingOverlay";
+  loadingDiv.style.position = 'fixed';
+  loadingDiv.style.top = 0;
+  loadingDiv.style.left = 0;
+  loadingDiv.style.width = '100vw';
+  loadingDiv.style.height = '100vh';
+  loadingDiv.style.background = 'rgba(255,255,255,0.85)';
+  loadingDiv.style.display = 'flex';
+  loadingDiv.style.flexDirection = 'column';
+  loadingDiv.style.justifyContent = 'center';
+  loadingDiv.style.alignItems = 'center';
+  loadingDiv.style.zIndex = 9999;
+  loadingDiv.innerHTML = `
+    <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div style="margin-top: 1rem; font-weight: bold; color: #b8860b;">${message}</div>
+  `;
+  document.body.appendChild(loadingDiv);
+}
 
-  function showOtpModal({ username, email, password }) {
-    // Hide the sign-up modal first
-    const signupModalEl = document.getElementById('signupModal');
-    if (signupModalEl && typeof bootstrap !== "undefined") {
-      const signupModal = bootstrap.Modal.getOrCreateInstance(signupModalEl);
-      signupModal.hide();
-    }
-
-    // Store signup info globally for OTP verification
-    window._pendingSignupInfo = { username, email, password };
-
-    // Reset OTP inputs and error
-    const otpInputs = document.querySelectorAll('#otpInputs .otp-input');
-    otpInputs.forEach(input => input.value = '');
-    document.getElementById('otpError').style.display = 'none';
-
-    // Show OTP modal
-    const otpModalEl = document.getElementById('otpModal');
-    if (otpModalEl && typeof bootstrap !== "undefined") {
-      const otpModal = bootstrap.Modal.getOrCreateInstance(otpModalEl);
-      otpModal.show();
-      setTimeout(() => otpInputs[0].focus(), 300);
-    }
-  }
-
-  if (signupForm) {
-    signupForm.addEventListener('submit', async function (event) {
-      event.preventDefault();
-
-      const username = usernameInput.value.trim();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const confirmPassword = confirmPasswordInput.value;
-
-      // Validate passwords
-      if (password !== confirmPassword) {
-        alert('Passwords do not match!');
-        return;
-      }
-      if (password.length < 6) {
-        alert('Password must be at least 6 characters.');
-        return;
-      }
-
-      // Step 1: Send OTP for signup
-      try {
-        const response = await fetch('http://localhost:5000/api/otp/send-signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          showOtpModal({ username, email, password });
-        } else {
-          alert(result.message || 'Failed to send OTP!');
-        }
-      } catch (error) {
-        console.error('Error during sign up:', error);
-        alert('An error occurred. Please try again later.');
-      }
-    });
-  }
-});
+// Hide loading overlay
+function hideLoadingOverlay() {
+  const loadingDiv = document.getElementById("loadingOverlay");
+  if (loadingDiv) loadingDiv.remove();
+}
 
 window.addEventListener('pageshow', function () {
   updateCustomerNavActions();
@@ -957,18 +985,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
   if (confirmLogoutBtn) {
     confirmLogoutBtn.addEventListener('click', function () {
-      // Remove token
+      // Remove customer token and customerId
       localStorage.removeItem('customerToken');
-      // Update navbars and sidebar
-      updateDesktopNavbar();
-      updateCustomerNavActions();
-      updateMobileNavSidebar();
-      // Close the modal
-      const logoutModalEl = document.getElementById('logoutModal');
-      if (logoutModalEl && typeof bootstrap !== "undefined") {
-        const modalInstance = bootstrap.Modal.getInstance(logoutModalEl) || new bootstrap.Modal(logoutModalEl);
-        modalInstance.hide();
-      }
+      localStorage.removeItem('customerId');
+      // Redirect to homepage
+      window.location.href = "../index.html";
     });
   }
 });

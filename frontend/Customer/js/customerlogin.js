@@ -38,10 +38,33 @@ document.addEventListener('DOMContentLoaded', () => {
           // Update navbar if you have a function for it
           if (typeof updateCustomerNavActions === "function") updateCustomerNavActions();
 
+          // Show loading spinner/message before redirect
+          const loadingDiv = document.createElement('div');
+          loadingDiv.style.position = 'fixed';
+          loadingDiv.style.top = 0;
+          loadingDiv.style.left = 0;
+          loadingDiv.style.width = '100vw';
+          loadingDiv.style.height = '100vh';
+          loadingDiv.style.background = 'rgba(255,255,255,0.8)';
+          loadingDiv.style.display = 'flex';
+          loadingDiv.style.flexDirection = 'column';
+          loadingDiv.style.justifyContent = 'center';
+          loadingDiv.style.alignItems = 'center';
+          loadingDiv.style.zIndex = 9999;
+          loadingDiv.innerHTML = `
+            <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <div style="margin-top: 1rem; font-weight: bold; color: #b8860b;">Signing you in...</div>
+          `;
+          document.body.appendChild(loadingDiv);
+
           // After successful login:
           const redirectTo = localStorage.getItem('redirectAfterLogin') || 'homepage.html';
           localStorage.removeItem('redirectAfterLogin');
-          window.location.href = redirectTo;
+          setTimeout(() => {
+            window.location.href = redirectTo;
+          }, 1500);
         } else {
           alert(result.message || 'Login Failed!');
         }

@@ -22,7 +22,7 @@ const posLogin = async (req, res) => {
     }
 
     // Generate JWT token for POS login
-    const token = jwt.sign({ id: user._id }, 'your_secret_key', { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, 'your_secret_key', { expiresIn: '12h' });
 
     res.json({ message: 'POS login successful', token });
   } catch (err) {

@@ -272,7 +272,7 @@ function setupModal() {
         leftHtml += `
           <div class="item-row">
             <span>${item.quantity} × ${item.name}${item.portion ? ` <em>(${item.portion})</em>` : ''}</span>
-            <span>${price ? `₱${subtotal.toFixed(2)}` : '<span style="color:red">N/A</span>'}</span>
+            <span>${price > 0 ? `₱${subtotal.toFixed(2)}` : '<span style="color:red">N/A</span>'}</span>
           </div>
         `;
       });
@@ -534,67 +534,49 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function getOrderItemPrice(item, foodPriceMap) {
-  let price = 0;
-  let matchedFood = null;
-  const foods = foodPriceMap[item.name] || [];
+  // 1. Use price from order if present (number or string that can be parsed)
+  if (
+    (typeof item.price === "number" && !isNaN(item.price)) ||
+    (typeof item.price === "string" && !isNaN(parseFloat(item.price)))
+  ) {
+    return Number(item.price);
+  }
 
-  if (foods.length === 1) {
-    matchedFood = foods[0];
-  } else if (foods.length > 1) {
+  // 2. Try to match by name and portion (case-insensitive, trimmed)
+  const foods = foodPriceMap[item.name?.trim()] || [];
+  if (foods.length > 0) {
+    // Try to match portion if present
     if (item.portion) {
-      // Prefer food that has portions and a matching portion
-      matchedFood = foods.find(f =>
-        Array.isArray(f.portions) &&
-        f.portions.some(
-          p =>
-            p.portion &&
-            item.portion &&
-            p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
-        )
-      );
-      // Fallback: any food with portions array
-      if (!matchedFood) {
-        matchedFood = foods.find(f => Array.isArray(f.portions) && f.portions.length > 0);
+      for (const food of foods) {
+        if (Array.isArray(food.portions)) {
+          const portionObj = food.portions.find(
+            p =>
+              p.portion &&
+              item.portion &&
+              p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
+          );
+          if (portionObj && typeof portionObj.price === "number") {
+            return portionObj.price;
+          }
+        }
       }
-      // If still not found, fallback to food with base price
-      if (!matchedFood) {
-        matchedFood = foods.find(f => typeof f.price === "number");
+    }
+    // Fallback: use base price if available
+    for (const food of foods) {
+      if (typeof food.price === "number" && !isNaN(food.price)) {
+        return food.price;
       }
-    } else {
-      // Prefer food with no portions or empty portions array and has a price
-      matchedFood = foods.find(f => (!Array.isArray(f.portions) || f.portions.length === 0) && typeof f.price === "number");
-      // Fallback: any food with base price
-      if (!matchedFood) {
-        matchedFood = foods.find(f => typeof f.price === "number");
+    }
+    // Fallback: use first portion price if available
+    for (const food of foods) {
+      if (Array.isArray(food.portions) && food.portions.length > 0) {
+        if (typeof food.portions[0].price === "number") {
+          return food.portions[0].price;
+        }
       }
-      // Fallback: any food
-      if (!matchedFood) matchedFood = foods[0];
     }
   }
 
-  if (matchedFood) {
-    if (
-      item.portion &&
-      Array.isArray(matchedFood.portions) &&
-      matchedFood.portions.length > 0
-    ) {
-      const portionObj = matchedFood.portions.find(
-        p =>
-          p.portion &&
-          item.portion &&
-          p.portion.trim().toLowerCase() === item.portion.trim().toLowerCase()
-      );
-      if (portionObj) {
-        price = portionObj.price;
-      }
-    } else if (!item.portion && (typeof matchedFood.price === "number")) {
-      price = matchedFood.price;
-    }
-  }
-  // Final fallback: if still no price, try any food with a price
-  if ((price === 0 || price === undefined) && foods.length > 0 && !item.portion) {
-    const fallback = foods.find(f => typeof f.price === "number");
-    if (fallback) price = fallback.price;
-  }
-  return price || 0;
+  // 3. As a last resort, return 0 (will show ₱0.00)
+  return 0;
 }

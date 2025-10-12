@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const bodyParser = require('body-parser');
 
 const foodRoutes = require('./routes/foods');
 const adminAuthRoutes = require('./routes/adminAcces');
@@ -14,11 +15,16 @@ const notificationRoutes = require('./routes/notifications');
 const otpRoutes = require('./routes/otp');
 const businessInfoRoutes = require('./routes/businessInfo');
 const reportsRoutes = require('./routes/reports');
+const businessSettingsRoutes = require('./routes/businessSettings');
 const protect = require('./middleware/auth');
 
 dotenv.config();
 
 const app = express();
+
+// Increase the limit to 10mb (or higher if needed)
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -46,6 +52,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/protected-endpoint', protect);
 app.use('/api/business-info', businessInfoRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/business-settings', businessSettingsRoutes);
 
 app.listen(5000, () => {
   console.log('Server running on port 5000');

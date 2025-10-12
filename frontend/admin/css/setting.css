@@ -120,7 +120,8 @@ color: #333;
 }
 
 #tab1:checked ~ .tab-content #panel1,
-#tab2:checked ~ .tab-content #panel2 {
+#tab2:checked ~ .tab-content #panel2,
+#tab3:checked ~ .tab-content #panel3 {
     display: block;
 }
 
