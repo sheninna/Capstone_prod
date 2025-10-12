@@ -524,4 +524,73 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!localStorage.getItem('adminToken')) {
         window.location.replace('adminlogin.html');
     }
+
+    // Business Hours Tab Logic
+    const openTimeInput = document.getElementById('openTime');
+    const closeTimeInput = document.getElementById('closeTime');
+    const holidaysInput = document.getElementById('holidays');
+    const businessHoursForm = document.getElementById('businessHoursForm');
+    const businessHoursMsg = document.getElementById('businessHoursMsg');
+    const closedDaysCheckboxes = [
+        { day: 'Sunday', el: document.getElementById('closedSunday') },
+        { day: 'Monday', el: document.getElementById('closedMonday') },
+        { day: 'Tuesday', el: document.getElementById('closedTuesday') },
+        { day: 'Wednesday', el: document.getElementById('closedWednesday') },
+        { day: 'Thursday', el: document.getElementById('closedThursday') },
+        { day: 'Friday', el: document.getElementById('closedFriday') },
+        { day: 'Saturday', el: document.getElementById('closedSaturday') },
+    ];
+
+    async function loadBusinessHours() {
+        try {
+            const res = await fetch('http://localhost:5000/api/business-settings');
+            const data = await res.json();
+            if (data) {
+                openTimeInput.value = data.openTime || '';
+                closeTimeInput.value = data.closeTime || '';
+                holidaysInput.value = (data.holidays || []).map(d => d.slice(0, 10)).join(',');
+                (data.closedDays || []).forEach(day => {
+                    const cb = closedDaysCheckboxes.find(c => c.day === day);
+                    if (cb) cb.el.checked = true;
+                });
+            }
+        } catch (err) {
+            businessHoursMsg.textContent = "Failed to load business hours.";
+            businessHoursMsg.className = "text-danger";
+        }
+    }
+
+    if (businessHoursForm) {
+        businessHoursForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const openTime = openTimeInput.value;
+            const closeTime = closeTimeInput.value;
+            const closedDays = closedDaysCheckboxes.filter(cb => cb.el.checked).map(cb => cb.day);
+            const holidays = holidaysInput.value.split(',').map(s => s.trim()).filter(Boolean);
+
+            try {
+                const token = localStorage.getItem('adminToken');
+                const res = await fetch('http://localhost:5000/api/business-settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ openTime, closeTime, closedDays, holidays }),
+                });
+                if (res.ok) {
+                    businessHoursMsg.textContent = "Business hours updated!";
+                    businessHoursMsg.className = "text-success";
+                } else {
+                    businessHoursMsg.textContent = "Failed to update business hours.";
+                    businessHoursMsg.className = "text-danger";
+                }
+            } catch (err) {
+                businessHoursMsg.textContent = "Error updating business hours.";
+                businessHoursMsg.className = "text-danger";
+            }
+        });
+
+        loadBusinessHours();
+    }
 });

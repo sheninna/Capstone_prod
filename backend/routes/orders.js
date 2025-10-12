@@ -3,6 +3,7 @@ const router = express.Router();
 const protect = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const posAuth = require('../middleware/posAuth');
+const checkBusinessOpen = require('../middleware/businessHours');
 const {
   placeOrder,
   placePosOrder,
@@ -13,7 +14,7 @@ const {
   getOrders
 } = require('../controllers/orderController');
 
-router.post('/', protect, placeOrder);
+router.post('/', protect, checkBusinessOpen, placeOrder);
 router.post('/pos', posAuth, placePosOrder);
 router.get('/:userId', getUserOrders);
 router.get('/', posAuth, getAllOrders);

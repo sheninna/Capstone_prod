@@ -34,6 +34,9 @@
         <input type="radio" id="tab2" name="tab">
         <label class="tab" for="tab2">Business Info</label>
 
+        <input type="radio" id="tab3" name="tab">
+        <label class="tab" for="tab3">Business Hours</label>
+
         <!-- Content -->
         <div class="tab-content">
             <!-- Manage Menu Panel -->
@@ -134,6 +137,41 @@
                 </div>
                 <button class="btn" id="saveBusinessInfo">Save</button>
             </div>
+
+            <!-- Business Hours Tab Panel -->
+<div id="panel3" class="tab-panel">
+    <h2 class="mb-4">Business Hours</h2>
+    <form id="businessHoursForm" class="mb-3">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="openTime" class="form-label">Open Time</label>
+                <input type="time" id="openTime" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label for="closeTime" class="form-label">Close Time</label>
+                <input type="time" id="closeTime" class="form-control" required>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Closed Days</label>
+            <div id="closedDaysCheckboxes" class="d-flex flex-wrap gap-3">
+                <div><input type="checkbox" value="Sunday" id="closedSunday"> <label for="closedSunday">Sunday</label></div>
+                <div><input type="checkbox" value="Monday" id="closedMonday"> <label for="closedMonday">Monday</label></div>
+                <div><input type="checkbox" value="Tuesday" id="closedTuesday"> <label for="closedTuesday">Tuesday</label></div>
+                <div><input type="checkbox" value="Wednesday" id="closedWednesday"> <label for="closedWednesday">Wednesday</label></div>
+                <div><input type="checkbox" value="Thursday" id="closedThursday"> <label for="closedThursday">Thursday</label></div>
+                <div><input type="checkbox" value="Friday" id="closedFriday"> <label for="closedFriday">Friday</label></div>
+                <div><input type="checkbox" value="Saturday" id="closedSaturday"> <label for="closedSaturday">Saturday</label></div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="holidays" class="form-label">Holidays (comma separated YYYY-MM-DD)</label>
+            <input type="text" id="holidays" class="form-control" placeholder="2025-12-25,2025-12-31">
+        </div>
+        <button type="submit" class="btn btn-warning">Save Business Hours</button>
+        <div id="businessHoursMsg" class="mt-2"></div>
+    </form>
+</div>
         </div>
     </div>
 

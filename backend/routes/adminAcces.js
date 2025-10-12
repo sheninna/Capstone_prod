@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminOnly = require('../middleware/adminOnly');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // or your config
+const upload = multer({ dest: 'uploads/' }); 
 const {
   signup,
   login,

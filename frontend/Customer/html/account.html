@@ -112,80 +112,80 @@
 
 <!--MAIN-->
 <main>
-    <div class="container py-4">
+      <div class="container py-4">
         <h2 class="account-title mb-4">My Account</h2>
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-link active" data-tab="profile"><i class="fa fa-user"></i> Profile</button>
-            <button class="tab-link" data-tab="password"><i class="fa fa-lock"></i> Password</button>
+          <button class="tab-link active" data-tab="profile"><i class="fa fa-user"></i> Profile</button>
+          <button class="tab-link" data-tab="password"><i class="fa fa-lock"></i> Password</button>
         </div>
 
         <!-- Profile -->
         <div id="profile" class="tab-content active">
-            <div class="profile-section">
-                <div class="profile-pic">
-                    <img id="profileImage" src="../assets/profile.png" alt="Profile Picture">
-                    <div class="edit-icon" id="editPhotoBtn"><i class="fa fa-pen"></i></div>
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-                </div>
-                <div class="user-info">
-                    <h3 id="username"></h3>
-                    <p id="userEmail"></p>
-                </div>
-                <form id="profileForm">
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <input id="name" type="text" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <input id="address" type="text" placeholder="Enter address" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone-number">Phone Number</label>
-                        <input id="phone-number" type="text" placeholder="Enter phone number" disabled>
-                    </div>
-                    <button type="button" class="btn" id="editBtn">EDIT</button>
-                    <div class="btn-row" id="actionBtns" style="display:none;">
-                        <button type="button" class="btn cancel" id="cancelBtn">Cancel</button>
-                        <button type="submit" class="btn Save" id="saveBtn">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+          <div class="profile-section">
+              <div class="profile-pic">
+                  <img id="profileImage" src="../assets/profile.png" alt="Profile Picture">
+                  <div class="edit-icon" id="editPhotoBtn"><i class="fa fa-pen"></i></div>
+                  <input type="file" id="photoInput" accept="image/*" style="display: none;">
+              </div>
+              <div class="user-info">
+                  <h3 id="username"></h3>
+                  <p id="userEmail"></p>
+              </div>
+              <form id="profileForm">
+                  <div class="form-group">
+                      <label for="name">Name</label>
+                      <input id="name" type="text" disabled>
+                  </div>
+                  <div class="form-group">
+                      <label for="address">Address</label>
+                      <input id="address" type="text" placeholder="Enter address" disabled>
+                  </div>
+                  <div class="form-group">
+                      <label for="phone-number">Phone Number</label>
+                      <input id="phone-number" type="text" placeholder="Enter phone number" disabled>
+                  </div>
+                  <button type="button" class="btn" id="editBtn">EDIT</button>
+                  <div class="btn-row" id="actionBtns" style="display:none;">
+                      <button type="button" class="btn cancel" id="cancelBtn">Cancel</button>
+                      <button type="submit" class="btn Save" id="saveBtn">Save</button>
+                  </div>
+              </form>
+          </div>
+      </div>
 
-        <!-- Password -->
-        <div id="password" class="tab-content">
-            <h3>Change Password</h3>
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="currentPass">Current Password</label>
-                    <input id="currentPass" type="password">
-                    <span class="password-toggle" id="toggleCurrentPass">
-                        <i class="far fa-eye"></i>
-                    </span>
-                    <div id="currentPassError" class="error-message"></div>
-                </div>
-                <div class="form-group">
-                    <label for="newPass">New Password</label>
-                    <input id="newPass" type="password">
-                    <span class="password-toggle" id="toggleNewPass">
-                        <i class="far fa-eye"></i>
-                    </span>
-                    <div id="newPassError" class="error-message"></div>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPass">Confirm New Password</label>
-                    <input id="confirmPass" type="password">
-                    <span class="password-toggle" id="toggleConfirmPass">
-                        <i class="far fa-eye"></i>
-                    </span>
-                    <div id="confirmPassError" class="error-message"></div>
-                </div>
-                <button type="submit" class="btn">Update Password</button>
-            </form>
-        </div>
+      <!-- Password -->
+      <div id="password" class="tab-content">
+          <h3>Change Password</h3>
+          <form id="passwordForm">
+              <div class="form-group">
+                  <label for="currentPass">Current Password</label>
+                  <input id="currentPass" type="password">
+                  <span class="password-toggle" id="toggleCurrentPass">
+                      <i class="far fa-eye"></i>
+                  </span>
+                  <div id="currentPassError" class="error-message"></div>
+              </div>
+              <div class="form-group">
+                  <label for="newPass">New Password</label>
+                  <input id="newPass" type="password">
+                  <span class="password-toggle" id="toggleNewPass">
+                      <i class="far fa-eye"></i>
+                  </span>
+                  <div id="newPassError" class="error-message"></div>
+              </div>
+              <div class="form-group">
+                  <label for="confirmPass">Confirm New Password</label>
+                  <input id="confirmPass" type="password">
+                  <span class="password-toggle" id="toggleConfirmPass">
+                      <i class="far fa-eye"></i>
+                  </span>
+                  <div id="confirmPassError" class="error-message"></div>
+              </div>
+              <button type="submit" class="btn">Update Password</button>
+          </form>
+      </div>
 
 <!-- Orders -->
 <div id="orders" class="tab-content mt-4">

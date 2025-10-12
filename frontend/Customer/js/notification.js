@@ -157,7 +157,13 @@ async function loadNotifications() {
     const notificationList = document.getElementById("notificationList");
     const noNotifMessage = document.getElementById("noNotifMessage");
 
-    notificationList.innerHTML = ""; // Clear previous
+    // Remove all notification items but keep the noNotifMessage
+    Array.from(notificationList.children).forEach(child => {
+        if (child !== noNotifMessage) child.remove();
+    });
+
+    // Always hide the message before logic
+    noNotifMessage.style.display = "none";
 
     if (!userId) {
         noNotifMessage.style.display = "block";
@@ -173,9 +179,10 @@ async function loadNotifications() {
             noNotifMessage.style.display = "block";
             noNotifMessage.textContent = "No notifications available.";
             return;
-        } else {
-            noNotifMessage.style.display = "none";
         }
+
+        // Hide the message if notifications exist
+        noNotifMessage.style.display = "none";
 
         notifications.forEach(notif => {
             const item = document.createElement("div");
@@ -216,8 +223,13 @@ async function loadNotifications() {
 
         updateNotificationCount();
     } catch (err) {
-        noNotifMessage.style.display = "block";
-        noNotifMessage.textContent = "Failed to load notifications.";
+        // Only show error if there are no notifications displayed
+        if (!notificationList.querySelector('.notif-item')) {
+            noNotifMessage.style.display = "block";
+            noNotifMessage.textContent = "Failed to load notifications.";
+        } else {
+            noNotifMessage.style.display = "none";
+        }
         console.error("Failed to load notifications:", err);
     }
 }
@@ -241,8 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadNotifications();
 });
 
-// Load notifications on page load
-document.addEventListener("DOMContentLoaded", loadNotifications);
 
 document.addEventListener('DOMContentLoaded', function () {
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
